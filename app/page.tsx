@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { LandingScreen } from "@/components/landing-screen"
-import { MiniKitProvider } from "@/minikit-provider" // Keep user's provider
+import { MiniKitProvider, useMiniKit } from "@/minikit-provider" // Import useMiniKit from the provider
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,7 +16,6 @@ import { createPublicClient, http, parseAbi, formatUnits } from "viem"
 import { mainnet } from "viem/chains" // Or your target chain
 import { AnimatedBackground } from "@/components/animated-background" // Named import
 import { BottomNavigation } from "@/components/bottom-navigation" // Named import
-import { useMiniKit } from "@/minikit-provider"
 
 // ABI for contract001kpp
 const AIRDROP_CONTRACT_ABI = parseAbi([

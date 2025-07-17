@@ -5,22 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Wallet } from "lucide-react"
 import { AnimatedBackground } from "./animated-background"
 import Image from "next/image"
-import { useMiniKit } from "@/minikit-provider"
+import { useMiniKit } from "@/minikit-provider" // Import useMiniKit from the provider
 
-interface LandingScreenProps {
-  // função opcional para efeitos colaterais no componente pai
-  onConnect?: () => void
-}
-
-export function LandingScreen({ onConnect }: LandingScreenProps) {
+export function LandingScreen() {
   const [isConnecting, setIsConnecting] = useState(false)
+  const { connect } = useMiniKit() // Get connect function from context
 
-  const { connect } = useMiniKit()
   const handleConnectWallet = async () => {
     setIsConnecting(true)
     try {
-      await connect() // altera o estado global no provider
-      onConnect?.() // notifica o pai, se existir
+      await connect() // Call the connect function from the context (now simulated)
     } catch (error) {
       console.error("Error connecting wallet:", error)
     } finally {

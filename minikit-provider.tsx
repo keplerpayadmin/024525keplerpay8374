@@ -34,29 +34,22 @@ export function MiniKitProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // SIMULATED connect function to bypass "MiniKit.connect is not a function"
   const connect = async () => {
-    try {
-      const session = await MiniKit.connect()
-      if (session && session.address) {
-        setIsConnected(true)
-        setAddress(session.address as `0x${string}`)
-      }
-    } catch (error) {
-      console.error("Failed to connect MiniKit:", error)
-      setIsConnected(false)
-      setAddress(undefined)
-      throw error // Re-throw to allow calling component to handle
-    }
+    console.log("Simulating MiniKit connection...")
+    await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate async operation
+    setIsConnected(true)
+    setAddress("0xSimulatedWalletAddress123456789012345678901234567890" as `0x${string}`) // Placeholder address
+    console.log("Simulated MiniKit connected.")
   }
 
+  // SIMULATED disconnect function to bypass "MiniKit.disconnect is not a function"
   const disconnect = async () => {
-    try {
-      await MiniKit.disconnect()
-      setIsConnected(false)
-      setAddress(undefined)
-    } catch (error) {
-      console.error("Failed to disconnect MiniKit:", error)
-    }
+    console.log("Simulating MiniKit disconnection...")
+    await new Promise((resolve) => setTimeout(resolve, 300)) // Simulate async operation
+    setIsConnected(false)
+    setAddress(undefined)
+    console.log("Simulated MiniKit disconnected.")
   }
 
   return (
