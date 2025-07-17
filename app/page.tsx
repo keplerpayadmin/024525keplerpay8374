@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { LandingScreen } from "@/components/landing-screen"
-import { MiniKitProvider, useMiniKit } from "@/minikit-provider" // Ensure useMiniKit is imported
+import { MiniKitProvider } from "@/minikit-provider" // Keep user's provider
+import { useMiniKit } from "@/hooks/use-minikit" // Import from new hook file
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
