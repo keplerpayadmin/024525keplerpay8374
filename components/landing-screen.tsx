@@ -4,32 +4,29 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Wallet } from "lucide-react"
 import { AnimatedBackground } from "./animated-background"
-import { MiniKit } from "@worldcoin/minikit-js"
 import Image from "next/image"
+import { useMiniKit } from "@/minikit-provider"
 
 interface LandingScreenProps {
+  // onConnect is no longer strictly needed here as useMiniKit handles state,
+  // but keeping it for potential future parent-level side effects if desired.
   onConnect: () => void
 }
 
 export function LandingScreen({ onConnect }: LandingScreenProps) {
+  const { connect, isConnected } = useMiniKit()
   const [isConnecting, setIsConnecting] = useState(false)
 
   const handleConnectWallet = async () => {
     setIsConnecting(true)
-
     try {
-      // Simular conexão com MiniKit
-      if (typeof window !== "undefined" && MiniKit.isInstalled()) {
-        // Aqui você pode implementar a lógica real de conexão
-        await new Promise((resolve) => setTimeout(resolve, 2000)) // Simular delay
-        onConnect()
-      } else {
-        // Fallback para demonstração
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        onConnect()
-      }
+      await connect() // This will trigger the MiniKit connection flow
+      // The isConnected state in useMiniKit will update automatically via the session_changed listener
+      // No need to check isConnected immediately after await connect() as the listener handles it.
+      onConnect() // Signal to parent that connection attempt was made (optional)
     } catch (error) {
       console.error("Error connecting wallet:", error)
+      // Handle connection error, e.g., show a toast
     } finally {
       setIsConnecting(false)
     }

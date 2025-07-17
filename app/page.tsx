@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { LandingScreen } from "@/components/landing-screen"
-import { MiniKitProvider } from "@/minikit-provider"
+import { MiniKitProvider, useMiniKit } from "@/minikit-provider" // Ensure useMiniKit is imported
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,29 +12,107 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
-import { useEffect } from "react"
-import { AnimatedBackground } from "@/components/animated-background"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { createPublicClient, http, parseAbi, formatUnits } from "viem"
+import { mainnet } from "viem/chains" // Or your target chain
+import { AnimatedBackground } from "@/components/animated-background" // Named import
+import { BottomNavigation } from "@/components/bottom-navigation" // Named import
 
-function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
-  const [kppBalance, setKppBalance] = useState(0) // KPP tokens from check-ins
+// ABI for contract001kpp
+const AIRDROP_CONTRACT_ABI = parseAbi([
+  "function claimAirdrop() external",
+  "function lastClaimTime(address) view returns (uint256)",
+  "function dailyAirdropAmount() view returns (uint256)",
+  "event AirdropClaimed(address indexed user, uint256 amount)",
+])
+
+// ABI for IKPPToken (simplified for balanceOf and transfer)
+const KPP_TOKEN_ABI = parseAbi([
+  "function balanceOf(address account) view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+])
+
+// --- PLACEHOLDER CONTRACT ADDRESSES ---
+// Replace with your actual deployed contract addresses
+const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4" as `0x${string}`
+const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
+// --- END PLACEHOLDER ---
+
+function MainApp() {
+  const { address, disconnect } = useMiniKit()
+  const [kppBalance, setKppBalance] = useState(0)
   const [balance, setBalance] = useState(1250.75) // WLD balance for staking only
   const [stakedAmount, setStakedAmount] = useState(500)
   const [stakeInput, setStakeInput] = useState("")
   const [checkedIn, setCheckedIn] = useState(false)
   const [stakingRewards, setStakingRewards] = useState(12.34)
-  const [timeLeft, setTimeLeft] = useState(86400) // 24 hours in seconds
+  const [timeLeft, setTimeLeft] = useState(86400) // Default 24 hours
   const [activeTab, setActiveTab] = useState("airdrop")
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [claimError, setClaimError] = useState<string | null>(null)
 
-  // Countdown timer for next check-in
+  const publicClient = createPublicClient({
+    chain: mainnet, // Use your target chain here (e.g., sepolia, polygon)
+    transport: http(),
+  })
+
+  const fetchKPPBalance = async () => {
+    if (!address) return 0
+
+    try {
+      const kppAmount = await publicClient.readContract({
+        address: KPP_TOKEN_ADDRESS,
+        abi: KPP_TOKEN_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      })
+      setKppBalance(Number(formatUnits(kppAmount, 18))) // Assuming 18 decimals for KPP
+    } catch (error) {
+      console.error("Error fetching KPP balance:", error)
+      setKppBalance(0)
+    }
+  }
+
+  const fetchLastClaimTime = async () => {
+    if (!address) return 0
+
+    try {
+      const lastTime = await publicClient.readContract({
+        address: AIRDROP_CONTRACT_ADDRESS,
+        abi: AIRDROP_CONTRACT_ABI,
+        functionName: "lastClaimTime",
+        args: [address],
+      })
+      return Number(lastTime)
+    } catch (error) {
+      console.error("Error fetching last claim time:", error)
+      return 0
+    }
+  }
+
+  const updateCountdown = async () => {
+    const lastClaim = await fetchLastClaimTime()
+    const currentTime = Math.floor(Date.now() / 1000) // Current time in seconds
+    const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 day in seconds
+
+    if (lastClaim === 0 || currentTime >= lastClaim + CLAIM_INTERVAL_SECONDS) {
+      setTimeLeft(0) // Available to claim
+    } else {
+      setTimeLeft(lastClaim + CLAIM_INTERVAL_SECONDS - currentTime)
+    }
+  }
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+    fetchKPPBalance()
+    updateCountdown()
 
-  // Auto-increment staking rewards
+    const interval = setInterval(() => {
+      updateCountdown()
+    }, 1000) // Update countdown every second
+
+    return () => clearInterval(interval)
+  }, [address]) // Re-fetch when address changes
+
+  // Auto-increment staking rewards (simulated)
   useEffect(() => {
     const rewardTimer = setInterval(() => {
       setStakingRewards((prev) => prev + 0.001)
@@ -49,10 +127,43 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleCheckIn = () => {
-    setKppBalance((prev) => prev + 1)
-    setCheckedIn(true)
-    setTimeout(() => setCheckedIn(false), 3000)
+  const handleCheckIn = async () => {
+    if (!address) {
+      setClaimError("Please connect your wallet first.")
+      return
+    }
+    setIsClaiming(true)
+    setClaimError(null)
+
+    try {
+      // In a real MiniKit integration, you'd use MiniKit.sendTransaction or similar
+      // For this example, we'll simulate a successful transaction
+      console.log(`Calling claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`)
+
+      // Simulate transaction
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate network delay
+
+      // Simulate success
+      setCheckedIn(true)
+      fetchKPPBalance() // Update balance after claim
+      updateCountdown() // Update countdown after claim
+      setTimeout(() => setCheckedIn(false), 3000)
+
+      // Example of how you would call it with viem if you had a wallet client
+      // const { request } = await publicClient.simulateContract({
+      //   account: address,
+      //   address: AIRDROP_CONTRACT_ADDRESS,
+      //   abi: AIRDROP_CONTRACT_ABI,
+      //   functionName: "claimAirdrop",
+      // });
+      // const hash = await walletClient.writeContract(request);
+      // await publicClient.waitForTransactionReceipt({ hash });
+    } catch (error: any) {
+      console.error("Error claiming airdrop:", error)
+      setClaimError(error.message || "Failed to claim KPP. Please try again.")
+    } finally {
+      setIsClaiming(false)
+    }
   }
 
   const handleStake = () => {
@@ -94,7 +205,7 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
               className="drop-shadow-lg"
             />
             <Button
-              onClick={onDisconnect}
+              onClick={disconnect} // Use MiniKit's disconnect
               variant="outline"
               size="sm"
               className="border-white/20 text-white hover:bg-white/10 bg-black/20 backdrop-blur-sm"
@@ -113,7 +224,7 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-400 mb-2">{kppBalance} KPP</div>
+              <div className="text-3xl font-bold text-yellow-400 mb-2">{kppBalance.toFixed(2)} KPP</div>
               <div className="text-sm text-white/60">Check-in Rewards</div>
             </CardContent>
           </Card>
@@ -151,9 +262,14 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
                   <Button
                     onClick={handleCheckIn}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    disabled={checkedIn}
+                    disabled={checkedIn || isClaiming || timeLeft > 0}
                   >
-                    {checkedIn ? (
+                    {isClaiming ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Claiming...
+                      </>
+                    ) : checkedIn ? (
                       <>
                         <CheckCircle className="mr-2 h-4 w-4" />
                         Checked In!
@@ -165,6 +281,7 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
                       </>
                     )}
                   </Button>
+                  {claimError && <p className="text-red-500 text-sm mt-2">{claimError}</p>}
                 </CardContent>
               </Card>
 
@@ -180,7 +297,7 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
                       <div className="text-sm text-white/60">Current streak</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-semibold text-white">{kppBalance} KPP</div>
+                      <div className="text-lg font-semibold text-white">{kppBalance.toFixed(2)} KPP</div>
                       <div className="text-sm text-white/60">Total earned</div>
                     </div>
                   </div>
@@ -438,16 +555,16 @@ function MainApp({ onDisconnect }: { onDisconnect: () => void }) {
   )
 }
 
-export default function WorldcoinApp() {
-  const [isConnected, setIsConnected] = useState(false)
-
+export default function WorldcoinAppWrapper() {
   return (
     <MiniKitProvider>
-      {!isConnected ? (
-        <LandingScreen onConnect={() => setIsConnected(true)} />
-      ) : (
-        <MainApp onDisconnect={() => setIsConnected(false)} />
-      )}
+      <WorldcoinAppContent />
     </MiniKitProvider>
   )
+}
+
+function WorldcoinAppContent() {
+  const { isConnected } = useMiniKit()
+
+  return <>{!isConnected ? <LandingScreen onConnect={() => {}} /> : <MainApp />}</>
 }
