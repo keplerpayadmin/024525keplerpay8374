@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { LandingScreen } from "@/components/landing-screen"
 import { MiniKitProvider } from "@/minikit-provider" // Keep user's provider
-import { useMiniKit } from "@/hooks/use-minikit" // Import from new hook file
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +16,7 @@ import { createPublicClient, http, parseAbi, formatUnits } from "viem"
 import { mainnet } from "viem/chains" // Or your target chain
 import { AnimatedBackground } from "@/components/animated-background" // Named import
 import { BottomNavigation } from "@/components/bottom-navigation" // Named import
+import { useMiniKit } from "@/minikit-provider"
 
 // ABI for contract001kpp
 const AIRDROP_CONTRACT_ABI = parseAbi([
@@ -38,8 +38,7 @@ const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4" as `0x${s
 const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
 // --- END PLACEHOLDER ---
 
-function MainApp() {
-  const { address, disconnect } = useMiniKit()
+function MainApp({ address }: { address: `0x${string}` }) {
   const [kppBalance, setKppBalance] = useState(0)
   const [balance, setBalance] = useState(1250.75) // WLD balance for staking only
   const [stakedAmount, setStakedAmount] = useState(500)
@@ -190,6 +189,15 @@ function MainApp() {
     setStakingRewards(0)
   }
 
+  const { disconnect } = useMiniKit()
+  const handleDisconnect = async () => {
+    try {
+      await disconnect()
+    } catch (error) {
+      console.error("Failed to disconnect MiniKit:", error)
+    }
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <AnimatedBackground />
@@ -206,7 +214,7 @@ function MainApp() {
               className="drop-shadow-lg"
             />
             <Button
-              onClick={disconnect} // Use MiniKit's disconnect
+              onClick={handleDisconnect} // Use MiniKit.disconnect() directly
               variant="outline"
               size="sm"
               className="border-white/20 text-white hover:bg-white/10 bg-black/20 backdrop-blur-sm"
@@ -565,7 +573,7 @@ export default function WorldcoinAppWrapper() {
 }
 
 function WorldcoinAppContent() {
-  const { isConnected } = useMiniKit()
+  const { isConnected, address } = useMiniKit()
 
-  return <>{!isConnected ? <LandingScreen onConnect={() => {}} /> : <MainApp />}</>
+  return <>{!isConnected || !address ? <LandingScreen /> : <MainApp address={address} />}</>
 }

@@ -29,32 +29,8 @@ export function MiniKitProvider({ children }: { children: ReactNode }) {
       } else {
         console.log("MiniKit already installed")
       }
-
-      // Check initial connection status
-      const checkConnection = async () => {
-        const session = await MiniKit.getSession()
-        if (session && session.address) {
-          setIsConnected(true)
-          setAddress(session.address as `0x${string}`)
-        } else {
-          setIsConnected(false)
-          setAddress(undefined)
-        }
-      }
-      checkConnection()
-
-      // Listen for session changes
-      MiniKit.on("session_changed", (session) => {
-        if (session && session.address) {
-          setIsConnected(true)
-          setAddress(session.address as `0x${string}`)
-        } else {
-          setIsConnected(false)
-          setAddress(undefined)
-        }
-      })
     } catch (error) {
-      console.error("Error initializing MiniKit:", error)
+      console.error("Error installing MiniKit:", error)
     }
   }, [])
 
