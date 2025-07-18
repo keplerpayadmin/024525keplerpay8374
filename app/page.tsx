@@ -12,11 +12,33 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
-import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem" // Adicionado encodeFunctionData
-import { mainnet } from "viem/chains" // Ou a sua cadeia alvo
+import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem"
+import { defineChain } from "viem" // Importar defineChain
 import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
-import { MiniKit } from "@worldcoin/minikit-js" // Importa MiniKit diretamente
+import { MiniKit } from "@worldcoin/minikit-js"
+
+// Definir a cadeia World Chain Mainnet
+const worldChainMainnet = defineChain({
+  id: 480, // 0x1e0
+  name: "World Chain Mainnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ["https://worldchain-mainnet.g.alchemy.com/public"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Worldscan",
+      url: "https://worldscan.org",
+    },
+  },
+  contracts: {
+    // Adicione aqui os endereços de contratos importantes da World Chain, se necessário
+    // Ex: multicall3: { address: '0x...', blockCreated: 0 },
+  },
+})
 
 // ABI for contract001kpp
 const AIRDROP_CONTRACT_ABI = parseAbi([
@@ -50,8 +72,9 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
 
+  // Agora usando a World Chain Mainnet
   const publicClient = createPublicClient({
-    chain: mainnet, // Use a sua cadeia alvo aqui (ex: sepolia, polygon)
+    chain: worldChainMainnet, // Usando a cadeia World Chain Mainnet
     transport: http(),
   })
 
@@ -137,10 +160,13 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
 
     try {
       if (typeof window === "undefined" || !MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not installed or not available.")
+        throw new Error("MiniKit is not installed or not available in this browser environment.")
       }
-      if (typeof MiniKit.commandsAsync?.sendTransaction !== "function") {
-        throw new Error("MiniKit.commandsAsync.sendTransaction is not available.")
+      // Verifica se MiniKit.commandsAsync e sendTransaction estão disponíveis
+      if (!MiniKit.commandsAsync || typeof MiniKit.commandsAsync.sendTransaction !== "function") {
+        throw new Error(
+          "MiniKit.commandsAsync.sendTransaction is not available. MiniKit might not be fully initialized or supported.",
+        )
       }
 
       // Codifica a chamada da função para claimAirdrop
@@ -149,8 +175,11 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
         functionName: "claimAirdrop",
       })
 
-      console.log(`Sending transaction to claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`)
+      console.log(
+        `Attempting to send transaction to claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`,
+      )
       console.log("Encoded data:", encodedData)
+      console.log("Target contract address:", AIRDROP_CONTRACT_ADDRESS)
 
       // Envia a transação usando MiniKit
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
@@ -160,16 +189,24 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       })
 
       if (finalPayload.status === "error") {
-        throw new Error(finalPayload.message || "Transaction failed.")
+        console.error("MiniKit transaction error payload:", finalPayload)
+        throw new Error(finalPayload.message || "Transaction failed from MiniKit.")
       }
 
-      console.log("Transaction sent, hash:", finalPayload.transactionHash)
+      console.log("Transaction sent successfully via MiniKit, hash:", finalPayload.transactionHash)
+
+      // Opcional: Você pode querer esperar pelo recibo da transação aqui para maior certeza
+      // const transactionReceipt = await publicClient.waitForTransactionReceipt({ hash: finalPayload.transactionHash });
+      // console.log("Transaction receipt:", transactionReceipt);
 
       // Atualiza o estado da UI após o sucesso da transação
       setCheckedIn(true)
-      fetchKPPBalance() // Atualiza o saldo após a reivindicação
-      updateCountdown() // Atualiza a contagem regressiva após a reivindicação
-      setTimeout(() => setCheckedIn(false), 3000) // Redefine o estado checkedIn após um atraso
+      // Pequeno atraso para permitir que a blockchain processe antes de buscar o novo saldo
+      setTimeout(async () => {
+        await fetchKPPBalance() // Atualiza o saldo após a reivindicação
+        await updateCountdown() // Atualiza a contagem regressiva após a reivindicação
+        setCheckedIn(false) // Redefine o estado checkedIn
+      }, 2000) // Atraso de 2 segundos
     } catch (error: any) {
       console.error("Error claiming airdrop:", error)
       setClaimError(error.message || "Failed to claim KPP. Please try again.")
@@ -206,7 +243,6 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.disconnect === "function") {
         await MiniKit.disconnect()
       }
-      // Chamar a função de logout do componente pai
       onLogout()
     } catch (error) {
       console.error("Failed to disconnect MiniKit:", error)
@@ -555,9 +591,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <h4 className className="text-white font-medium">
-                          Ecosystem Growth
-                        </h4>
+                        <h4 className="text-white font-medium">Ecosystem Growth</h4>
                         <p className="text-sm text-white/60">Expanding reach and user adoption</p>
                       </div>
                     </div>
