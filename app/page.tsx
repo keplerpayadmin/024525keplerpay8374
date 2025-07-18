@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { LandingScreen } from "@/components/landing-screen"
-import { MiniKitProvider, useMiniKit } from "@/minikit-provider" // Import useMiniKit from the provider
+import { MiniKitProvider } from "@/minikit-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,9 +13,10 @@ import { Separator } from "@/components/ui/separator"
 import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
 import { createPublicClient, http, parseAbi, formatUnits } from "viem"
-import { mainnet } from "viem/chains" // Or your target chain
-import { AnimatedBackground } from "@/components/animated-background" // Named import
-import { BottomNavigation } from "@/components/bottom-navigation" // Named import
+import { mainnet } from "viem/chains"
+import { AnimatedBackground } from "@/components/animated-background"
+import { BottomNavigation } from "@/components/bottom-navigation"
+import { MiniKit } from "@worldcoin/minikit-js" // Importa MiniKit diretamente
 
 // ABI for contract001kpp
 const AIRDROP_CONTRACT_ABI = parseAbi([
@@ -32,25 +33,25 @@ const KPP_TOKEN_ABI = parseAbi([
 ])
 
 // --- PLACEHOLDER CONTRACT ADDRESSES ---
-// Replace with your actual deployed contract addresses
+// Substitua pelos seus endereços de contrato reais
 const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4" as `0x${string}`
 const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
-// --- END PLACEHOLDER ---
+// --- FIM PLACEHOLDER ---
 
-function MainApp({ address }: { address: `0x${string}` }) {
+function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () => void }) {
   const [kppBalance, setKppBalance] = useState(0)
-  const [balance, setBalance] = useState(1250.75) // WLD balance for staking only
+  const [balance, setBalance] = useState(1250.75) // Saldo WLD apenas para staking
   const [stakedAmount, setStakedAmount] = useState(500)
   const [stakeInput, setStakeInput] = useState("")
   const [checkedIn, setCheckedIn] = useState(false)
   const [stakingRewards, setStakingRewards] = useState(12.34)
-  const [timeLeft, setTimeLeft] = useState(86400) // Default 24 hours
+  const [timeLeft, setTimeLeft] = useState(86400) // Padrão 24 horas
   const [activeTab, setActiveTab] = useState("airdrop")
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
 
   const publicClient = createPublicClient({
-    chain: mainnet, // Use your target chain here (e.g., sepolia, polygon)
+    chain: mainnet, // Use a sua cadeia alvo aqui (ex: sepolia, polygon)
     transport: http(),
   })
 
@@ -64,7 +65,7 @@ function MainApp({ address }: { address: `0x${string}` }) {
         functionName: "balanceOf",
         args: [address],
       })
-      setKppBalance(Number(formatUnits(kppAmount, 18))) // Assuming 18 decimals for KPP
+      setKppBalance(Number(formatUnits(kppAmount, 18))) // Assumindo 18 decimais para KPP
     } catch (error) {
       console.error("Error fetching KPP balance:", error)
       setKppBalance(0)
@@ -90,11 +91,11 @@ function MainApp({ address }: { address: `0x${string}` }) {
 
   const updateCountdown = async () => {
     const lastClaim = await fetchLastClaimTime()
-    const currentTime = Math.floor(Date.now() / 1000) // Current time in seconds
-    const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 day in seconds
+    const currentTime = Math.floor(Date.now() / 1000) // Tempo atual em segundos
+    const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 dia em segundos
 
     if (lastClaim === 0 || currentTime >= lastClaim + CLAIM_INTERVAL_SECONDS) {
-      setTimeLeft(0) // Available to claim
+      setTimeLeft(0) // Disponível para reivindicar
     } else {
       setTimeLeft(lastClaim + CLAIM_INTERVAL_SECONDS - currentTime)
     }
@@ -106,12 +107,12 @@ function MainApp({ address }: { address: `0x${string}` }) {
 
     const interval = setInterval(() => {
       updateCountdown()
-    }, 1000) // Update countdown every second
+    }, 1000) // Atualiza a contagem regressiva a cada segundo
 
     return () => clearInterval(interval)
-  }, [address]) // Re-fetch when address changes
+  }, [address]) // Busca novamente quando o endereço muda
 
-  // Auto-increment staking rewards (simulated)
+  // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
     const rewardTimer = setInterval(() => {
       setStakingRewards((prev) => prev + 0.001)
@@ -135,20 +136,20 @@ function MainApp({ address }: { address: `0x${string}` }) {
     setClaimError(null)
 
     try {
-      // In a real MiniKit integration, you'd use MiniKit.sendTransaction or similar
-      // For this example, we'll simulate a successful transaction
+      // Numa integração real do MiniKit, usaria MiniKit.sendTransaction ou similar
+      // Para este exemplo, vamos simular uma transação bem-sucedida
       console.log(`Calling claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`)
 
-      // Simulate transaction
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate network delay
+      // Simula a transação
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simula atraso de rede
 
-      // Simulate success
+      // Simula o sucesso
       setCheckedIn(true)
-      fetchKPPBalance() // Update balance after claim
-      updateCountdown() // Update countdown after claim
+      fetchKPPBalance() // Atualiza o saldo após a reivindicação
+      updateCountdown() // Atualiza a contagem regressiva após a reivindicação
       setTimeout(() => setCheckedIn(false), 3000)
 
-      // Example of how you would call it with viem if you had a wallet client
+      // Exemplo de como chamaria com viem se tivesse um cliente de carteira
       // const { request } = await publicClient.simulateContract({
       //   account: address,
       //   address: AIRDROP_CONTRACT_ADDRESS,
@@ -188,10 +189,13 @@ function MainApp({ address }: { address: `0x${string}` }) {
     setStakingRewards(0)
   }
 
-  const { disconnect } = useMiniKit()
   const handleDisconnect = async () => {
     try {
-      await disconnect()
+      if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.disconnect === "function") {
+        await MiniKit.disconnect()
+      }
+      // Chamar a função de logout do componente pai
+      onLogout()
     } catch (error) {
       console.error("Failed to disconnect MiniKit:", error)
     }
@@ -213,7 +217,7 @@ function MainApp({ address }: { address: `0x${string}` }) {
               className="drop-shadow-lg"
             />
             <Button
-              onClick={handleDisconnect} // Use MiniKit.disconnect() directly
+              onClick={handleDisconnect}
               variant="outline"
               size="sm"
               className="border-white/20 text-white hover:bg-white/10 bg-black/20 backdrop-blur-sm"
@@ -572,7 +576,94 @@ export default function WorldcoinAppWrapper() {
 }
 
 function WorldcoinAppContent() {
-  const { isConnected, address } = useMiniKit()
+  const [isConnected, setIsConnected] = useState(false)
+  const [walletAddress, setWalletAddress] = useState<`0x${string}` | undefined>(undefined)
+  const [isLoadingSession, setIsLoadingSession] = useState(true)
 
-  return <>{!isConnected || !address ? <LandingScreen /> : <MainApp address={address} />}</>
+  // Verifica a sessão ao carregar a página
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session")
+        const data = await res.json()
+        if (data.authenticated && data.user?.walletAddress) {
+          setIsConnected(true)
+          setWalletAddress(data.user.walletAddress as `0x${string}`)
+        } else {
+          setIsConnected(false)
+          setWalletAddress(undefined)
+        }
+      } catch (error) {
+        console.error("Error checking session:", error)
+        setIsConnected(false)
+        setWalletAddress(undefined)
+      } finally {
+        setIsLoadingSession(false)
+      }
+    }
+    checkSession()
+
+    // Ouve por mudanças de sessão do MiniKit (se MiniKit.on estiver disponível)
+    if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.on === "function") {
+      const handleSessionChange = (session: any) => {
+        if (session && session.address) {
+          setIsConnected(true)
+          setWalletAddress(session.address as `0x${string}`)
+        } else {
+          setIsConnected(false)
+          setWalletAddress(undefined)
+        }
+      }
+      const handleDisconnected = () => {
+        setIsConnected(false)
+        setWalletAddress(undefined)
+      }
+
+      MiniKit.on("session_changed", handleSessionChange)
+      MiniKit.on("disconnected", handleDisconnected)
+
+      // Não há um método 'off' explícito para MiniKit.on, então o listener persistirá.
+    }
+  }, [])
+
+  const handleLoginSuccess = useCallback((address: `0x${string}`) => {
+    setIsConnected(true)
+    setWalletAddress(address)
+  }, [])
+
+  const handleLogout = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" })
+      if (res.ok) {
+        setIsConnected(false)
+        setWalletAddress(undefined)
+      } else {
+        console.error("Failed to logout:", await res.text())
+      }
+    } catch (error) {
+      console.error("Error during logout:", error)
+    }
+  }, [])
+
+  if (isLoadingSession) {
+    return (
+      <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
+        <AnimatedBackground />
+        <div className="relative z-10 text-white text-xl flex items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3"></div>
+          Loading app...
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {!isConnected || !walletAddress ? (
+        <LandingScreen onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <MainApp address={walletAddress} onLogout={handleLogout} />
+      )}
+    </>
+  )
 }
