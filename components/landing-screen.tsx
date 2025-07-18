@@ -112,11 +112,6 @@ export function LandingScreen({ onLoginSuccess }: LandingScreenProps) {
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                 Connecting...
               </>
-            ) : typeof window !== "undefined" && !MiniKit.isInstalled() ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                Loading Wallet...
-              </>
             ) : (
               <>
                 <Wallet className="mr-3 h-5 w-5" />
