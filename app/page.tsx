@@ -204,6 +204,15 @@ function MainApp({
       `Check-in button disabled state: ${isButtonDisabled} (checkedIn: ${checkedIn}, isClaiming: ${isClaiming}, timeLeft: ${timeLeft})`,
     )
 
+    // Adicionar logs detalhados sobre o cooldown antes de enviar a transação
+    const lastClaimTimeOnCall = await fetchLastClaimTime()
+    const currentTimeOnCall = Math.floor(Date.now() / 1000)
+    const nextClaimAvailableTimeOnCall = lastClaimTimeOnCall + 24 * 60 * 60
+    addDebugLog(`[Pre-Tx Check] lastClaimTime (from contract): ${lastClaimTimeOnCall}`)
+    addDebugLog(`[Pre-Tx Check] currentTime (client): ${currentTimeOnCall}`)
+    addDebugLog(`[Pre-Tx Check] nextClaimAvailableAt: ${nextClaimAvailableTimeOnCall}`)
+    addDebugLog(`[Pre-Tx Check] Is claim available? ${currentTimeOnCall >= nextClaimAvailableTimeOnCall}`)
+
     try {
       if (typeof window === "undefined" || !MiniKit.isInstalled()) {
         throw new Error("MiniKit is not installed or not available in this browser environment.")
