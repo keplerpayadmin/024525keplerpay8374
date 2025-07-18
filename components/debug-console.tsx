@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { X, Copy } from "lucide-react" // Importar o ícone Copy
 
 interface DebugConsoleProps {
   logs: string[]
@@ -13,6 +13,20 @@ interface DebugConsoleProps {
 
 export function DebugConsole({ logs, title = "Debug Console", onClear }: DebugConsoleProps) {
   const [isOpen, setIsOpen] = useState(true)
+  const [copyStatus, setCopyStatus] = useState<string | null>(null) // Estado para feedback de cópia
+
+  const handleCopyLogs = useCallback(async () => {
+    try {
+      const logsText = logs.join("\n")
+      await navigator.clipboard.writeText(logsText)
+      setCopyStatus("Copied!")
+    } catch (err) {
+      console.error("Failed to copy logs:", err)
+      setCopyStatus("Failed to copy!")
+    } finally {
+      setTimeout(() => setCopyStatus(null), 2000) // Limpar feedback após 2 segundos
+    }
+  }, [logs])
 
   if (!isOpen) {
     return (
@@ -51,11 +65,30 @@ export function DebugConsole({ logs, title = "Debug Console", onClear }: DebugCo
             ))
           )}
         </div>
-        {onClear && logs.length > 0 && (
-          <Button onClick={onClear} variant="ghost" size="sm" className="w-full mt-2 text-white/70 hover:bg-white/10">
-            Clear Logs
-          </Button>
-        )}
+        <div className="flex gap-2 mt-2">
+          {onClear && logs.length > 0 && (
+            <Button onClick={onClear} variant="ghost" size="sm" className="flex-1 text-white/70 hover:bg-white/10">
+              Clear Logs
+            </Button>
+          )}
+          {logs.length > 0 && (
+            <Button
+              onClick={handleCopyLogs}
+              variant="ghost"
+              size="sm"
+              className="flex-1 text-white/70 hover:bg-white/10"
+              disabled={!!copyStatus} // Desabilitar enquanto o status de cópia estiver visível
+            >
+              {copyStatus ? (
+                copyStatus
+              ) : (
+                <>
+                  <Copy className="mr-2 h-3 w-3" /> Copy Logs
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
