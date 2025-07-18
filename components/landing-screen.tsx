@@ -105,7 +105,7 @@ export function LandingScreen({ onLoginSuccess }: LandingScreenProps) {
           <Button
             onClick={handleConnectWallet}
             disabled={isConnecting || (typeof window !== "undefined" && !MiniKit.isInstalled())}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="bg-black hover:bg-gray-800 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isConnecting ? (
               <>
