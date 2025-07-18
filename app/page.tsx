@@ -359,11 +359,11 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl font-bold text-orange-400">0 Days</div> {/* Alterado para 0 Days */}
+                      <div className="text-2xl font-bold text-orange-400">0 Days</div>
                       <div className="text-sm text-white/60">Current streak</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-semibold text-white">0 KPP</div> {/* Alterado para 0 KPP */}
+                      <div className="text-lg font-semibold text-white">0 KPP</div>
                       <div className="text-sm text-white/60">Total earned</div>
                     </div>
                   </div>
