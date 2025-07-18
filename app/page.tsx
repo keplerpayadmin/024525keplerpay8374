@@ -1,7 +1,5 @@
 "use client"
 
-import Link from "next/link"
-
 import { useState, useEffect, useCallback } from "react"
 import { LandingScreen } from "@/components/landing-screen"
 import { MiniKitProvider } from "@/minikit-provider"
@@ -11,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Gift, Coins, TrendingUp, LogOut, ExternalLink, Handshake, ArrowLeft, Clock, Flame } from "lucide-react"
+import { Gift, Coins, TrendingUp, LogOut, ExternalLink, Handshake, Clock, Flame } from "lucide-react"
 import Image from "next/image"
 import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem"
 import { defineChain } from "viem"
@@ -62,6 +60,17 @@ const KPP_TOKEN_ABI = parseAbi([
 const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4" as `0x${string}`
 const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
 // --- FIM PLACEHOLDER ---
+
+function formatTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+  return {
+    hours: hours.toString().padStart(2, "0"),
+    minutes: minutes.toString().padStart(2, "0"),
+    seconds: secs.toString().padStart(2, "0"),
+  }
+}
 
 function MainApp({
   address,
@@ -472,15 +481,6 @@ function MainApp({
           {activeTab === "airdrop" && (
             <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
               {/* Back Button (movido para dentro da aba airdrop para corresponder à imagem) */}
-              <div className="absolute top-4 left-4 z-50">
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-white hover:bg-gray-800/80 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="text-sm font-medium">Back</span>
-                </Link>
-              </div>
 
               {/* Título */}
               <motion.div
@@ -662,8 +662,7 @@ function MainApp({
                           </>
                         ) : (
                           <>
-                            <Coins className="w-4 h-4" />
-                            <span>Claim KPP</span>
+                            <span>Check-in</span>
                           </>
                         )}
                       </div>
