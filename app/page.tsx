@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
 import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem"
-import { defineChain } from "viem" // Importar defineChain
+import { defineChain } from "viem"
 import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
@@ -184,7 +184,6 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       // Envia a transação usando MiniKit com a estrutura 'transaction' como array
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
-          // <--- AQUI: Envolvendo a transação num array sob a chave 'transaction'
           {
             to: AIRDROP_CONTRACT_ADDRESS,
             data: encodedData,
@@ -195,7 +194,9 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
 
       if (finalPayload.status === "error") {
         console.error("MiniKit transaction error payload:", finalPayload)
-        throw new Error(finalPayload.message || "Transaction failed from MiniKit.")
+        // Captura a mensagem de erro específica do MiniKit/World App
+        const errorMessage = finalPayload.message || "Transaction failed from MiniKit."
+        throw new Error(errorMessage)
       }
 
       console.log("Transaction sent successfully via MiniKit, hash:", finalPayload.transactionHash)
@@ -290,7 +291,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-yellow-400 mb-2">{kppBalance.toFixed(2)} KPP</div>
-              <div className="text-sm text-white/60">Check-in Rewards</div>
+              {/* Removido: <div className="text-sm text-white/60">Check-in Rewards</div> */}
             </CardContent>
           </Card>
 
@@ -358,7 +359,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl font-bold text-orange-400">7 Days</div>
+                      <div className="text-2xl font-bold text-orange-400">0 Days</div> {/* Alterado para 0 Days */}
                       <div className="text-sm text-white/60">Current streak</div>
                     </div>
                     <div className="text-right">
