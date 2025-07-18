@@ -17,16 +17,11 @@ export default function AirdropLoader() {
   const [mounted, setMounted] = useState(false)
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
-  const addDebugLog = useCallback((message: string) => {
-    setDebugLogs((prevLogs) => {
-      const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
-      return newLogs.slice(-50)
-    })
+  const addDebugLog = useCallback((msg: string) => {
+    setDebugLogs((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`].slice(-50))
   }, [])
 
-  const clearDebugLogs = useCallback(() => {
-    setDebugLogs([])
-  }, [])
+  const clearDebugLogs = useCallback(() => setDebugLogs([]), [])
 
   useEffect(() => {
     setMounted(true)
@@ -43,9 +38,9 @@ export default function AirdropLoader() {
   }
 
   return (
-    <div>
+    <>
       <AirdropClient addDebugLog={addDebugLog} />
       <DebugConsole logs={debugLogs} onClear={clearDebugLogs} />
-    </div>
+    </>
   )
 }
