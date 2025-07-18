@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Copy } from "lucide-react" // Importar o ícone Copy
+import { X, Copy } from "lucide-react"
 
 interface DebugConsoleProps {
   logs: string[]
@@ -13,7 +13,7 @@ interface DebugConsoleProps {
 
 export function DebugConsole({ logs, title = "Debug Console", onClear }: DebugConsoleProps) {
   const [isOpen, setIsOpen] = useState(true)
-  const [copyStatus, setCopyStatus] = useState<string | null>(null) // Estado para feedback de cópia
+  const [copyStatus, setCopyStatus] = useState<string | null>(null)
 
   const handleCopyLogs = useCallback(async () => {
     try {
@@ -24,7 +24,7 @@ export function DebugConsole({ logs, title = "Debug Console", onClear }: DebugCo
       console.error("Failed to copy logs:", err)
       setCopyStatus("Failed to copy!")
     } finally {
-      setTimeout(() => setCopyStatus(null), 2000) // Limpar feedback após 2 segundos
+      setTimeout(() => setCopyStatus(null), 2000)
     }
   }, [logs])
 
@@ -77,7 +77,7 @@ export function DebugConsole({ logs, title = "Debug Console", onClear }: DebugCo
               variant="ghost"
               size="sm"
               className="flex-1 text-white/70 hover:bg-white/10"
-              disabled={!!copyStatus} // Desabilitar enquanto o status de cópia estiver visível
+              disabled={!!copyStatus}
             >
               {copyStatus ? (
                 copyStatus

@@ -119,14 +119,13 @@ function MainApp({
     }
 
     try {
-      addDebugLog(`Fetching last claim time for address: ${address}...`)
+      // Removido log excessivo aqui, apenas o resultado final é importante
       const lastTime = await publicClient.readContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: AIRDROP_CONTRACT_ABI,
         functionName: "lastClaimTime",
         args: [address],
       })
-      addDebugLog(`Last Claim Time (raw from contract): ${Number(lastTime)}`)
       return Number(lastTime)
     } catch (error: any) {
       addDebugLog(`Error fetching last claim time: ${error.message}`)
@@ -136,24 +135,25 @@ function MainApp({
   }
 
   const updateCountdown = async () => {
-    addDebugLog("Calling fetchLastClaimTime...")
     const lastClaim = await fetchLastClaimTime()
     const currentTime = Math.floor(Date.now() / 1000) // Tempo atual em segundos
     const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 dia em segundos
 
-    addDebugLog(
-      `[Countdown] lastClaim: ${lastClaim} (from contract), currentTime: ${currentTime}, CLAIM_INTERVAL: ${CLAIM_INTERVAL_SECONDS}`,
-    )
     const nextClaimAvailableTime = lastClaim + CLAIM_INTERVAL_SECONDS
-    addDebugLog(`[Countdown] Next claim available at timestamp: ${nextClaimAvailableTime}`)
 
     if (lastClaim === 0 || currentTime >= nextClaimAvailableTime) {
       setTimeLeft(0) // Disponível para reivindicar
-      addDebugLog("Claim available. timeLeft set to 0.")
+      // Log apenas quando o estado muda ou é importante
+      if (timeLeft !== 0) {
+        addDebugLog("Claim available. timeLeft set to 0.")
+      }
     } else {
       const remaining = nextClaimAvailableTime - currentTime
       setTimeLeft(remaining)
-      addDebugLog(`Time left for claim: ${formatTime(remaining)} (${remaining} seconds)`)
+      // Log apenas quando o tempo restante muda significativamente (ex: a cada minuto)
+      if (Math.floor(remaining / 60) !== Math.floor(timeLeft / 60)) {
+        addDebugLog(`Time left for claim: ${formatTime(remaining)} (${remaining} seconds)`)
+      }
     }
   }
 
@@ -163,7 +163,7 @@ function MainApp({
     updateCountdown()
 
     const interval = setInterval(() => {
-      addDebugLog("Interval triggered. Updating countdown...")
+      // Removido log "Interval triggered" para reduzir verbosidade
       updateCountdown()
     }, 1000) // Atualiza a contagem regressiva a cada segundo
 
@@ -171,7 +171,7 @@ function MainApp({
       clearInterval(interval)
       addDebugLog("MainApp useEffect cleanup. Interval cleared.")
     }
-  }, [address, addDebugLog]) // Adicionar addDebugLog como dependência
+  }, [address, addDebugLog, timeLeft]) // Adicionar timeLeft como dependência para re-avaliar o log de tempo
 
   // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
@@ -197,6 +197,12 @@ function MainApp({
     setIsClaiming(true)
     setClaimError(null)
     addDebugLog("Starting claim process...")
+
+    // Log the disabled state of the button before attempting claim
+    const isButtonDisabled = checkedIn || isClaiming || timeLeft > 0
+    addDebugLog(
+      `Check-in button disabled state: ${isButtonDisabled} (checkedIn: ${checkedIn}, isClaiming: ${isClaiming}, timeLeft: ${timeLeft})`,
+    )
 
     try {
       if (typeof window === "undefined" || !MiniKit.isInstalled()) {
@@ -234,10 +240,9 @@ function MainApp({
       })
 
       if (finalPayload.status === "error") {
-        addDebugLog(`MiniKit transaction error: ${finalPayload.message || "Unknown error"}`)
-        console.error("MiniKit transaction error payload:", finalPayload)
-        // Captura a mensagem de erro específica do MiniKit/World App
-        const errorMessage = finalPayload.message || "Transaction failed from MiniKit."
+        const errorMessage = finalPayload.message || "Transaction failed from MiniKit (unknown reason)."
+        addDebugLog(`ERROR: MiniKit transaction failed: ${errorMessage}`)
+        console.error("MiniKit transaction error payload:", finalPayload) // Manter para console nativo
         throw new Error(errorMessage)
       }
 
@@ -260,7 +265,7 @@ function MainApp({
         addDebugLog("UI updated after successful claim.")
       }, 2000) // Atraso de 2 segundos
     } catch (error: any) {
-      addDebugLog(`Claim error: ${error.message}`)
+      addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`) // Log mais proeminente para erros de claim
       console.error("Error claiming airdrop:", error)
       setClaimError(error.message || "Failed to claim KPP. Please try again.")
     } finally {
@@ -684,7 +689,7 @@ export default function WorldcoinAppWrapper() {
   const addDebugLog = useCallback((message: string) => {
     setDebugLogs((prevLogs) => {
       const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
-      return newLogs.slice(-20) // Manter os últimos 20 logs
+      return newLogs.slice(-50) // Manter os últimos 50 logs
     })
   }, [])
 
