@@ -61,7 +61,15 @@ const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4" as `0x${s
 const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
 // --- FIM PLACEHOLDER ---
 
-function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () => void }) {
+function MainApp({
+  address,
+  onLogout,
+  addDebugLog, // Receber addDebugLog como prop
+}: {
+  address: `0x${string}`
+  onLogout: () => void
+  addDebugLog: (message: string) => void
+}) {
   const [kppBalance, setKppBalance] = useState(0)
   const [balance, setBalance] = useState(1250.75) // Saldo WLD apenas para staking
   const [stakedAmount, setStakedAmount] = useState(500)
@@ -72,18 +80,6 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   const [activeTab, setActiveTab] = useState("airdrop")
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [debugLogs, setDebugLogs] = useState<string[]>([]) // Estado para logs de depuração
-
-  const addDebugLog = useCallback((message: string) => {
-    setDebugLogs((prevLogs) => {
-      const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
-      return newLogs.slice(-20) // Manter os últimos 20 logs
-    })
-  }, [])
-
-  const clearDebugLogs = useCallback(() => {
-    setDebugLogs([])
-  }, [])
 
   // Agora usando a World Chain Mainnet
   const publicClient = createPublicClient({
@@ -175,7 +171,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       clearInterval(interval)
       addDebugLog("MainApp useEffect cleanup. Interval cleared.")
     }
-  }, [address, addDebugLog]) // Busca novamente quando o endereço muda
+  }, [address, addDebugLog]) // Adicionar addDebugLog como dependência
 
   // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
@@ -678,26 +674,47 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
         </div>
       </div>
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <DebugConsole logs={debugLogs} onClear={clearDebugLogs} />
     </div>
   )
 }
 
 export default function WorldcoinAppWrapper() {
+  const [debugLogs, setDebugLogs] = useState<string[]>([]) // Estado para logs de depuração
+
+  const addDebugLog = useCallback((message: string) => {
+    setDebugLogs((prevLogs) => {
+      const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
+      return newLogs.slice(-20) // Manter os últimos 20 logs
+    })
+  }, [])
+
+  const clearDebugLogs = useCallback(() => {
+    setDebugLogs([])
+  }, [])
+
   return (
-    <MiniKitProvider>
-      <WorldcoinAppContent />
+    <MiniKitProvider addDebugLog={addDebugLog}>
+      <WorldcoinAppContent addDebugLog={addDebugLog} clearDebugLogs={clearDebugLogs} debugLogs={debugLogs} />
     </MiniKitProvider>
   )
 }
 
-function WorldcoinAppContent() {
+function WorldcoinAppContent({
+  addDebugLog,
+  clearDebugLogs,
+  debugLogs,
+}: {
+  addDebugLog: (message: string) => void
+  clearDebugLogs: () => void
+  debugLogs: string[]
+}) {
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState<`0x${string}` | undefined>(undefined)
   const [isLoadingSession, setIsLoadingSession] = useState(true)
 
   // Verifica a sessão ao carregar a página
   useEffect(() => {
+    addDebugLog("WorldcoinAppContent useEffect triggered. Checking session...")
     const checkSession = async () => {
       try {
         const res = await fetch("/api/auth/session")
@@ -705,63 +722,83 @@ function WorldcoinAppContent() {
         if (data.authenticated && data.user?.walletAddress) {
           setIsConnected(true)
           setWalletAddress(data.user.walletAddress as `0x${string}`)
+          addDebugLog(`Session found. Wallet address: ${data.user.walletAddress}`)
         } else {
           setIsConnected(false)
           setWalletAddress(undefined)
+          addDebugLog("No active session found.")
         }
-      } catch (error) {
+      } catch (error: any) {
+        addDebugLog(`Error checking session: ${error.message}`)
         console.error("Error checking session:", error)
         setIsConnected(false)
         setWalletAddress(undefined)
       } finally {
         setIsLoadingSession(false)
+        addDebugLog("Finished checking session.")
       }
     }
     checkSession()
 
     // Ouve por mudanças de sessão do MiniKit (se MiniKit.on estiver disponível)
     if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.on === "function") {
+      addDebugLog("MiniKit.on listeners registered for session changes.")
       const handleSessionChange = (session: any) => {
         if (session && session.address) {
           setIsConnected(true)
           setWalletAddress(session.address as `0x${string}`)
+          addDebugLog(`MiniKit session_changed: Connected to ${session.address}`)
         } else {
           setIsConnected(false)
           setWalletAddress(undefined)
+          addDebugLog("MiniKit session_changed: Disconnected or no address.")
         }
       }
       const handleDisconnected = () => {
         setIsConnected(false)
         setWalletAddress(undefined)
+        addDebugLog("MiniKit disconnected event received.")
       }
 
       MiniKit.on("session_changed", handleSessionChange)
       MiniKit.on("disconnected", handleDisconnected)
 
       // Não há um método 'off' explícito para MiniKit.on, então o listener persistirá.
+    } else {
+      addDebugLog("MiniKit.on not available or MiniKit not installed. Skipping session change listeners.")
     }
-  }, [])
+  }, [addDebugLog])
 
-  const handleLoginSuccess = useCallback((address: `0x${string}`) => {
-    setIsConnected(true)
-    setWalletAddress(address)
-  }, [])
+  const handleLoginSuccess = useCallback(
+    (address: `0x${string}`) => {
+      setIsConnected(true)
+      setWalletAddress(address)
+      addDebugLog(`Login successful. Wallet address: ${address}`)
+    },
+    [addDebugLog],
+  )
 
   const handleLogout = useCallback(async () => {
     try {
+      addDebugLog("Attempting to logout...")
       const res = await fetch("/api/auth/logout", { method: "POST" })
       if (res.ok) {
         setIsConnected(false)
         setWalletAddress(undefined)
+        addDebugLog("Logout successful.")
       } else {
-        console.error("Failed to logout:", await res.text())
+        const errorText = await res.text()
+        addDebugLog(`Failed to logout: ${errorText}`)
+        console.error("Failed to logout:", errorText)
       }
-    } catch (error) {
+    } catch (error: any) {
+      addDebugLog(`Error during logout: ${error.message}`)
       console.error("Error during logout:", error)
     }
-  }, [])
+  }, [addDebugLog])
 
   if (isLoadingSession) {
+    addDebugLog("App is loading session...")
     return (
       <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
         <AnimatedBackground />
@@ -769,6 +806,7 @@ function WorldcoinAppContent() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3"></div>
           Loading app...
         </div>
+        <DebugConsole logs={debugLogs} onClear={clearDebugLogs} />
       </div>
     )
   }
@@ -778,8 +816,9 @@ function WorldcoinAppContent() {
       {!isConnected || !walletAddress ? (
         <LandingScreen onLoginSuccess={handleLoginSuccess} />
       ) : (
-        <MainApp address={walletAddress} onLogout={handleLogout} />
+        <MainApp address={walletAddress} onLogout={handleLogout} addDebugLog={addDebugLog} />
       )}
+      <DebugConsole logs={debugLogs} onClear={clearDebugLogs} />
     </>
   )
 }
