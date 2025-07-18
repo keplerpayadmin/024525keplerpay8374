@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
-import { createPublicClient, http, parseAbi, formatUnits } from "viem"
-import { mainnet } from "viem/chains"
+import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem" // Adicionado encodeFunctionData
+import { mainnet } from "viem/chains" // Ou a sua cadeia alvo
 import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js" // Importa MiniKit diretamente
@@ -136,28 +136,40 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
     setClaimError(null)
 
     try {
-      // Numa integração real do MiniKit, usaria MiniKit.sendTransaction ou similar
-      // Para este exemplo, vamos simular uma transação bem-sucedida
-      console.log(`Calling claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`)
+      if (typeof window === "undefined" || !MiniKit.isInstalled()) {
+        throw new Error("MiniKit is not installed or not available.")
+      }
+      if (typeof MiniKit.commandsAsync?.sendTransaction !== "function") {
+        throw new Error("MiniKit.commandsAsync.sendTransaction is not available.")
+      }
 
-      // Simula a transação
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simula atraso de rede
+      // Codifica a chamada da função para claimAirdrop
+      const encodedData = encodeFunctionData({
+        abi: AIRDROP_CONTRACT_ABI,
+        functionName: "claimAirdrop",
+      })
 
-      // Simula o sucesso
+      console.log(`Sending transaction to claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`)
+      console.log("Encoded data:", encodedData)
+
+      // Envia a transação usando MiniKit
+      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
+        to: AIRDROP_CONTRACT_ADDRESS,
+        data: encodedData,
+        value: BigInt(0), // Nenhum token nativo enviado com esta transação
+      })
+
+      if (finalPayload.status === "error") {
+        throw new Error(finalPayload.message || "Transaction failed.")
+      }
+
+      console.log("Transaction sent, hash:", finalPayload.transactionHash)
+
+      // Atualiza o estado da UI após o sucesso da transação
       setCheckedIn(true)
       fetchKPPBalance() // Atualiza o saldo após a reivindicação
       updateCountdown() // Atualiza a contagem regressiva após a reivindicação
-      setTimeout(() => setCheckedIn(false), 3000)
-
-      // Exemplo de como chamaria com viem se tivesse um cliente de carteira
-      // const { request } = await publicClient.simulateContract({
-      //   account: address,
-      //   address: AIRDROP_CONTRACT_ADDRESS,
-      //   abi: AIRDROP_CONTRACT_ABI,
-      //   functionName: "claimAirdrop",
-      // });
-      // const hash = await walletClient.writeContract(request);
-      // await publicClient.waitForTransactionReceipt({ hash });
+      setTimeout(() => setCheckedIn(false), 3000) // Redefine o estado checkedIn após um atraso
     } catch (error: any) {
       console.error("Error claiming airdrop:", error)
       setClaimError(error.message || "Failed to claim KPP. Please try again.")
@@ -543,7 +555,9 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <h4 className="text-white font-medium">Ecosystem Growth</h4>
+                        <h4 className className="text-white font-medium">
+                          Ecosystem Growth
+                        </h4>
                         <p className="text-sm text-white/60">Expanding reach and user adoption</p>
                       </div>
                     </div>
