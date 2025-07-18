@@ -14,14 +14,11 @@ export async function POST(req: NextRequest) {
     // Verify nonce matches the one we created
     const storedNonce = cookies().get("siwe")?.value
     if (nonce !== storedNonce) {
-      return NextResponse.json(
-        {
-          status: "error",
-          isValid: false,
-          message: "Invalid nonce",
-        },
-        { status: 400 },
-      )
+      return NextResponse.json({
+        status: "error",
+        isValid: false,
+        message: "Invalid nonce",
+      })
     }
 
     // Verify the SIWE message
@@ -50,13 +47,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     console.error("SIWE verification error:", error)
-    return NextResponse.json(
-      {
-        status: "error",
-        isValid: false,
-        message: error.message || "Verification failed",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({
+      status: "error",
+      isValid: false,
+      message: error.message || "Verification failed",
+    })
   }
 }

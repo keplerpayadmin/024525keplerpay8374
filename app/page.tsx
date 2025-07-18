@@ -6,11 +6,10 @@ import { MiniKitProvider } from "@/minikit-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Gift, Coins, TrendingUp, CheckCircle, LogOut, ExternalLink, Handshake } from "lucide-react"
+import { Gift, Coins, TrendingUp, LogOut, ExternalLink, Handshake } from "lucide-react"
 import Image from "next/image"
 import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem"
 import { defineChain } from "viem"
@@ -18,6 +17,8 @@ import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
 import { DebugConsole } from "@/components/debug-console"
+import AirdropLoader from "./airdrop-loader"
+import { Suspense } from "react"
 
 // Definir a cadeia World Chain Mainnet
 const worldChainMainnet = defineChain({
@@ -119,7 +120,6 @@ function MainApp({
     }
 
     try {
-      // Removido log excessivo aqui, apenas o resultado final é importante
       const lastTime = await publicClient.readContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: AIRDROP_CONTRACT_ABI,
@@ -134,6 +134,21 @@ function MainApp({
     }
   }
 
+  const fetchDailyAirdropAmount = async () => {
+    try {
+      const amount = await publicClient.readContract({
+        address: AIRDROP_CONTRACT_ADDRESS,
+        abi: AIRDROP_CONTRACT_ABI,
+        functionName: "dailyAirdropAmount",
+      })
+      return Number(formatUnits(amount, 18))
+    } catch (error: any) {
+      addDebugLog(`Error fetching daily airdrop amount: ${error.message}`)
+      console.error("Error fetching daily airdrop amount:", error)
+      return 0 // Retorna 0 em caso de erro
+    }
+  }
+
   const updateCountdown = async () => {
     const lastClaim = await fetchLastClaimTime()
     const currentTime = Math.floor(Date.now() / 1000) // Tempo atual em segundos
@@ -143,14 +158,12 @@ function MainApp({
 
     if (lastClaim === 0 || currentTime >= nextClaimAvailableTime) {
       setTimeLeft(0) // Disponível para reivindicar
-      // Log apenas quando o estado muda ou é importante
       if (timeLeft !== 0) {
         addDebugLog("Claim available. timeLeft set to 0.")
       }
     } else {
       const remaining = nextClaimAvailableTime - currentTime
       setTimeLeft(remaining)
-      // Log apenas quando o tempo restante muda significativamente (ex: a cada minuto)
       if (Math.floor(remaining / 60) !== Math.floor(timeLeft / 60)) {
         addDebugLog(`Time left for claim: ${formatTime(remaining)} (${remaining} seconds)`)
       }
@@ -163,7 +176,6 @@ function MainApp({
     updateCountdown()
 
     const interval = setInterval(() => {
-      // Removido log "Interval triggered" para reduzir verbosidade
       updateCountdown()
     }, 1000) // Atualiza a contagem regressiva a cada segundo
 
@@ -171,7 +183,7 @@ function MainApp({
       clearInterval(interval)
       addDebugLog("MainApp useEffect cleanup. Interval cleared.")
     }
-  }, [address, addDebugLog, timeLeft]) // Adicionar timeLeft como dependência para re-avaliar o log de tempo
+  }, [address, addDebugLog, timeLeft])
 
   // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
@@ -198,13 +210,11 @@ function MainApp({
     setClaimError(null)
     addDebugLog("Starting claim process...")
 
-    // Log the disabled state of the button before attempting claim
     const isButtonDisabled = checkedIn || isClaiming || timeLeft > 0
     addDebugLog(
       `Check-in button disabled state: ${isButtonDisabled} (checkedIn: ${checkedIn}, isClaiming: ${isClaiming}, timeLeft: ${timeLeft})`,
     )
 
-    // Adicionar logs detalhados sobre o cooldown antes de enviar a transação
     const lastClaimTimeOnCall = await fetchLastClaimTime()
     const currentTimeOnCall = Math.floor(Date.now() / 1000)
     const nextClaimAvailableTimeOnCall = lastClaimTimeOnCall + 24 * 60 * 60
@@ -213,13 +223,15 @@ function MainApp({
     addDebugLog(`[Pre-Tx Check] nextClaimAvailableAt: ${nextClaimAvailableTimeOnCall}`)
     addDebugLog(`[Pre-Tx Check] Is claim available? ${currentTimeOnCall >= nextClaimAvailableTimeOnCall}`)
 
+    const dailyAirdrop = await fetchDailyAirdropAmount()
+    addDebugLog(`[Pre-Tx Check] Daily Airdrop Amount (from contract): ${dailyAirdrop} KPP`)
+
     try {
       if (typeof window === "undefined" || !MiniKit.isInstalled()) {
         throw new Error("MiniKit is not installed or not available in this browser environment.")
       }
       addDebugLog("MiniKit is installed.")
 
-      // Verifica se MiniKit.commandsAsync e sendTransaction estão disponíveis
       if (!MiniKit.commandsAsync || typeof MiniKit.commandsAsync.sendTransaction !== "function") {
         throw new Error(
           "MiniKit.commandsAsync.sendTransaction is not available. MiniKit might not be fully initialized or supported.",
@@ -227,7 +239,6 @@ function MainApp({
       }
       addDebugLog("MiniKit.commandsAsync.sendTransaction is available.")
 
-      // Codifica a chamada da função para claimAirdrop
       const encodedData = encodeFunctionData({
         abi: AIRDROP_CONTRACT_ABI,
         functionName: "claimAirdrop",
@@ -236,14 +247,13 @@ function MainApp({
       addDebugLog(`Encoded data for claimAirdrop: ${encodedData}`)
       addDebugLog(`Target contract address: ${AIRDROP_CONTRACT_ADDRESS}`)
 
-      // Envia a transação usando MiniKit com a estrutura 'transaction' como array
       addDebugLog("Calling MiniKit.commandsAsync.sendTransaction...")
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
           {
             to: AIRDROP_CONTRACT_ADDRESS,
             data: encodedData,
-            value: "0x0", // Valor em hexadecimal
+            value: "0x0",
           },
         ],
       })
@@ -251,30 +261,23 @@ function MainApp({
       if (finalPayload.status === "error") {
         const errorMessage = finalPayload.message || "Transaction failed from MiniKit (unknown reason)."
         addDebugLog(`ERROR: MiniKit transaction failed: ${errorMessage}`)
-        console.error("MiniKit transaction error payload:", finalPayload) // Manter para console nativo
+        console.error("MiniKit transaction error payload:", finalPayload)
         throw new Error(errorMessage)
       }
 
       addDebugLog(`Transaction sent successfully. Hash: ${finalPayload.transactionHash}`)
       console.log("Transaction sent successfully via MiniKit, hash:", finalPayload.transactionHash)
 
-      // Opcional: Você pode querer esperar pelo recibo da transação aqui para maior certeza
-      // const transactionReceipt = await publicClient.waitForTransactionReceipt({ hash: finalPayload.transactionHash });
-      // console.log("Transaction receipt:", transactionReceipt);
-      // addDebugLog(`Transaction receipt received. Status: ${transactionReceipt.status}`);
-
-      // Atualiza o estado da UI após o sucesso da transação
       setCheckedIn(true)
       addDebugLog("Transaction successful. Updating UI...")
-      // Pequeno atraso para permitir que a blockchain processe antes de buscar o novo saldo
       setTimeout(async () => {
-        await fetchKPPBalance() // Atualiza o saldo após a reivindicação
-        await updateCountdown() // Atualiza a contagem regressiva após a reivindicação
-        setCheckedIn(false) // Redefine o estado checkedIn
+        await fetchKPPBalance()
+        await updateCountdown()
+        setCheckedIn(false)
         addDebugLog("UI updated after successful claim.")
-      }, 2000) // Atraso de 2 segundos
+      }, 2000)
     } catch (error: any) {
-      addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`) // Log mais proeminente para erros de claim
+      addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`)
       console.error("Error claiming airdrop:", error)
       setClaimError(error.message || "Failed to claim KPP. Please try again.")
     } finally {
@@ -369,79 +372,15 @@ function MainApp({
 
           {/* Content based on active tab */}
           {activeTab === "airdrop" && (
-            <div className="space-y-4">
-              <Card className="bg-black/40 border-white/20 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Gift className="h-5 w-5" />
-                    Daily Check-in
-                  </CardTitle>
-                  <CardDescription className="text-white/60">Check in daily to earn 1 KPP token</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <div>
-                      <div className="text-lg font-semibold text-white">1 KPP</div>
-                      <div className="text-sm text-white/60">Daily reward available</div>
-                    </div>
-                    <Badge variant="secondary" className="bg-green-600/20 text-green-400 border-green-400/20">
-                      Available
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-white/60">Next check-in in:</span>
-                      <span className="text-white font-mono">{formatTime(timeLeft)}</span>
-                    </div>
-                    <Progress value={(86400 - timeLeft) / 864} className="h-2" />
-                  </div>
-
-                  <Button
-                    onClick={handleCheckIn}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    disabled={checkedIn || isClaiming || timeLeft > 0}
-                  >
-                    {isClaiming ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Claiming...
-                      </>
-                    ) : checkedIn ? (
-                      <>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Checked In!
-                      </>
-                    ) : (
-                      <>
-                        <Gift className="mr-2 h-4 w-4" />
-                        Check in
-                      </>
-                    )}
-                  </Button>
-                  {claimError && <p className="text-red-500 text-sm mt-2">{claimError}</p>}
-                </CardContent>
-              </Card>
-
-              {/* Check-in Streak */}
-              <Card className="bg-black/40 border-white/20 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white">Check-in Streak</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold text-orange-400">0 Days</div>
-                      <div className="text-sm text-white/60">Current streak</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-white">0 KPP</div>
-                      <div className="text-sm text-white/60">Total earned</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Suspense
+              fallback={
+                <div className="min-h-screen bg-black flex items-center justify-center">
+                  <div className="text-white">Loading...</div>
+                </div>
+              }
+            >
+              <AirdropLoader />
+            </Suspense>
           )}
 
           {activeTab === "staking" && (
@@ -693,12 +632,12 @@ function MainApp({
 }
 
 export default function WorldcoinAppWrapper() {
-  const [debugLogs, setDebugLogs] = useState<string[]>([]) // Estado para logs de depuração
+  const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = useCallback((message: string) => {
     setDebugLogs((prevLogs) => {
       const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
-      return newLogs.slice(-50) // Manter os últimos 50 logs
+      return newLogs.slice(-50)
     })
   }, [])
 
@@ -726,7 +665,6 @@ function WorldcoinAppContent({
   const [walletAddress, setWalletAddress] = useState<`0x${string}` | undefined>(undefined)
   const [isLoadingSession, setIsLoadingSession] = useState(true)
 
-  // Verifica a sessão ao carregar a página
   useEffect(() => {
     addDebugLog("WorldcoinAppContent useEffect triggered. Checking session...")
     const checkSession = async () => {
@@ -754,7 +692,6 @@ function WorldcoinAppContent({
     }
     checkSession()
 
-    // Ouve por mudanças de sessão do MiniKit (se MiniKit.on estiver disponível)
     if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.on === "function") {
       addDebugLog("MiniKit.on listeners registered for session changes.")
       const handleSessionChange = (session: any) => {
@@ -776,8 +713,6 @@ function WorldcoinAppContent({
 
       MiniKit.on("session_changed", handleSessionChange)
       MiniKit.on("disconnected", handleDisconnected)
-
-      // Não há um método 'off' explícito para MiniKit.on, então o listener persistirá.
     } else {
       addDebugLog("MiniKit.on not available or MiniKit not installed. Skipping session change listeners.")
     }

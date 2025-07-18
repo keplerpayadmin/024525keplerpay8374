@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import type { TransactionType } from "./types" // Assumindo que 'types.ts' existe ou será criado
+import type { Transaction } from "./types"
 
 // ABI simplificado para tokens ERC20
 const ERC20_ABI = [
@@ -104,7 +104,7 @@ class BlockchainTransactionService {
     }
   }
 
-  async getTransactionHistory(walletAddress: string, limit = 20): Promise<TransactionType[]> {
+  async getTransactionHistory(walletAddress: string, limit = 20): Promise<Transaction[]> {
     try {
       this.addDebugLog(`=== BUSCANDO TRANSAÇÕES REAIS DA BLOCKCHAIN ===`)
       this.addDebugLog(`Endereço: ${walletAddress}`)
@@ -125,7 +125,7 @@ class BlockchainTransactionService {
         return []
       }
 
-      const allTransactions: TransactionType[] = []
+      const allTransactions: Transaction[] = []
 
       // Obter o bloco atual
       const currentBlock = await this.provider.getBlockNumber()
