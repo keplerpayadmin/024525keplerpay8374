@@ -147,7 +147,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}.${secs.toString().padStart(2, "0")}`
   }
 
   const handleCheckIn = async () => {
@@ -181,11 +181,16 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       console.log("Encoded data:", encodedData)
       console.log("Target contract address:", AIRDROP_CONTRACT_ADDRESS)
 
-      // Envia a transação usando MiniKit
+      // Envia a transação usando MiniKit com a estrutura 'transaction' como array
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-        to: AIRDROP_CONTRACT_ADDRESS,
-        data: encodedData,
-        value: "0x0", // Alterado de BigInt(0) para "0x0"
+        transaction: [
+          // <--- AQUI: Envolvendo a transação num array sob a chave 'transaction'
+          {
+            to: AIRDROP_CONTRACT_ADDRESS,
+            data: encodedData,
+            value: "0x0", // Valor em hexadecimal
+          },
+        ],
       })
 
       if (finalPayload.status === "error") {
