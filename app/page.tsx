@@ -185,7 +185,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         to: AIRDROP_CONTRACT_ADDRESS,
         data: encodedData,
-        value: BigInt(0), // Nenhum token nativo enviado com esta transação
+        value: "0x0", // Alterado de BigInt(0) para "0x0"
       })
 
       if (finalPayload.status === "error") {
