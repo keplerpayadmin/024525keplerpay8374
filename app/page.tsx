@@ -363,7 +363,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
                       <div className="text-sm text-white/60">Current streak</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-semibold text-white">{kppBalance.toFixed(2)} KPP</div>
+                      <div className="text-lg font-semibold text-white">0 KPP</div> {/* Alterado para 0 KPP */}
                       <div className="text-sm text-white/60">Total earned</div>
                     </div>
                   </div>
