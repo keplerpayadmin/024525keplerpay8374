@@ -315,7 +315,7 @@ function MainApp({
           {
             to: contractAddress,
             data: encodedData, // Dados codificados para claimAirdrop()
-            value: "0x0",
+            value: 0n, // Alterado de "0x0" para 0n
           },
         ],
       })
