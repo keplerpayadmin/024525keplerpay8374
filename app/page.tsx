@@ -17,7 +17,7 @@ import { defineChain } from "viem"
 import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
-import { DebugConsole } from "@/components/debug-console" // Importar o novo componente
+import { DebugConsole } from "@/components/debug-console"
 
 // Definir a cadeia World Chain Mainnet
 const worldChainMainnet = defineChain({
@@ -92,10 +92,14 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   })
 
   const fetchKPPBalance = async () => {
-    if (!address) return 0
+    if (!address) {
+      addDebugLog("KPP Balance: No address provided.")
+      setKppBalance(0)
+      return
+    }
 
     try {
-      addDebugLog("Fetching KPP balance...")
+      addDebugLog(`Fetching KPP balance for address: ${address}...`)
       const kppAmount = await publicClient.readContract({
         address: KPP_TOKEN_ADDRESS,
         abi: KPP_TOKEN_ABI,
@@ -103,8 +107,8 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
         args: [address],
       })
       const formattedKpp = Number(formatUnits(kppAmount, 18))
-      setKppBalance(formattedKpp) // Assumindo 18 decimais para KPP
-      addDebugLog(`KPP Balance: ${formattedKpp.toFixed(2)}`)
+      setKppBalance(formattedKpp)
+      addDebugLog(`KPP Balance: ${formattedKpp.toFixed(2)} KPP (raw: ${kppAmount.toString()})`)
     } catch (error: any) {
       addDebugLog(`Error fetching KPP balance: ${error.message}`)
       console.error("Error fetching KPP balance:", error)
@@ -113,17 +117,20 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   }
 
   const fetchLastClaimTime = async () => {
-    if (!address) return 0
+    if (!address) {
+      addDebugLog("Last Claim Time: No address provided.")
+      return 0
+    }
 
     try {
-      addDebugLog("Fetching last claim time...")
+      addDebugLog(`Fetching last claim time for address: ${address}...`)
       const lastTime = await publicClient.readContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: AIRDROP_CONTRACT_ABI,
         functionName: "lastClaimTime",
         args: [address],
       })
-      addDebugLog(`Last Claim Time: ${Number(lastTime)}`)
+      addDebugLog(`Last Claim Time (raw from contract): ${Number(lastTime)}`)
       return Number(lastTime)
     } catch (error: any) {
       addDebugLog(`Error fetching last claim time: ${error.message}`)
@@ -133,29 +140,41 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   }
 
   const updateCountdown = async () => {
+    addDebugLog("Calling fetchLastClaimTime...")
     const lastClaim = await fetchLastClaimTime()
     const currentTime = Math.floor(Date.now() / 1000) // Tempo atual em segundos
     const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 dia em segundos
 
-    if (lastClaim === 0 || currentTime >= lastClaim + CLAIM_INTERVAL_SECONDS) {
+    addDebugLog(
+      `[Countdown] lastClaim: ${lastClaim} (from contract), currentTime: ${currentTime}, CLAIM_INTERVAL: ${CLAIM_INTERVAL_SECONDS}`,
+    )
+    const nextClaimAvailableTime = lastClaim + CLAIM_INTERVAL_SECONDS
+    addDebugLog(`[Countdown] Next claim available at timestamp: ${nextClaimAvailableTime}`)
+
+    if (lastClaim === 0 || currentTime >= nextClaimAvailableTime) {
       setTimeLeft(0) // Disponível para reivindicar
-      addDebugLog("Claim available.")
+      addDebugLog("Claim available. timeLeft set to 0.")
     } else {
-      const remaining = lastClaim + CLAIM_INTERVAL_SECONDS - currentTime
+      const remaining = nextClaimAvailableTime - currentTime
       setTimeLeft(remaining)
-      addDebugLog(`Time left for claim: ${formatTime(remaining)}`)
+      addDebugLog(`Time left for claim: ${formatTime(remaining)} (${remaining} seconds)`)
     }
   }
 
   useEffect(() => {
+    addDebugLog("MainApp useEffect triggered. Fetching initial data...")
     fetchKPPBalance()
     updateCountdown()
 
     const interval = setInterval(() => {
+      addDebugLog("Interval triggered. Updating countdown...")
       updateCountdown()
     }, 1000) // Atualiza a contagem regressiva a cada segundo
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      addDebugLog("MainApp useEffect cleanup. Interval cleared.")
+    }
   }, [address, addDebugLog]) // Busca novamente quando o endereço muda
 
   // Incremento automático das recompensas de staking (simulado)
@@ -659,7 +678,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
         </div>
       </div>
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <DebugConsole logs={debugLogs} onClear={clearDebugLogs} /> {/* Adicionar o DebugConsole aqui */}
+      <DebugConsole logs={debugLogs} onClear={clearDebugLogs} />
     </div>
   )
 }
