@@ -338,7 +338,7 @@ function MainApp({
           }, 2000)
           setClaimError("You have already claimed today. Please wait 24 hours.")
         } else {
-          throw new Error(errorMessage)
+          setClaimError("Transaction failed. Please check debug console for details.")
         }
         return
       }
@@ -499,6 +499,44 @@ function MainApp({
                 )}
               </AnimatePresence>
 
+              {/* Botão de Check-in */}
+              <AnimatePresence>
+                {!isInCooldown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative z-10 mb-8" // Adicionado mb-8 para espaçamento
+                  >
+                    <button
+                      className={`w-56 py-3 px-5 rounded-full ${
+                        canClaim && !isClaiming
+                          ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 hover:from-gray-200 hover:to-gray-300"
+                          : "bg-gradient-to-b from-gray-700 to-gray-800 text-gray-400"
+                      } font-bold text-sm shadow-lg border border-gray-300/30 relative overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200`}
+                      onClick={handleClaim}
+                      disabled={!canClaim || isClaiming}
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-b ${canClaim && !isClaiming ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
+                      />
+                      <div className="relative flex items-center justify-center gap-2">
+                        {isClaiming ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-t-gray-800 border-gray-400 rounded-full animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Check-in</span>
+                          </>
+                        )}
+                      </div>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Temporizador de Contagem Regressiva - Mostra se estiver em cooldown */}
               <AnimatePresence>
                 {isInCooldown && (
@@ -506,7 +544,7 @@ function MainApp({
                     initial={{ opacity: 0, y: 20, scale: 0.8 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.8 }}
-                    className="mb-8 relative z-10"
+                    className="relative z-10" // Removido mb-8, pois já está abaixo do botão
                   >
                     <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
                       <div className="flex items-center justify-center gap-3 mb-4">
@@ -577,44 +615,6 @@ function MainApp({
                       {/* Borda animada */}
                       <div className="absolute inset-0 rounded-2xl border border-cyan-400/30 animate-pulse" />
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Botão de Check-in */}
-              <AnimatePresence>
-                {!isInCooldown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="relative z-10"
-                  >
-                    <button
-                      className={`w-56 py-3 px-5 rounded-full ${
-                        canClaim && !isClaiming
-                          ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 hover:from-gray-200 hover:to-gray-300"
-                          : "bg-gradient-to-b from-gray-700 to-gray-800 text-gray-400"
-                      } font-bold text-sm shadow-lg border border-gray-300/30 relative overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200`}
-                      onClick={handleClaim}
-                      disabled={!canClaim || isClaiming}
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-b ${canClaim && !isClaiming ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
-                      />
-                      <div className="relative flex items-center justify-center gap-2">
-                        {isClaiming ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-t-gray-800 border-gray-400 rounded-full animate-spin" />
-                            <span>Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Check-in</span>
-                          </>
-                        )}
-                      </div>
-                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
