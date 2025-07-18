@@ -2,35 +2,33 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
 import Link from "next/link"
-import { Coins, Gift, Lock, Shield, CheckCircle, ArrowLeft, X, Clock } from "lucide-react"
-import { MiniKit, type VerifyCommandInput, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js"
-// import { useI18n } from "@/lib/i18n/context" // Removido
+import { Coins, Gift, ArrowLeft, Clock } from "lucide-react" // Removidos Lock, Shield, CheckCircle, X
+import { MiniKit } from "@worldcoin/minikit-js" // Removidos VerifyCommandInput, VerificationLevel, ISuccessResult
 
 interface AirdropClientProps {
   addDebugLog: (message: string) => void
 }
 
 export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
-  // const { t } = useI18n() // Removido
+  // Estados relacionados à quebra de corrente, World ID e abertura da caixa removidos
+  // const [chainsBreaking, setChainsBreaking] = useState(false)
+  // const [chainsBroken, setChainsBroken] = useState(false)
+  // const [worldIdVerifying, setWorldIdVerifying] = useState(false)
+  // const [worldIdVerified, setWorldIdVerified] = useState(false)
+  // const [worldIdFailed, setWorldIdFailed] = useState(false)
+  // const [boxOpened, setBoxOpened] = useState(false)
+  // const [showReward, setShowReward] = useState(false) // Isso será implicitamente verdadeiro se não estiver em cooldown
 
-  const [chainsBreaking, setChainsBreaking] = useState(false)
-  const [chainsBroken, setChainsBroken] = useState(false)
-  const [worldIdVerifying, setWorldIdVerifying] = useState(false)
-  const [worldIdVerified, setWorldIdVerified] = useState(false)
-  const [worldIdFailed, setWorldIdFailed] = useState(false)
-  const [boxOpened, setBoxOpened] = useState(false)
-  const [canClaim, setCanClaim] = useState(false)
+  const [canClaim, setCanClaim] = useState(false) // Isso será derivado do cooldown
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimSuccess, setClaimSuccess] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [showReward, setShowReward] = useState(false)
   const [showCountdown, setShowCountdown] = useState(false)
-  const [countdownTime, setCountdownTime] = useState(24 * 60 * 60) // 24 hours in seconds
+  const [countdownTime, setCountdownTime] = useState(24 * 60 * 60) // 24 horas em segundos
   const [isInCooldown, setIsInCooldown] = useState(false)
 
-  // Check localStorage for existing cooldown on component mount
+  // Verifica o localStorage para cooldown existente na montagem do componente
   useEffect(() => {
     addDebugLog("AirdropClient useEffect: Checking cooldown status.")
     const checkCooldownStatus = () => {
@@ -39,26 +37,28 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         const lastClaimTimestamp = Number.parseInt(lastClaimTime)
         const now = Date.now()
         const timeDiff = now - lastClaimTimestamp
-        const cooldownPeriod = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+        const cooldownPeriod = 24 * 60 * 60 * 1000 // 24 horas em milissegundos
 
         if (timeDiff < cooldownPeriod) {
-          // Still in cooldown
+          // Ainda em cooldown
           const remainingTime = Math.ceil((cooldownPeriod - timeDiff) / 1000)
           setCountdownTime(remainingTime)
           setShowCountdown(true)
           setIsInCooldown(true)
-          setCanClaim(false)
+          setCanClaim(false) // Não pode reivindicar se estiver em cooldown
           addDebugLog(
             `Cooldown active. Remaining: ${formatTime(remainingTime).hours}:${formatTime(remainingTime).minutes}:${formatTime(remainingTime).seconds}`,
           )
         } else {
-          // Cooldown expired, clear localStorage
+          // Cooldown expirou, limpa o localStorage
           localStorage.removeItem("airdrop_last_claim")
           setIsInCooldown(false)
           setShowCountdown(false)
+          setCanClaim(true) // Pode reivindicar se o cooldown expirou
           addDebugLog("Cooldown expired. Claim available.")
         }
       } else {
+        setCanClaim(true) // Pode reivindicar se não houver reivindicação anterior
         addDebugLog("No previous claim found in localStorage. Claim available.")
       }
     }
@@ -66,37 +66,20 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
     checkCooldownStatus()
   }, [addDebugLog])
 
-  // Reset World ID verification on component mount to ensure fresh verification each time
-  useEffect(() => {
-    if (!isInCooldown) {
-      setWorldIdVerified(false)
-      setWorldIdFailed(false)
-      setChainsBroken(false)
-      setBoxOpened(false)
-      setShowReward(false)
-      setCanClaim(false)
-      addDebugLog("AirdropClient useEffect: Resetting state for new claim cycle.")
-    }
-  }, [isInCooldown, addDebugLog])
-
-  // Countdown effect
+  // Efeito de contagem regressiva
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (showCountdown && countdownTime > 0) {
       interval = setInterval(() => {
         setCountdownTime((prev) => {
           if (prev <= 1) {
-            // Countdown finished
+            // Contagem regressiva finalizada
             addDebugLog("Countdown finished. Resetting airdrop state.")
             setShowCountdown(false)
             setIsInCooldown(false)
-            setCanClaim(false)
-            setBoxOpened(false)
-            setShowReward(false)
-            setChainsBroken(false)
-            setWorldIdVerified(false)
+            setCanClaim(true) // Habilita o botão de reivindicação
             localStorage.removeItem("airdrop_last_claim")
-            return 24 * 60 * 60 // Reset to 24 hours
+            return 0 // Define como 0, pois está disponível
           }
           return prev - 1
         })
@@ -122,129 +105,14 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
   const startCooldown = () => {
     const now = Date.now()
     localStorage.setItem("airdrop_last_claim", now.toString())
-    setCountdownTime(24 * 60 * 60) // 24 hours
+    setCountdownTime(24 * 60 * 60) // 24 horas
     setShowCountdown(true)
     setIsInCooldown(true)
-    setCanClaim(false)
+    setCanClaim(false) // Desabilita o botão de reivindicação
     addDebugLog("Claim successful. Starting 24h cooldown.")
   }
 
-  const handleBoxClick = async () => {
-    if (isInCooldown || showCountdown) {
-      addDebugLog("Box click ignored: In cooldown.")
-      return
-    }
-
-    if (!chainsBroken && !chainsBreaking) {
-      addDebugLog("Starting chain breaking animation.")
-      setChainsBreaking(true)
-
-      setTimeout(() => {
-        setChainsBroken(true)
-        setChainsBreaking(false)
-        addDebugLog("Chains broken. Initiating World ID verification.")
-        handleWorldIdVerification()
-      }, 1500)
-    }
-  }
-
-  const proceedAfterVerification = () => {
-    addDebugLog("World ID verification successful (or simulated). Proceeding to open box.")
-    setWorldIdVerified(true)
-    setWorldIdVerifying(false)
-    setWorldIdFailed(false)
-
-    setTimeout(() => {
-      setBoxOpened(true)
-      setTimeout(() => {
-        setShowReward(true)
-        setCanClaim(true)
-        addDebugLog("Box opened. Reward shown. Claim button enabled.")
-      }, 1000)
-    }, 500)
-  }
-
-  const failVerification = () => {
-    addDebugLog("World ID verification failed.")
-    setWorldIdVerified(false)
-    setWorldIdVerifying(false)
-    setWorldIdFailed(true)
-  }
-
-  const handleWorldIdVerification = async () => {
-    setWorldIdVerifying(true)
-    setWorldIdFailed(false)
-    setClaimError(null)
-
-    try {
-      if (!MiniKit.isInstalled()) {
-        addDebugLog("MiniKit not installed, simulating World ID verification success.")
-        setTimeout(() => {
-          proceedAfterVerification()
-        }, 2000)
-        return
-      }
-
-      const verifyPayload: VerifyCommandInput = {
-        action: "world_id",
-        signal: `airdrop_${Date.now()}`,
-        verification_level: VerificationLevel.Orb,
-      }
-
-      try {
-        addDebugLog("Calling MiniKit.commandsAsync.verify for World ID.")
-
-        const verificationTimeout = setTimeout(() => {
-          addDebugLog("World ID verification timeout. Failing verification.")
-          failVerification()
-        }, 10000)
-
-        const { finalPayload } = await MiniKit.commandsAsync.verify(verifyPayload)
-
-        clearTimeout(verificationTimeout)
-
-        addDebugLog(`World ID verification response: ${JSON.stringify(finalPayload)}`)
-
-        if (finalPayload.status === "error") {
-          addDebugLog("World ID verification cancelled by user or error from MiniKit.")
-          failVerification()
-          return
-        }
-
-        try {
-          addDebugLog("Attempting backend verification for World ID proof.")
-          const verifyResponse = await fetch("/api/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              payload: finalPayload as ISuccessResult,
-              action: "world_id",
-              signal: verifyPayload.signal,
-            }),
-          })
-
-          const verifyResponseJson = await verifyResponse.json()
-          addDebugLog(`Backend verification response: ${JSON.stringify(verifyResponseJson)}`)
-        } catch (backendError: any) {
-          addDebugLog(`Backend verification error, but continuing: ${backendError.message}`)
-        }
-
-        proceedAfterVerification()
-      } catch (verifyError: any) {
-        addDebugLog(
-          `World ID verification error (MiniKit call failed): ${verifyError.message}. Proceeding as verified (as per requirements).`,
-        )
-        proceedAfterVerification()
-      }
-    } catch (error: any) {
-      addDebugLog(
-        `General error in World ID verification: ${error.message}. Proceeding as verified (as per requirements).`,
-      )
-      proceedAfterVerification()
-    }
-  }
+  // Funções handleBoxClick, proceedAfterVerification, failVerification, handleWorldIdVerification removidas
 
   const handleClaim = async () => {
     if (!canClaim || isClaiming) {
@@ -264,7 +132,6 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
       }
       addDebugLog("MiniKit is installed.")
 
-      // Use o endereço do contrato de Airdrop correto
       const contractAddress = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
       addDebugLog(`Using Airdrop Contract Address: ${contractAddress}`)
 
@@ -297,7 +164,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         transaction: [
           {
             to: contractAddress,
-            data: "0x5b88349d", // Encoded data for claimAirdrop()
+            data: "0x5b88349d", // Dados codificados para claimAirdrop()
             value: "0x0",
           },
         ],
@@ -329,11 +196,11 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
       addDebugLog(`Airdrop claimed successfully. Transaction Hash: ${finalPayload.transactionHash}`)
 
       setClaimSuccess(true)
-      setCanClaim(false)
+      setCanClaim(false) // Desabilita o botão de reivindicação imediatamente
 
       setTimeout(() => {
         setClaimSuccess(false)
-        startCooldown()
+        startCooldown() // Inicia o cooldown após um pequeno atraso para visibilidade da mensagem de sucesso
       }, 3000)
     } catch (error: any) {
       addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`)
@@ -351,7 +218,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         }, 2000)
         setClaimError("You have already claimed today. Please wait 24 hours.")
       } else {
-        setClaimError("Failed to claim KPP. Please try again.") // Substituído t.airdrop.claimFailed
+        setClaimError("Failed to claim KPP. Please try again.")
       }
     } finally {
       setIsClaiming(false)
@@ -363,20 +230,20 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden flex flex-col">
-      {/* Back Button */}
+      {/* Botão Voltar */}
       <div className="absolute top-4 left-4 z-50">
         <Link
           href="/"
           className="flex items-center gap-2 px-4 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-white hover:bg-gray-800/80 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Back</span> {/* Substituído t.common.back */}
+          <span className="text-sm font-medium">Back</span>
         </Link>
       </div>
 
-      {/* Moving Light Lines Background - Same as presentation.tsx */}
+      {/* Fundo de Linhas de Luz em Movimento - Igual ao presentation.tsx */}
       <div className="absolute inset-0">
-        {/* Horizontal Moving Lines */}
+        {/* Linhas Horizontais em Movimento */}
         {[...Array(12)].map((_, i) => (
           <div
             key={`h-line-${i}`}
@@ -391,7 +258,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
           />
         ))}
 
-        {/* Vertical Moving Lines */}
+        {/* Linhas Verticais em Movimento */}
         {[...Array(10)].map((_, i) => (
           <div
             key={`v-line-${i}`}
@@ -406,7 +273,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
           />
         ))}
 
-        {/* Diagonal Moving Lines */}
+        {/* Linhas Diagonais em Movimento */}
         {[...Array(8)].map((_, i) => (
           <div
             key={`d-line-${i}`}
@@ -422,7 +289,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         ))}
       </div>
 
-      {/* Static Grid */}
+      {/* Grade Estática */}
       <div
         className="absolute inset-0 opacity-10"
         style={{
@@ -434,7 +301,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         }}
       />
 
-      {/* Central Glow Effect */}
+      {/* Efeito de Brilho Central */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse" />
         <div
@@ -447,7 +314,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         />
       </div>
 
-      {/* Rotating Rings */}
+      {/* Anéis Rotativos */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className="w-72 h-72 border border-white/10 rounded-full animate-spin"
@@ -459,9 +326,9 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         />
       </div>
 
-      {/* Main Content */}
+      {/* Conteúdo Principal */}
       <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
-        {/* Title */}
+        {/* Título */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -471,14 +338,12 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
           <h1 className="text-4xl font-bold tracking-tighter mb-2">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
               Daily Airdrop
-            </span>{" "}
-            {/* Substituído t.airdrop.title */}
+            </span>
           </h1>
-          <p className="text-gray-400 text-sm">Claim your daily KPP tokens</p>{" "}
-          {/* Substituído t.airdrop.everyDayReward */}
+          <p className="text-gray-400 text-sm">Claim your daily KPP tokens</p>
         </motion.div>
 
-        {/* Countdown Timer - Show if in cooldown */}
+        {/* Temporizador de Contagem Regressiva - Mostra se estiver em cooldown */}
         <AnimatePresence>
           {showCountdown && isInCooldown && (
             <motion.div
@@ -490,12 +355,11 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
               <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <Clock className="w-5 h-5 text-cyan-400" />
-                  <span className="text-cyan-400 font-medium text-sm">Next claim in:</span>{" "}
-                  {/* Substituído t.airdrop.nextClaimIn */}
+                  <span className="text-cyan-400 font-medium text-sm">Next claim in:</span>
                 </div>
 
                 <div className="flex items-center justify-center gap-4">
-                  {/* Hours */}
+                  {/* Horas */}
                   <div className="text-center">
                     <motion.div
                       className="text-3xl font-bold text-white tabular-nums"
@@ -510,13 +374,12 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
                     >
                       {timeDisplay.hours}
                     </motion.div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Hours</div>{" "}
-                    {/* Substituído t.airdrop.hours */}
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Hours</div>
                   </div>
 
                   <div className="text-2xl text-white font-bold">:</div>
 
-                  {/* Minutes */}
+                  {/* Minutos */}
                   <div className="text-center">
                     <motion.div
                       className="text-3xl font-bold text-white tabular-nums"
@@ -531,13 +394,12 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
                     >
                       {timeDisplay.minutes}
                     </motion.div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Minutes</div>{" "}
-                    {/* Substituído t.airdrop.minutes */}
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Minutes</div>
                   </div>
 
                   <div className="text-2xl text-white font-bold">:</div>
 
-                  {/* Seconds */}
+                  {/* Segundos */}
                   <div className="text-center">
                     <motion.div
                       className="text-3xl font-bold text-white tabular-nums"
@@ -552,337 +414,42 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
                     >
                       {timeDisplay.seconds}
                     </motion.div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Seconds</div>{" "}
-                    {/* Substituído t.airdrop.seconds */}
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Seconds</div>
                   </div>
                 </div>
 
-                {/* Animated border */}
+                {/* Borda animada */}
                 <div className="absolute inset-0 rounded-2xl border border-cyan-400/30 animate-pulse" />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* World ID Status */}
-        <AnimatePresence>
-          {worldIdVerifying && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-2 border-t-blue-400 border-blue-700 rounded-full animate-spin" />
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-400 font-medium">Verifying World ID...</span>{" "}
-                {/* Substituído t.airdrop.verifying */}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {worldIdVerified && !boxOpened && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-green-900/30 border border-green-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 font-medium">World ID Verified!</span>{" "}
-                {/* Substituído t.airdrop.verified */}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {worldIdFailed && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-red-900/30 border border-red-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <X className="w-5 h-5 text-red-400" />
-                <span className="text-red-400 font-medium">World ID Verification Failed!</span>{" "}
-                {/* Substituído t.airdrop.verificationFailed */}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Surprise Box */}
+        {/* Conteúdo Principal do Airdrop - Simplificado */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-8 relative"
         >
-          <div className="relative w-64 h-64 mx-auto">
-            {/* Box Container */}
-            <motion.div
-              className={`absolute inset-0 ${isInCooldown ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-              onClick={handleBoxClick}
-              whileHover={{ scale: chainsBroken || isInCooldown ? 1 : 1.05 }}
-              whileTap={{ scale: chainsBroken || isInCooldown ? 1 : 0.95 }}
-            >
-              {/* Box Base */}
-              <div className="relative w-full h-full">
-                {/* Box Bottom */}
-                <motion.div
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48 h-32 bg-gradient-to-br from-amber-600 via-yellow-500 to-amber-700 rounded-lg shadow-2xl border-4 border-yellow-400/50"
-                  style={{
-                    boxShadow: `
-                      0 0 30px rgba(251, 191, 36, 0.5),
-                      inset 0 0 20px rgba(255, 255, 255, 0.2)
-                    `,
-                  }}
-                >
-                  {/* Box Pattern */}
-                  <div className="absolute inset-2 border-2 border-yellow-300/30 rounded" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <Gift className="w-8 h-8 text-yellow-200" />
-                  </div>
-                </motion.div>
-
-                {/* Box Lid - Moved further down from top-12 to top-16 */}
-                <AnimatePresence>
-                  {!boxOpened && (
-                    <motion.div
-                      className="absolute top-16 left-1/2 transform -translate-x-1/2 w-48 h-16 bg-gradient-to-br from-amber-500 via-yellow-400 to-amber-600 rounded-lg shadow-xl border-4 border-yellow-300/50"
-                      style={{
-                        boxShadow: `
-                          0 0 25px rgba(251, 191, 36, 0.4),
-                          inset 0 0 15px rgba(255, 255, 255, 0.3)
-                        `,
-                      }}
-                      exit={{
-                        rotateX: -120,
-                        y: -50,
-                        opacity: 0.7,
-                        transition: { duration: 0.8, ease: "easeOut" },
-                      }}
-                    >
-                      <div className="absolute inset-2 border-2 border-yellow-200/40 rounded" />
-                      {/* Ribbon */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-2 bg-gradient-to-r from-red-500 to-red-600 shadow-lg" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Chain - Only Horizontal - Adjusted position to match new lid position */}
-                <AnimatePresence>
-                  {!chainsBroken && (
-                    <motion.div
-                      className="absolute top-28 left-1/2 transform -translate-x-1/2 w-52 h-1 bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 rounded-full shadow-lg"
-                      style={{
-                        boxShadow: `
-                          0 0 10px rgba(107, 114, 128, 0.8),
-                          inset 0 0 5px rgba(255, 255, 255, 0.3)
-                        `,
-                      }}
-                      exit={{
-                        scale: 0,
-                        opacity: 0,
-                        transition: { duration: 0.5, ease: "easeOut" },
-                      }}
-                    >
-                      {/* Chain Links */}
-                      {[...Array(10)].map((_, i) => (
-                        <motion.div
-                          key={`chain-link-${i}`}
-                          className="absolute w-6 h-3 border-2 border-gray-400 rounded-full bg-gradient-to-b from-gray-300 to-gray-500"
-                          style={{
-                            left: `${i * 20}px`,
-                            top: "-5px",
-                            boxShadow: "inset 0 0 3px rgba(255,255,255,0.5)",
-                          }}
-                          animate={
-                            chainsBreaking
-                              ? {
-                                  scale: [1, 0.8, 0],
-                                  opacity: [1, 0.5, 0],
-                                  y: [0, 10, 20],
-                                }
-                              : {}
-                          }
-                          transition={{ delay: i * 0.05 }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Padlock - Adjusted position to match new chain position */}
-                <AnimatePresence>
-                  {!chainsBroken && (
-                    <motion.div
-                      className="absolute top-24 left-1/2 transform -translate-x-1/2 z-30"
-                      exit={{
-                        scale: 0,
-                        rotate: 180,
-                        opacity: 0,
-                        transition: { duration: 0.5, ease: "easeOut" },
-                      }}
-                    >
-                      <div className="relative">
-                        {/* Padlock Glow */}
-                        <div
-                          className="absolute inset-0 bg-gray-300 rounded-lg blur-sm"
-                          style={{
-                            boxShadow: `
-                              0 0 20px rgba(156, 163, 175, 0.8),
-                              0 0 40px rgba(156, 163, 175, 0.6)
-                            `,
-                          }}
-                        />
-                        {/* Padlock Body */}
-                        <div className="relative bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 w-10 h-12 rounded-lg border-2 border-gray-200 shadow-xl">
-                          {/* Padlock Shackle */}
-                          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 border-4 border-gray-300 rounded-t-full bg-transparent" />
-                          {/* Keyhole */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <Lock className="w-4 h-4 text-gray-700" />
-                          </div>
-                          {/* Metallic shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent rounded-lg" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Chain Breaking Effect */}
-                {chainsBreaking && (
-                  <>
-                    {[...Array(15)].map((_, i) => (
-                      <motion.div
-                        key={`break-particle-${i}`}
-                        className="absolute w-1 h-1 bg-gray-400 rounded-full"
-                        initial={{
-                          x: 120,
-                          y: 120,
-                          scale: 1,
-                          opacity: 1,
-                        }}
-                        animate={{
-                          x: 120 + (Math.random() - 0.5) * 200,
-                          y: 120 + (Math.random() - 0.5) * 200,
-                          scale: [1, 0.5, 0],
-                          opacity: [1, 0.8, 0],
-                        }}
-                        transition={{
-                          duration: 1,
-                          delay: i * 0.05,
-                          ease: "easeOut",
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {/* Sparkles Effect */}
-                {boxOpened && (
-                  <>
-                    {[...Array(12)].map((_, i) => (
-                      <motion.div
-                        key={`sparkle-${i}`}
-                        className="absolute w-2 h-2 bg-yellow-300 rounded-full"
-                        initial={{
-                          x: 120,
-                          y: 120,
-                          scale: 0,
-                          opacity: 1,
-                        }}
-                        animate={{
-                          x: 120 + Math.cos((i * Math.PI * 2) / 12) * 100,
-                          y: 120 + Math.sin((i * Math.PI * 2) / 12) * 100,
-                          scale: [0, 1, 0],
-                          opacity: [1, 1, 0],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          delay: i * 0.1,
-                          ease: "easeOut",
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {/* TPF Logo Reveal */}
-                <AnimatePresence>
-                  {showReward && (
-                    <motion.div
-                      className="absolute top-4 left-1/2 transform -translate-x-1/2"
-                      initial={{ y: 50, opacity: 0, scale: 0.5 }}
-                      animate={{
-                        y: 0,
-                        opacity: 1,
-                        scale: 1,
-                        rotateY: [0, 360],
-                      }}
-                      transition={{
-                        duration: 1,
-                        rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-                      }}
-                    >
-                      <div className="relative w-24 h-24">
-                        {/* Glow Effect */}
-                        <div
-                          className="absolute inset-0 bg-white rounded-full"
-                          style={{
-                            boxShadow: `
-                              0 0 40px rgba(255, 255, 255, 0.8),
-                              0 0 80px rgba(255, 255, 255, 0.6),
-                              0 0 120px rgba(255, 255, 255, 0.4)
-                            `,
-                            animation: "pulse 1s ease-in-out infinite",
-                          }}
-                        />
-                        <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
-                          <Image
-                            src="/images/logo-tpf.png"
-                            alt="TPF Logo"
-                            width={88}
-                            height={88}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
+          <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+            {/* Ícone de Presente Central */}
+            <div className="relative w-48 h-48 flex items-center justify-center bg-gradient-to-br from-yellow-500 to-amber-600 rounded-full shadow-2xl border-4 border-yellow-400/50">
+              <Gift className="w-24 h-24 text-yellow-200" />
+              {/* Efeito de Brilho */}
+              <div
+                className="absolute inset-0 bg-white rounded-full"
+                style={{
+                  boxShadow: `
+                    0 0 40px rgba(255, 255, 255, 0.8),
+                    0 0 80px rgba(255, 255, 255, 0.6),
+                    0 0 120px rgba(255, 255, 255, 0.4)
+                  `,
+                  animation: "pulse 1s ease-in-out infinite",
+                }}
+              />
+            </div>
           </div>
-
-          {/* Click instruction */}
-          {!chainsBroken && !chainsBreaking && !isInCooldown && (
-            <motion.p
-              className="text-gray-400 text-sm mt-4"
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            >
-              Click the box to break the chain
-            </motion.p>
-          )}
-
-          {chainsBreaking && (
-            <motion.p
-              className="text-yellow-400 text-sm mt-4 font-medium"
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY }}
-            >
-              Breaking the chain...
-            </motion.p>
-          )}
 
           {isInCooldown && (
             <motion.p
@@ -895,9 +462,9 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
           )}
         </motion.div>
 
-        {/* Claim Button */}
+        {/* Botão de Reivindicação */}
         <AnimatePresence>
-          {showReward && !showCountdown && !isInCooldown && (
+          {!isInCooldown && ( // Mostra o botão se não estiver em cooldown
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -906,7 +473,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
             >
               <button
                 className={`w-56 py-3 px-5 rounded-full ${
-                  canClaim
+                  canClaim && !isClaiming
                     ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 hover:from-gray-200 hover:to-gray-300"
                     : "bg-gradient-to-b from-gray-700 to-gray-800 text-gray-400"
                 } font-bold text-sm shadow-lg border border-gray-300/30 relative overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200`}
@@ -914,7 +481,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
                 disabled={!canClaim || isClaiming}
               >
                 <div
-                  className={`absolute inset-0 bg-gradient-to-b ${canClaim ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
+                  className={`absolute inset-0 bg-gradient-to-b ${canClaim && !isClaiming ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
                 />
                 <div className="relative flex items-center justify-center gap-2">
                   {isClaiming ? (
@@ -922,13 +489,11 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
                       <div className="w-4 h-4 border-2 border-t-gray-800 border-gray-400 rounded-full animate-spin" />
                       <span>Processing...</span>
                     </>
-                  ) : canClaim ? (
+                  ) : (
                     <>
                       <Coins className="w-4 h-4" />
                       <span>Claim KPP</span>
                     </>
-                  ) : (
-                    <span>Claimed</span>
                   )}
                 </div>
               </button>
@@ -936,7 +501,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
           )}
         </AnimatePresence>
 
-        {/* Success/Error Messages */}
+        {/* Mensagens de Sucesso/Erro */}
         <AnimatePresence>
           {claimSuccess && (
             <motion.div
@@ -967,7 +532,7 @@ export default function AirdropClient({ addDebugLog }: AirdropClientProps) {
         </AnimatePresence>
       </div>
 
-      {/* Floating Particles */}
+      {/* Partículas Flutuantes */}
       {[...Array(25)].map((_, i) => (
         <div
           key={`particle-${i}`}
