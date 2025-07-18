@@ -480,23 +480,6 @@ function MainApp({
           {/* Content based on active tab */}
           {activeTab === "airdrop" && (
             <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
-              {/* Back Button (movido para dentro da aba airdrop para corresponder à imagem) */}
-
-              {/* Título */}
-              <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="mb-8"
-              >
-                <h1 className="text-4xl font-bold tracking-tighter mb-2">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
-                    Daily Airdrop
-                  </span>
-                </h1>
-                <p className="text-gray-400 text-sm">Claim your daily KPP tokens</p>
-              </motion.div>
-
               {/* Daily Streak Display */}
               <AnimatePresence>
                 {dailyStreak > 0 && (
@@ -528,7 +511,7 @@ function MainApp({
                     <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
                       <div className="flex items-center justify-center gap-3 mb-4">
                         <Clock className="w-5 h-5 text-cyan-400" />
-                        <span className="text-cyan-400 font-medium text-sm">Next claim in:</span>
+                        <span className="text-cyan-400 font-medium text-sm">Next check-in in:</span>
                       </div>
 
                       <div className="flex items-center justify-center gap-4">
@@ -598,42 +581,7 @@ function MainApp({
                 )}
               </AnimatePresence>
 
-              {/* Círculo Central Brilhante (como na imagem) */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mb-8 relative"
-              >
-                <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
-                  <div className="relative w-48 h-48 flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 shadow-2xl border-4 border-yellow-400/50">
-                    {/* Central Glow */}
-                    <div
-                      className="absolute inset-0 bg-white rounded-full"
-                      style={{
-                        boxShadow: `
-                          0 0 40px rgba(255, 255, 255, 0.8),
-                          0 0 80px rgba(255, 255, 255, 0.6),
-                          0 0 120px rgba(255, 255, 255, 0.4)
-                        `,
-                        animation: "pulse 1s ease-in-out infinite",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {isInCooldown && (
-                  <motion.p
-                    className="text-red-400 text-sm mt-4 font-medium"
-                    animate={{ opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    Wait for the countdown to finish
-                  </motion.p>
-                )}
-              </motion.div>
-
-              {/* Botão de Reivindicação */}
+              {/* Botão de Check-in */}
               <AnimatePresence>
                 {!isInCooldown && (
                   <motion.div
