@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { useState, useEffect, useCallback } from "react"
 import { LandingScreen } from "@/components/landing-screen"
 import { MiniKitProvider } from "@/minikit-provider"
@@ -9,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Gift, Coins, TrendingUp, LogOut, ExternalLink, Handshake } from "lucide-react"
+import { Gift, Coins, TrendingUp, LogOut, ExternalLink, Handshake, ArrowLeft, Clock, Flame } from "lucide-react"
 import Image from "next/image"
 import { createPublicClient, http, parseAbi, formatUnits, encodeFunctionData } from "viem"
 import { defineChain } from "viem"
@@ -17,8 +19,7 @@ import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
 import { DebugConsole } from "@/components/debug-console"
-import AirdropLoader from "./airdrop-loader"
-import { Suspense } from "react"
+import { motion, AnimatePresence } from "framer-motion" // Importar para animações
 
 // Definir a cadeia World Chain Mainnet
 const worldChainMainnet = defineChain({
@@ -75,18 +76,30 @@ function MainApp({
   const [balance, setBalance] = useState(1250.75) // Saldo WLD apenas para staking
   const [stakedAmount, setStakedAmount] = useState(500)
   const [stakeInput, setStakeInput] = useState("")
-  const [checkedIn, setCheckedIn] = useState(false)
+  const [checkedIn, setCheckedIn] = useState(false) // Manter para compatibilidade, mas a lógica será do airdrop
   const [stakingRewards, setStakingRewards] = useState(12.34)
-  const [timeLeft, setTimeLeft] = useState(86400) // Padrão 24 horas
   const [activeTab, setActiveTab] = useState("airdrop")
+
+  // Estados e funções do Airdrop (movidos de airdrop-client.tsx)
+  const [canClaim, setCanClaim] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
+  const [claimSuccess, setClaimSuccess] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
+  const [countdownTime, setCountdownTime] = useState(24 * 60 * 60) // 24 horas em segundos
+  const [isInCooldown, setIsInCooldown] = useState(false)
+  const [dailyStreak, setDailyStreak] = useState(0) // Novo estado para a sequência diária
 
   // Agora usando a World Chain Mainnet
   const publicClient = createPublicClient({
     chain: worldChainMainnet, // Usando a cadeia World Chain Mainnet
     transport: http(),
   })
+
+  // Função auxiliar para obter a string da data de hoje (YYYY-MM-DD)
+  const getTodayDateString = () => {
+    const today = new Date()
+    return today.toISOString().split("T")[0]
+  }
 
   const fetchKPPBalance = async () => {
     if (!address) {
@@ -149,41 +162,211 @@ function MainApp({
     }
   }
 
-  const updateCountdown = async () => {
-    const lastClaim = await fetchLastClaimTime()
-    const currentTime = Math.floor(Date.now() / 1000) // Tempo atual em segundos
-    const CLAIM_INTERVAL_SECONDS = 24 * 60 * 60 // 1 dia em segundos
+  // Função de cooldown e streak (movida de airdrop-client.tsx)
+  const startCooldown = () => {
+    const now = Date.now()
+    localStorage.setItem("airdrop_last_claim", now.toString())
+    localStorage.setItem("last_claim_date", getTodayDateString()) // Armazena a data de hoje
+    setCountdownTime(24 * 60 * 60) // 24 horas
+    setIsInCooldown(true)
+    setCanClaim(false) // Desabilita o botão de reivindicação
+    addDebugLog("Claim successful. Starting 24h cooldown.")
 
-    const nextClaimAvailableTime = lastClaim + CLAIM_INTERVAL_SECONDS
+    // Incrementa a sequência diária
+    setDailyStreak((prev) => {
+      const next = prev + 1
+      localStorage.setItem("daily_streak", next.toString())
+      return next
+    })
+    addDebugLog(`Daily streak incremented to: ${dailyStreak + 1}`)
+  }
 
-    if (lastClaim === 0 || currentTime >= nextClaimAvailableTime) {
-      setTimeLeft(0) // Disponível para reivindicar
-      if (timeLeft !== 0) {
-        addDebugLog("Claim available. timeLeft set to 0.")
+  // Lógica de verificação de cooldown e streak na montagem (movida de airdrop-client.tsx)
+  useEffect(() => {
+    addDebugLog("MainApp useEffect: Checking cooldown and streak status.")
+    const checkStatus = async () => {
+      // Lógica da sequência (streak)
+      const storedStreak = localStorage.getItem("daily_streak")
+      const lastClaimDate = localStorage.getItem("last_claim_date")
+      const todayDate = getTodayDateString()
+
+      if (storedStreak) {
+        setDailyStreak(Number.parseInt(storedStreak))
       }
-    } else {
-      const remaining = nextClaimAvailableTime - currentTime
-      setTimeLeft(remaining)
-      if (Math.floor(remaining / 60) !== Math.floor(timeLeft / 60)) {
-        addDebugLog(`Time left for claim: ${formatTime(remaining)} (${remaining} seconds)`)
+
+      if (lastClaimDate && lastClaimDate !== todayDate) {
+        // Se a última reivindicação não foi hoje, verifica se foi ontem para continuar a sequência
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0]
+        if (lastClaimDate !== yesterday) {
+          // Se não foi ontem, reinicia a sequência
+          setDailyStreak(0)
+          localStorage.setItem("daily_streak", "0")
+          addDebugLog("Daily streak reset due to missed day.")
+        }
       }
+
+      // Lógica do cooldown
+      const lastClaimTime = localStorage.getItem("airdrop_last_claim")
+      if (lastClaimTime) {
+        const lastClaimTimestamp = Number.parseInt(lastClaimTime)
+        const now = Date.now()
+        const timeDiff = now - lastClaimTimestamp
+        const cooldownPeriod = 24 * 60 * 60 * 1000 // 24 horas em milissegundos
+
+        if (timeDiff < cooldownPeriod) {
+          // Ainda em cooldown
+          const remainingTime = Math.ceil((cooldownPeriod - timeDiff) / 1000)
+          setCountdownTime(remainingTime)
+          setIsInCooldown(true)
+          setCanClaim(false) // Não pode reivindicar se estiver em cooldown
+          addDebugLog(
+            `Cooldown active. Remaining: ${formatTime(remainingTime).hours}:${formatTime(remainingTime).minutes}:${formatTime(remainingTime).seconds}`,
+          )
+        } else {
+          // Cooldown expirou, limpa o localStorage
+          localStorage.removeItem("airdrop_last_claim")
+          setIsInCooldown(false)
+          setCanClaim(true) // Pode reivindicar se o cooldown expirou
+          addDebugLog("Cooldown expired. Claim available.")
+        }
+      } else {
+        setCanClaim(true) // Pode reivindicar se não houver reivindicação anterior
+        addDebugLog("No previous claim found in localStorage. Claim available.")
+      }
+    }
+
+    checkStatus()
+  }, [addDebugLog])
+
+  // Efeito de contagem regressiva (movido de airdrop-client.tsx)
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isInCooldown && countdownTime > 0) {
+      interval = setInterval(() => {
+        setCountdownTime((prev) => {
+          if (prev <= 1) {
+            // Contagem regressiva finalizada
+            addDebugLog("Countdown finished. Resetting airdrop state.")
+            setIsInCooldown(false)
+            setCanClaim(true)
+            localStorage.removeItem("airdrop_last_claim")
+            return 0 // Define como 0, pois está disponível
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      clearInterval(interval)
+      addDebugLog("Countdown interval cleared.")
+    }
+  }, [isInCooldown, countdownTime, addDebugLog])
+
+  const formatTimeDisplay = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return {
+      hours: hours.toString().padStart(2, "0"),
+      minutes: minutes.toString().padStart(2, "0"),
+      seconds: secs.toString().padStart(2, "0"),
     }
   }
 
-  useEffect(() => {
-    addDebugLog("MainApp useEffect triggered. Fetching initial data...")
-    fetchKPPBalance()
-    updateCountdown()
-
-    const interval = setInterval(() => {
-      updateCountdown()
-    }, 1000) // Atualiza a contagem regressiva a cada segundo
-
-    return () => {
-      clearInterval(interval)
-      addDebugLog("MainApp useEffect cleanup. Interval cleared.")
+  // Função handleClaim (movida de airdrop-client.tsx)
+  const handleClaim = async () => {
+    if (!canClaim || isClaiming) {
+      addDebugLog("Claim button disabled or already claiming. Ignoring click.")
+      return
     }
-  }, [address, addDebugLog, timeLeft])
+
+    try {
+      setIsClaiming(true)
+      setClaimError(null)
+      setClaimSuccess(false)
+
+      addDebugLog("Starting claim process for KPP token.")
+
+      if (!MiniKit.isInstalled()) {
+        throw new Error("MiniKit is not installed.")
+      }
+      addDebugLog("MiniKit is installed.")
+
+      const contractAddress = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237" as `0x${string}`
+      addDebugLog(`Using Airdrop Contract Address: ${contractAddress}`)
+
+      const encodedData = encodeFunctionData({
+        abi: AIRDROP_CONTRACT_ABI,
+        functionName: "claimAirdrop",
+      })
+
+      addDebugLog("Calling MiniKit.commandsAsync.sendTransaction for claimAirdrop.")
+      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
+        transaction: [
+          {
+            to: contractAddress,
+            data: encodedData, // Dados codificados para claimAirdrop()
+            value: "0x0",
+          },
+        ],
+      })
+
+      addDebugLog(`MiniKit transaction response: ${JSON.stringify(finalPayload)}`)
+
+      if (finalPayload.status === "error") {
+        addDebugLog(`ERROR: MiniKit transaction failed: ${finalPayload.message || "Unknown error from MiniKit."}`)
+        const errorMessage = finalPayload.message || "Failed to claim airdrop."
+
+        if (
+          errorMessage.includes("Wait 24h") ||
+          errorMessage.includes("24h between claims") ||
+          errorMessage.includes("already claimed")
+        ) {
+          addDebugLog("Transaction failed due to cooldown. Starting cooldown.")
+          setTimeout(() => {
+            setClaimSuccess(false)
+            startCooldown()
+          }, 2000)
+          setClaimError("You have already claimed today. Please wait 24 hours.")
+        } else {
+          throw new Error(errorMessage)
+        }
+        return
+      }
+
+      addDebugLog(`Airdrop claimed successfully. Transaction Hash: ${finalPayload.transactionHash}`)
+
+      setClaimSuccess(true)
+      setCanClaim(false) // Desabilita o botão de reivindicação imediatamente
+
+      setTimeout(() => {
+        setClaimSuccess(false)
+        startCooldown() // Inicia o cooldown após um pequeno atraso para visibilidade da mensagem de sucesso
+        fetchKPPBalance() // Atualiza o saldo KPP após o claim
+      }, 3000)
+    } catch (error: any) {
+      addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
+
+      if (
+        errorMessage.includes("Wait 24h") ||
+        errorMessage.includes("24h between claims") ||
+        errorMessage.includes("already claimed")
+      ) {
+        addDebugLog("Claim failed due to cooldown. Starting cooldown.")
+        setTimeout(() => {
+          setClaimSuccess(false)
+          startCooldown()
+        }, 2000)
+        setClaimError("You have already claimed today. Please wait 24 hours.")
+      } else {
+        setClaimError("Failed to claim KPP. Please try again.")
+      }
+    } finally {
+      setIsClaiming(false)
+      addDebugLog("Claim process finished.")
+    }
+  }
 
   // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
@@ -193,98 +376,12 @@ function MainApp({
     return () => clearInterval(rewardTimer)
   }, [])
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}.${secs.toString().padStart(2, "0")}`
-  }
-
-  const handleCheckIn = async () => {
-    if (!address) {
-      setClaimError("Please connect your wallet first.")
-      addDebugLog("Attempted claim without connected wallet.")
-      return
-    }
-    setIsClaiming(true)
-    setClaimError(null)
-    addDebugLog("Starting claim process...")
-
-    const isButtonDisabled = checkedIn || isClaiming || timeLeft > 0
-    addDebugLog(
-      `Check-in button disabled state: ${isButtonDisabled} (checkedIn: ${checkedIn}, isClaiming: ${isClaiming}, timeLeft: ${timeLeft})`,
-    )
-
-    const lastClaimTimeOnCall = await fetchLastClaimTime()
-    const currentTimeOnCall = Math.floor(Date.now() / 1000)
-    const nextClaimAvailableTimeOnCall = lastClaimTimeOnCall + 24 * 60 * 60
-    addDebugLog(`[Pre-Tx Check] lastClaimTime (from contract): ${lastClaimTimeOnCall}`)
-    addDebugLog(`[Pre-Tx Check] currentTime (client): ${currentTimeOnCall}`)
-    addDebugLog(`[Pre-Tx Check] nextClaimAvailableAt: ${nextClaimAvailableTimeOnCall}`)
-    addDebugLog(`[Pre-Tx Check] Is claim available? ${currentTimeOnCall >= nextClaimAvailableTimeOnCall}`)
-
-    const dailyAirdrop = await fetchDailyAirdropAmount()
-    addDebugLog(`[Pre-Tx Check] Daily Airdrop Amount (from contract): ${dailyAirdrop} KPP`)
-
-    try {
-      if (typeof window === "undefined" || !MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not installed or not available in this browser environment.")
-      }
-      addDebugLog("MiniKit is installed.")
-
-      if (!MiniKit.commandsAsync || typeof MiniKit.commandsAsync.sendTransaction !== "function") {
-        throw new Error(
-          "MiniKit.commandsAsync.sendTransaction is not available. MiniKit might not be fully initialized or supported.",
-        )
-      }
-      addDebugLog("MiniKit.commandsAsync.sendTransaction is available.")
-
-      const encodedData = encodeFunctionData({
-        abi: AIRDROP_CONTRACT_ABI,
-        functionName: "claimAirdrop",
-      })
-
-      addDebugLog(`Encoded data for claimAirdrop: ${encodedData}`)
-      addDebugLog(`Target contract address: ${AIRDROP_CONTRACT_ADDRESS}`)
-
-      addDebugLog("Calling MiniKit.commandsAsync.sendTransaction...")
-      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [
-          {
-            to: AIRDROP_CONTRACT_ADDRESS,
-            data: encodedData,
-            value: "0x0",
-          },
-        ],
-      })
-
-      if (finalPayload.status === "error") {
-        const errorMessage = finalPayload.message || "Transaction failed from MiniKit (unknown reason)."
-        addDebugLog(`ERROR: MiniKit transaction failed: ${errorMessage}`)
-        console.error("MiniKit transaction error payload:", finalPayload)
-        throw new Error(errorMessage)
-      }
-
-      addDebugLog(`Transaction sent successfully. Hash: ${finalPayload.transactionHash}`)
-      console.log("Transaction sent successfully via MiniKit, hash:", finalPayload.transactionHash)
-
-      setCheckedIn(true)
-      addDebugLog("Transaction successful. Updating UI...")
-      setTimeout(async () => {
-        await fetchKPPBalance()
-        await updateCountdown()
-        setCheckedIn(false)
-        addDebugLog("UI updated after successful claim.")
-      }, 2000)
-    } catch (error: any) {
-      addDebugLog(`CRITICAL CLAIM ERROR: ${error.message}`)
-      console.error("Error claiming airdrop:", error)
-      setClaimError(error.message || "Failed to claim KPP. Please try again.")
-    } finally {
-      setIsClaiming(false)
-      addDebugLog("Claim process finished.")
-    }
-  }
+  // Efeito para buscar o saldo KPP e o tempo de cooldown inicial
+  useEffect(() => {
+    addDebugLog("MainApp useEffect triggered. Fetching initial data...")
+    fetchKPPBalance()
+    // A lógica de cooldown e streak já está no useEffect de checkStatus
+  }, [address, addDebugLog])
 
   const handleStake = () => {
     const amount = Number.parseFloat(stakeInput)
@@ -331,6 +428,8 @@ function MainApp({
     }
   }
 
+  const timeDisplay = formatTimeDisplay(countdownTime)
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <AnimatedBackground />
@@ -356,7 +455,7 @@ function MainApp({
             </Button>
           </div>
 
-          {/* KPP Balance Card */}
+          {/* KPP Balance Card (visível em todas as abas) */}
           <Card className="mb-6 bg-black/40 border-white/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
@@ -366,21 +465,243 @@ function MainApp({
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-yellow-400 mb-2">{kppBalance.toFixed(2)} KPP</div>
-              {/* Removido: <div className="text-sm text-white/60">Check-in Rewards</div> */}
             </CardContent>
           </Card>
 
           {/* Content based on active tab */}
           {activeTab === "airdrop" && (
-            <Suspense
-              fallback={
-                <div className="min-h-screen bg-black flex items-center justify-center">
-                  <div className="text-white">Loading...</div>
+            <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
+              {/* Back Button (movido para dentro da aba airdrop para corresponder à imagem) */}
+              <div className="absolute top-4 left-4 z-50">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-white hover:bg-gray-800/80 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="text-sm font-medium">Back</span>
+                </Link>
+              </div>
+
+              {/* Título */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+              >
+                <h1 className="text-4xl font-bold tracking-tighter mb-2">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
+                    Daily Airdrop
+                  </span>
+                </h1>
+                <p className="text-gray-400 text-sm">Claim your daily KPP tokens</p>
+              </motion.div>
+
+              {/* Daily Streak Display */}
+              <AnimatePresence>
+                {dailyStreak > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mb-6 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg"
+                  >
+                    <div className="flex items-center justify-center gap-3">
+                      <Flame className="w-5 h-5 text-purple-400" />
+                      <span className="text-purple-400 font-medium">
+                        Daily Streak: {dailyStreak} day{dailyStreak !== 1 ? "s" : ""}!
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Temporizador de Contagem Regressiva - Mostra se estiver em cooldown */}
+              <AnimatePresence>
+                {isInCooldown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                    className="mb-8 relative z-10"
+                  >
+                    <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <Clock className="w-5 h-5 text-cyan-400" />
+                        <span className="text-cyan-400 font-medium text-sm">Next claim in:</span>
+                      </div>
+
+                      <div className="flex items-center justify-center gap-4">
+                        {/* Horas */}
+                        <div className="text-center">
+                          <motion.div
+                            className="text-3xl font-bold text-white tabular-nums"
+                            animate={{
+                              textShadow: [
+                                "0 0 10px rgba(255,255,255,0.5)",
+                                "0 0 20px rgba(255,255,255,0.8)",
+                                "0 0 10px rgba(255,255,255,0.5)",
+                              ],
+                            }}
+                            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                          >
+                            {timeDisplay.hours}
+                          </motion.div>
+                          <div className="text-xs text-gray-400 uppercase tracking-wider">Hours</div>
+                        </div>
+
+                        <div className="text-2xl text-white font-bold">:</div>
+
+                        {/* Minutos */}
+                        <div className="text-center">
+                          <motion.div
+                            className="text-3xl font-bold text-white tabular-nums"
+                            animate={{
+                              textShadow: [
+                                "0 0 10px rgba(255,255,255,0.5)",
+                                "0 0 20px rgba(255,255,255,0.8)",
+                                "0 0 10px rgba(255,255,255,0.5)",
+                              ],
+                            }}
+                            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, delay: 0.5 }}
+                          >
+                            {timeDisplay.minutes}
+                          </motion.div>
+                          <div className="text-xs text-gray-400 uppercase tracking-wider">Minutes</div>
+                        </div>
+
+                        <div className="text-2xl text-white font-bold">:</div>
+
+                        {/* Segundos */}
+                        <div className="text-center">
+                          <motion.div
+                            className="text-3xl font-bold text-white tabular-nums"
+                            animate={{
+                              textShadow: [
+                                "0 0 10px rgba(255,255,255,0.5)",
+                                "0 0 20px rgba(255,255,255,0.8)",
+                                "0 0 10px rgba(255,255,255,0.5)",
+                              ],
+                            }}
+                            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, delay: 1 }}
+                          >
+                            {timeDisplay.seconds}
+                          </motion.div>
+                          <div className="text-xs text-gray-400 uppercase tracking-wider">Seconds</div>
+                        </div>
+                      </div>
+
+                      {/* Borda animada */}
+                      <div className="absolute inset-0 rounded-2xl border border-cyan-400/30 animate-pulse" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Círculo Central Brilhante (como na imagem) */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mb-8 relative"
+              >
+                <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+                  <div className="relative w-48 h-48 flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 shadow-2xl border-4 border-yellow-400/50">
+                    {/* Central Glow */}
+                    <div
+                      className="absolute inset-0 bg-white rounded-full"
+                      style={{
+                        boxShadow: `
+                          0 0 40px rgba(255, 255, 255, 0.8),
+                          0 0 80px rgba(255, 255, 255, 0.6),
+                          0 0 120px rgba(255, 255, 255, 0.4)
+                        `,
+                        animation: "pulse 1s ease-in-out infinite",
+                      }}
+                    />
+                  </div>
                 </div>
-              }
-            >
-              <AirdropLoader />
-            </Suspense>
+
+                {isInCooldown && (
+                  <motion.p
+                    className="text-red-400 text-sm mt-4 font-medium"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    Wait for the countdown to finish
+                  </motion.p>
+                )}
+              </motion.div>
+
+              {/* Botão de Reivindicação */}
+              <AnimatePresence>
+                {!isInCooldown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative z-10"
+                  >
+                    <button
+                      className={`w-56 py-3 px-5 rounded-full ${
+                        canClaim && !isClaiming
+                          ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 hover:from-gray-200 hover:to-gray-300"
+                          : "bg-gradient-to-b from-gray-700 to-gray-800 text-gray-400"
+                      } font-bold text-sm shadow-lg border border-gray-300/30 relative overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200`}
+                      onClick={handleClaim}
+                      disabled={!canClaim || isClaiming}
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-b ${canClaim && !isClaiming ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
+                      />
+                      <div className="relative flex items-center justify-center gap-2">
+                        {isClaiming ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-t-gray-800 border-gray-400 rounded-full animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Coins className="w-4 h-4" />
+                            <span>Claim KPP</span>
+                          </>
+                        )}
+                      </div>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Mensagens de Sucesso/Erro */}
+              <AnimatePresence>
+                {claimSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4 p-3 bg-green-900/30 border border-green-500/30 rounded-lg text-center relative z-10"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Coins className="text-green-400" size={16} />
+                      <span className="font-medium text-green-400">Claim Successful!</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {claimError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-center relative z-10"
+                  >
+                    <span className="text-red-400">{claimError}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
 
           {activeTab === "staking" && (
