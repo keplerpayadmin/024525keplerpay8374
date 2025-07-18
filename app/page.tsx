@@ -17,6 +17,7 @@ import { defineChain } from "viem"
 import { AnimatedBackground } from "@/components/animated-background"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
+import { DebugConsole } from "@/components/debug-console" // Importar o novo componente
 
 // Definir a cadeia World Chain Mainnet
 const worldChainMainnet = defineChain({
@@ -71,6 +72,18 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   const [activeTab, setActiveTab] = useState("airdrop")
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
+  const [debugLogs, setDebugLogs] = useState<string[]>([]) // Estado para logs de depuração
+
+  const addDebugLog = useCallback((message: string) => {
+    setDebugLogs((prevLogs) => {
+      const newLogs = [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]
+      return newLogs.slice(-20) // Manter os últimos 20 logs
+    })
+  }, [])
+
+  const clearDebugLogs = useCallback(() => {
+    setDebugLogs([])
+  }, [])
 
   // Agora usando a World Chain Mainnet
   const publicClient = createPublicClient({
@@ -82,14 +95,18 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
     if (!address) return 0
 
     try {
+      addDebugLog("Fetching KPP balance...")
       const kppAmount = await publicClient.readContract({
         address: KPP_TOKEN_ADDRESS,
         abi: KPP_TOKEN_ABI,
         functionName: "balanceOf",
         args: [address],
       })
-      setKppBalance(Number(formatUnits(kppAmount, 18))) // Assumindo 18 decimais para KPP
-    } catch (error) {
+      const formattedKpp = Number(formatUnits(kppAmount, 18))
+      setKppBalance(formattedKpp) // Assumindo 18 decimais para KPP
+      addDebugLog(`KPP Balance: ${formattedKpp.toFixed(2)}`)
+    } catch (error: any) {
+      addDebugLog(`Error fetching KPP balance: ${error.message}`)
       console.error("Error fetching KPP balance:", error)
       setKppBalance(0)
     }
@@ -99,14 +116,17 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
     if (!address) return 0
 
     try {
+      addDebugLog("Fetching last claim time...")
       const lastTime = await publicClient.readContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: AIRDROP_CONTRACT_ABI,
         functionName: "lastClaimTime",
         args: [address],
       })
+      addDebugLog(`Last Claim Time: ${Number(lastTime)}`)
       return Number(lastTime)
-    } catch (error) {
+    } catch (error: any) {
+      addDebugLog(`Error fetching last claim time: ${error.message}`)
       console.error("Error fetching last claim time:", error)
       return 0
     }
@@ -119,8 +139,11 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
 
     if (lastClaim === 0 || currentTime >= lastClaim + CLAIM_INTERVAL_SECONDS) {
       setTimeLeft(0) // Disponível para reivindicar
+      addDebugLog("Claim available.")
     } else {
-      setTimeLeft(lastClaim + CLAIM_INTERVAL_SECONDS - currentTime)
+      const remaining = lastClaim + CLAIM_INTERVAL_SECONDS - currentTime
+      setTimeLeft(remaining)
+      addDebugLog(`Time left for claim: ${formatTime(remaining)}`)
     }
   }
 
@@ -133,7 +156,7 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
     }, 1000) // Atualiza a contagem regressiva a cada segundo
 
     return () => clearInterval(interval)
-  }, [address]) // Busca novamente quando o endereço muda
+  }, [address, addDebugLog]) // Busca novamente quando o endereço muda
 
   // Incremento automático das recompensas de staking (simulado)
   useEffect(() => {
@@ -153,21 +176,26 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   const handleCheckIn = async () => {
     if (!address) {
       setClaimError("Please connect your wallet first.")
+      addDebugLog("Attempted claim without connected wallet.")
       return
     }
     setIsClaiming(true)
     setClaimError(null)
+    addDebugLog("Starting claim process...")
 
     try {
       if (typeof window === "undefined" || !MiniKit.isInstalled()) {
         throw new Error("MiniKit is not installed or not available in this browser environment.")
       }
+      addDebugLog("MiniKit is installed.")
+
       // Verifica se MiniKit.commandsAsync e sendTransaction estão disponíveis
       if (!MiniKit.commandsAsync || typeof MiniKit.commandsAsync.sendTransaction !== "function") {
         throw new Error(
           "MiniKit.commandsAsync.sendTransaction is not available. MiniKit might not be fully initialized or supported.",
         )
       }
+      addDebugLog("MiniKit.commandsAsync.sendTransaction is available.")
 
       // Codifica a chamada da função para claimAirdrop
       const encodedData = encodeFunctionData({
@@ -175,13 +203,11 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
         functionName: "claimAirdrop",
       })
 
-      console.log(
-        `Attempting to send transaction to claimAirdrop on contract ${AIRDROP_CONTRACT_ADDRESS} for ${address}`,
-      )
-      console.log("Encoded data:", encodedData)
-      console.log("Target contract address:", AIRDROP_CONTRACT_ADDRESS)
+      addDebugLog(`Encoded data for claimAirdrop: ${encodedData}`)
+      addDebugLog(`Target contract address: ${AIRDROP_CONTRACT_ADDRESS}`)
 
       // Envia a transação usando MiniKit com a estrutura 'transaction' como array
+      addDebugLog("Calling MiniKit.commandsAsync.sendTransaction...")
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
           {
@@ -193,31 +219,38 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       })
 
       if (finalPayload.status === "error") {
+        addDebugLog(`MiniKit transaction error: ${finalPayload.message || "Unknown error"}`)
         console.error("MiniKit transaction error payload:", finalPayload)
         // Captura a mensagem de erro específica do MiniKit/World App
         const errorMessage = finalPayload.message || "Transaction failed from MiniKit."
         throw new Error(errorMessage)
       }
 
+      addDebugLog(`Transaction sent successfully. Hash: ${finalPayload.transactionHash}`)
       console.log("Transaction sent successfully via MiniKit, hash:", finalPayload.transactionHash)
 
       // Opcional: Você pode querer esperar pelo recibo da transação aqui para maior certeza
       // const transactionReceipt = await publicClient.waitForTransactionReceipt({ hash: finalPayload.transactionHash });
       // console.log("Transaction receipt:", transactionReceipt);
+      // addDebugLog(`Transaction receipt received. Status: ${transactionReceipt.status}`);
 
       // Atualiza o estado da UI após o sucesso da transação
       setCheckedIn(true)
+      addDebugLog("Transaction successful. Updating UI...")
       // Pequeno atraso para permitir que a blockchain processe antes de buscar o novo saldo
       setTimeout(async () => {
         await fetchKPPBalance() // Atualiza o saldo após a reivindicação
         await updateCountdown() // Atualiza a contagem regressiva após a reivindicação
         setCheckedIn(false) // Redefine o estado checkedIn
+        addDebugLog("UI updated after successful claim.")
       }, 2000) // Atraso de 2 segundos
     } catch (error: any) {
+      addDebugLog(`Claim error: ${error.message}`)
       console.error("Error claiming airdrop:", error)
       setClaimError(error.message || "Failed to claim KPP. Please try again.")
     } finally {
       setIsClaiming(false)
+      addDebugLog("Claim process finished.")
     }
   }
 
@@ -227,6 +260,9 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       setBalance((prev) => prev - amount)
       setStakedAmount((prev) => prev + amount)
       setStakeInput("")
+      addDebugLog(`Staked ${amount} WLD.`)
+    } else {
+      addDebugLog(`Failed to stake: Invalid amount or insufficient balance.`)
     }
   }
 
@@ -236,21 +272,29 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
       setStakedAmount((prev) => prev - amount)
       setBalance((prev) => prev + amount)
       setStakeInput("")
+      addDebugLog(`Unstaked ${amount} WLD.`)
+    } else {
+      addDebugLog(`Failed to unstake: Invalid amount or insufficient staked amount.`)
     }
   }
 
   const handleClaimRewards = () => {
     setBalance((prev) => prev + stakingRewards)
     setStakingRewards(0)
+    addDebugLog(`Claimed ${stakingRewards.toFixed(3)} WLD rewards.`)
   }
 
   const handleDisconnect = async () => {
     try {
+      addDebugLog("Attempting to disconnect MiniKit...")
       if (typeof window !== "undefined" && MiniKit.isInstalled() && typeof MiniKit.disconnect === "function") {
         await MiniKit.disconnect()
+        addDebugLog("MiniKit disconnected.")
       }
       onLogout()
-    } catch (error) {
+      addDebugLog("Logged out successfully.")
+    } catch (error: any) {
+      addDebugLog(`Failed to disconnect MiniKit: ${error.message}`)
       console.error("Failed to disconnect MiniKit:", error)
     }
   }
@@ -258,7 +302,6 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
   return (
     <div className="relative min-h-screen overflow-hidden">
       <AnimatedBackground />
-
       <div className="relative z-10 min-h-screen pb-24">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
@@ -615,8 +658,8 @@ function MainApp({ address, onLogout }: { address: `0x${string}`; onLogout: () =
           )}
         </div>
       </div>
-
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <DebugConsole logs={debugLogs} onClear={clearDebugLogs} /> {/* Adicionar o DebugConsole aqui */}
     </div>
   )
 }
