@@ -341,13 +341,12 @@ export default function KStakingPage() {
             <button
               onClick={handleClaimRewards}
               disabled={
-                isClaiming // Manter desativado se já estiver processando
-                // Removida a condição: || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
+                isClaiming || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
               }
               className={`py-1.5 px-4 rounded-md font-medium text-xs transition-all duration-300 flex items-center justify-center space-x-1 ${
                 userStakingInfo?.pendingRewards && Number.parseFloat(userStakingInfo.pendingRewards) > 0
                   ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                  : "bg-gray-600/50 text-gray-400" // Removido 'cursor-not-allowed' para permitir clique
+                  : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
               }`}
             >
               {isClaiming ? (
@@ -455,6 +454,29 @@ export default function KStakingPage() {
         </motion.div>
       </div>
       <BottomNav activeTab="kstaking" />
+      {/* API Error Message - Made more prominent */}
+      <AnimatePresence>
+        {apiError && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }} // Start higher
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-6 bg-red-900/80 border border-red-500 rounded-lg text-center shadow-xl max-w-xs w-full" // Fixed position, larger, darker background
+          >
+            <div className="flex flex-col items-center space-y-3">
+              <div className="w-8 h-8 text-red-400 flex items-center justify-center text-2xl">⚠️</div>
+              <p className="text-red-200 text-sm font-medium">{t.kstaking?.claimError || "Error"}</p>
+              <p className="text-red-100 text-xs">{apiError}</p>
+              <Button
+                onClick={() => setApiError(null)}
+                className="mt-3 bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-4 rounded-full"
+              >
+                {t.kstaking?.dismiss || "Dismiss"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
