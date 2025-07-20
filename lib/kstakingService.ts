@@ -1,6 +1,7 @@
 import { ethers } from "ethers"
 import { MiniKit } from "@worldcoin/minikit-js"
 import { KSTAKING_CONTRACT_ADDRESS, kstakingContractABI, getKStakingContract } from "./kstakingContractABI"
+import { KPP_TOKEN_ADDRESS, erc20ABI, RPC_ENDPOINTS } from "./airdropContractABI" // Importar KPP_TOKEN_ADDRESS, erc20ABI e RPC_ENDPOINTS
 
 // Interface para as informações do usuário de staking
 export interface UserStakingInfo {
@@ -33,27 +34,77 @@ export async function getUserStakingInfo(
       throw new Error("Failed to get KStaking contract instance.")
     }
 
-    const [kppBalance, pendingRewards, lastClaimTime, totalClaimed, rewardsPerDay, rewardsPerYear] = await Promise.all([
-      contract.kppToken.balanceOf(address), // Obter saldo KPP do usuário
-      contract.calculatePendingRewards(address),
-      contract.users(address).then((info: any) => info.lastClaimTime),
-      contract.users(address).then((info: any) => info.totalClaimed),
-      contract.calculateRewardsPerDay(address),
-      contract
-        .calculateRewardsPerSecond(address)
-        .then((rps: bigint) => rps * BigInt(365 * 24 * 60 * 60)), // Converter para anual
-    ])
+    // Obter o provedor da instância do contrato de staking
+    const provider = contract.runner?.provider
 
-    return {
-      success: true,
-      data: {
-        kppBalance: ethers.formatUnits(kppBalance, 18),
-        pendingRewards: ethers.formatUnits(pendingRewards, 18),
-        lastClaimTime: Number(lastClaimTime),
-        totalClaimed: ethers.formatUnits(totalClaimed, 18),
-        rewardsPerDay: ethers.formatUnits(rewardsPerDay, 18),
-        rewardsPerYear: ethers.formatUnits(rewardsPerYear, 18),
-      },
+    if (!provider) {
+      // Se o provedor não estiver disponível no runner, tentar criar um novo
+      // Isso pode acontecer se o contrato foi instanciado sem um signer/provider
+      // Percorrer os RPC_ENDPOINTS para encontrar um provedor funcional
+      let currentProvider: ethers.JsonRpcProvider | undefined
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const p = new ethers.JsonRpcProvider(rpcUrl)
+          await p.getBlockNumber() // Testar a conexão
+          currentProvider = p
+          break
+        } catch (e) {
+          console.warn(`Failed to connect to RPC ${rpcUrl} for KPP balance check. Trying next...`)
+        }
+      }
+      if (!currentProvider) {
+        throw new Error("Failed to connect to any RPC endpoint to get KPP balance.")
+      }
+      // Usar o provedor encontrado
+      const kppTokenContract = new ethers.Contract(KPP_TOKEN_ADDRESS, erc20ABI, currentProvider)
+      const [kppBalance, pendingRewards, lastClaimTime, totalClaimed, rewardsPerDay, rewardsPerYear] =
+        await Promise.all([
+          kppTokenContract.balanceOf(address), // Obter saldo KPP do usuário
+          contract.calculatePendingRewards(address),
+          contract.users(address).then((info: any) => info.lastClaimTime),
+          contract.users(address).then((info: any) => info.totalClaimed),
+          contract.calculateRewardsPerDay(address),
+          contract
+            .calculateRewardsPerSecond(address)
+            .then((rps: bigint) => rps * BigInt(365 * 24 * 60 * 60)), // Converter para anual
+        ])
+      return {
+        success: true,
+        data: {
+          kppBalance: ethers.formatUnits(kppBalance, 18),
+          pendingRewards: ethers.formatUnits(pendingRewards, 18),
+          lastClaimTime: Number(lastClaimTime),
+          totalClaimed: ethers.formatUnits(totalClaimed, 18),
+          rewardsPerDay: ethers.formatUnits(rewardsPerDay, 18),
+          rewardsPerYear: ethers.formatUnits(rewardsPerYear, 18),
+        },
+      }
+    } else {
+      // Se o provedor estiver disponível no runner, usá-lo
+      const kppTokenContract = new ethers.Contract(KPP_TOKEN_ADDRESS, erc20ABI, provider)
+      const [kppBalance, pendingRewards, lastClaimTime, totalClaimed, rewardsPerDay, rewardsPerYear] =
+        await Promise.all([
+          kppTokenContract.balanceOf(address), // Obter saldo KPP do usuário
+          contract.calculatePendingRewards(address),
+          contract.users(address).then((info: any) => info.lastClaimTime),
+          contract.users(address).then((info: any) => info.totalClaimed),
+          contract.calculateRewardsPerDay(address),
+          contract
+            .calculateRewardsPerSecond(address)
+            .then((rps: bigint) => rps * BigInt(365 * 24 * 60 * 60)), // Converter para anual
+        ])
+
+      return {
+        success: true,
+        data: {
+          kppBalance: ethers.formatUnits(kppBalance, 18),
+          pendingRewards: ethers.formatUnits(pendingRewards, 18),
+          lastClaimTime: Number(lastClaimTime),
+          totalClaimed: ethers.formatUnits(totalClaimed, 18),
+          rewardsPerDay: ethers.formatUnits(rewardsPerDay, 18),
+          rewardsPerYear: ethers.formatUnits(rewardsPerYear, 18),
+        },
+      }
     }
   } catch (error) {
     console.error("Error fetching user staking info:", error)
