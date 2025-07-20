@@ -27,9 +27,49 @@ const KPP_STAKING_CONTRACT = {
   image: "/keplerpay-logo.png", // Usar o logo KeplerPay
 }
 
+// Battery Component (mantido do ficheiro fornecido)
+function BatteryIndicator({ currentLang }: { currentLang: "en" | "pt" | "es" | "id" }) {
+  const [batteryLevel, setBatteryLevel] = useState(0)
+  const t = useTranslations().t.kstaking // Usar o hook de tradução existente
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBatteryLevel((prev) => {
+        if (prev >= 100) return 0
+        return prev + 2
+      })
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Battery */}
+      <div className="relative w-8 h-4 border border-green-400 rounded-sm bg-black/50">
+        {/* Battery tip */}
+        <div className="absolute -right-1 top-1 w-1 h-2 bg-green-400 rounded-r-sm"></div>
+        {/* Battery fill */}
+        <div
+          className="h-full bg-gradient-to-r from-green-500 to-green-300 rounded-sm transition-all duration-100"
+          style={{ width: `${batteryLevel}%` }}
+        ></div>
+        {/* Battery percentage text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[6px] font-bold text-white drop-shadow-sm">{batteryLevel}%</span>
+        </div>
+      </div>
+      {/* Power Activated text */}
+      <div className="text-green-400 text-[8px] font-medium mt-1 text-center">
+        {t?.powerActivated || "Power Activated"}
+      </div>
+    </div>
+  )
+}
+
 export default function KStakingPage() {
   const router = useRouter()
-  const { t } = useTranslations()
+  const { t, language } = useTranslations() // Obter o idioma também
 
   const [userAddress, setUserAddress] = useState<string | null>(null)
   const [userStakingInfo, setUserStakingInfo] = useState<UserStakingInfo | null>(null)
@@ -188,6 +228,15 @@ export default function KStakingPage() {
   return (
     <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
       <BackgroundEffect /> {/* Usar o componente de fundo existente */}
+      {/* Battery Indicator - Top Right */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="absolute top-4 right-4 z-20"
+      >
+        <BatteryIndicator currentLang={language} />
+      </motion.div>
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -258,7 +307,7 @@ export default function KStakingPage() {
                     onClick={() => setClaimError(null)}
                     className="mt-1 text-red-400 text-[10px] hover:text-red-300"
                   >
-                    {t.dismiss || "Dismiss"}
+                    {t.kstaking?.dismiss || "Dismiss"}
                   </button>
                 </div>
               </div>
@@ -295,9 +344,9 @@ export default function KStakingPage() {
                 isClaiming || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
               }
               className={`py-1.5 px-4 rounded-md font-medium text-xs transition-all duration-300 flex items-center justify-center space-x-1 ${
-                isClaiming || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
-                  ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                userStakingInfo?.pendingRewards && Number.parseFloat(userStakingInfo.pendingRewards) > 0
+                  ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                  : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
               }`}
             >
               {isClaiming ? (
