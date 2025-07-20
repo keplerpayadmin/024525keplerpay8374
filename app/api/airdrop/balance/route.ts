@@ -29,7 +29,7 @@ export async function GET() {
         const balance = await contract.contractBalance()
         const formattedBalance = ethers.formatUnits(balance, 18)
 
-        console.log(`Contract balance: ${formattedBalance} TPF`)
+        console.log(`Contract balance: ${formattedBalance} KPP`)
 
         return NextResponse.json({
           success: true,
