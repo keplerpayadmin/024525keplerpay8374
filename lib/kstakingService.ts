@@ -26,21 +26,29 @@ export async function getUserStakingInfo(
 ): Promise<{ success: boolean; data?: UserStakingInfo; error?: string }> {
   try {
     if (!address) {
+      console.warn("getUserStakingInfo: Address is required.")
       return { success: false, error: "Address is required" }
     }
 
+    console.log(`getUserStakingInfo: Attempting to get KStaking contract for address ${address}...`)
     const contract = await getKStakingContract() // Esta função já tenta vários RPCs e retorna um contrato com provedor
     if (!contract) {
-      throw new Error("Failed to get KStaking contract instance.")
+      const errMsg = "Failed to get KStaking contract instance. Check RPCs and contract address."
+      console.error(`getUserStakingInfo: ${errMsg}`)
+      throw new Error(errMsg)
     }
+    console.log("getUserStakingInfo: KStaking contract instance obtained.")
 
     const provider = contract.runner?.provider
     if (!provider) {
       // Isso não deve acontecer se getKStakingContract for bem-sucedido, mas é um fallback seguro
-      throw new Error("KStaking contract instance does not have a provider attached.")
+      const errMsg = "KStaking contract instance does not have a provider attached."
+      console.error(`getUserStakingInfo: ${errMsg}`)
+      throw new Error(errMsg)
     }
 
     const kppTokenContract = new ethers.Contract(KPP_TOKEN_ADDRESS, erc20ABI, provider)
+    console.log(`getUserStakingInfo: KPP Token Contract initialized for address ${KPP_TOKEN_ADDRESS}.`)
 
     let kppBalance: bigint = BigInt(0)
     let pendingRewards: bigint = BigInt(0)
@@ -51,9 +59,11 @@ export async function getUserStakingInfo(
 
     // Adicionar try-catch individual para cada chamada de contrato para depuração
     try {
+      console.log("getUserStakingInfo: Fetching kppBalance...")
       kppBalance = await kppTokenContract.balanceOf(address)
+      console.log(`getUserStakingInfo: kppBalance fetched: ${kppBalance.toString()}`)
     } catch (e) {
-      console.error("Error fetching kppBalance:", e)
+      console.error("getUserStakingInfo: Error fetching kppBalance:", e)
       // Se o erro for 'formatJson', significa que o RPC retornou algo que não é JSON
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (kppBalance): ${e.message}. Check RPC endpoint stability.`)
@@ -62,9 +72,11 @@ export async function getUserStakingInfo(
     }
 
     try {
+      console.log("getUserStakingInfo: Fetching pendingRewards...")
       pendingRewards = await contract.calculatePendingRewards(address)
+      console.log(`getUserStakingInfo: pendingRewards fetched: ${pendingRewards.toString()}`)
     } catch (e) {
-      console.error("Error fetching pendingRewards:", e)
+      console.error("getUserStakingInfo: Error fetching pendingRewards:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (pendingRewards): ${e.message}. Check RPC endpoint stability.`)
       }
@@ -72,11 +84,15 @@ export async function getUserStakingInfo(
     }
 
     try {
+      console.log("getUserStakingInfo: Fetching user info (lastClaimTime, totalClaimed)...")
       const userInfo = await contract.users(address)
       lastClaimTime = userInfo.lastClaimTime
       totalClaimed = userInfo.totalClaimed
+      console.log(
+        `getUserStakingInfo: User info fetched: lastClaimTime=${lastClaimTime.toString()}, totalClaimed=${totalClaimed.toString()}`,
+      )
     } catch (e) {
-      console.error("Error fetching user info (lastClaimTime, totalClaimed):", e)
+      console.error("getUserStakingInfo: Error fetching user info (lastClaimTime, totalClaimed):", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (userInfo): ${e.message}. Check RPC endpoint stability.`)
       }
@@ -84,9 +100,11 @@ export async function getUserStakingInfo(
     }
 
     try {
+      console.log("getUserStakingInfo: Fetching rewardsPerDay...")
       rewardsPerDay = await contract.calculateRewardsPerDay(address)
+      console.log(`getUserStakingInfo: rewardsPerDay fetched: ${rewardsPerDay.toString()}`)
     } catch (e) {
-      console.error("Error fetching rewardsPerDay:", e)
+      console.error("getUserStakingInfo: Error fetching rewardsPerDay:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (rewardsPerDay): ${e.message}. Check RPC endpoint stability.`)
       }
@@ -94,16 +112,19 @@ export async function getUserStakingInfo(
     }
 
     try {
+      console.log("getUserStakingInfo: Fetching rewardsPerSecond and calculating rewardsPerYear...")
       const rps = await contract.calculateRewardsPerSecond(address)
       rewardsPerYear = rps * BigInt(365 * 24 * 60 * 60)
+      console.log(`getUserStakingInfo: rewardsPerYear calculated: ${rewardsPerYear.toString()}`)
     } catch (e) {
-      console.error("Error fetching rewardsPerYear:", e)
+      console.error("getUserStakingInfo: Error fetching rewardsPerYear:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (rewardsPerYear): ${e.message}. Check RPC endpoint stability.`)
       }
       throw e
     }
 
+    console.log("getUserStakingInfo: All user staking info fetched successfully.")
     return {
       success: true,
       data: {
@@ -128,19 +149,25 @@ export async function getKStakingContractStats(): Promise<{
   error?: string
 }> {
   try {
+    console.log("getKStakingContractStats: Attempting to get KStaking contract...")
     const contract = await getKStakingContract()
     if (!contract) {
-      throw new Error("Failed to get KStaking contract instance.")
+      const errMsg = "Failed to get KStaking contract instance. Check RPCs and contract address."
+      console.error(`getKStakingContractStats: ${errMsg}`)
+      throw new Error(errMsg)
     }
+    console.log("getKStakingContractStats: KStaking contract instance obtained.")
 
     let totalRewardsClaimed: bigint = BigInt(0)
     let contractRewardBalance: bigint = BigInt(0)
     let currentAPY: bigint = BigInt(0)
 
     try {
+      console.log("getKStakingContractStats: Fetching totalRewardsClaimed...")
       totalRewardsClaimed = await contract.totalRewardsClaimed()
+      console.log(`getKStakingContractStats: totalRewardsClaimed fetched: ${totalRewardsClaimed.toString()}`)
     } catch (e) {
-      console.error("Error fetching totalRewardsClaimed:", e)
+      console.error("getKStakingContractStats: Error fetching totalRewardsClaimed:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (totalRewardsClaimed): ${e.message}. Check RPC endpoint stability.`)
       }
@@ -148,9 +175,11 @@ export async function getKStakingContractStats(): Promise<{
     }
 
     try {
+      console.log("getKStakingContractStats: Fetching contractRewardBalance...")
       contractRewardBalance = await contract.getRewardBalance()
+      console.log(`getKStakingContractStats: contractRewardBalance fetched: ${contractRewardBalance.toString()}`)
     } catch (e) {
-      console.error("Error fetching contractRewardBalance:", e)
+      console.error("getKStakingContractStats: Error fetching contractRewardBalance:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (contractRewardBalance): ${e.message}. Check RPC endpoint stability.`)
       }
@@ -158,15 +187,18 @@ export async function getKStakingContractStats(): Promise<{
     }
 
     try {
+      console.log("getKStakingContractStats: Fetching currentAPY...")
       currentAPY = await contract.getCurrentAPY()
+      console.log(`getKStakingContractStats: currentAPY fetched: ${currentAPY.toString()}`)
     } catch (e) {
-      console.error("Error fetching currentAPY:", e)
+      console.error("getKStakingContractStats: Error fetching currentAPY:", e)
       if (e instanceof Error && e.message.includes("formatJson")) {
         throw new Error(`RPC Error (currentAPY): ${e.message}. Check RPC endpoint stability.`)
       }
       throw e
     }
 
+    console.log("getKStakingContractStats: All contract stats fetched successfully.")
     return {
       success: true,
       data: {
@@ -186,14 +218,18 @@ export async function claimKStakingRewards(
   address: string,
 ): Promise<{ success: boolean; txId?: string; error?: string }> {
   try {
+    console.log("claimKStakingRewards: Checking if MiniKit is installed...")
     if (!MiniKit.isInstalled()) {
-      throw new Error("MiniKit is not installed. Please install the Worldcoin App.")
+      const errMsg = "MiniKit is not installed. Please install the Worldcoin App."
+      console.error(`claimKStakingRewards: ${errMsg}`)
+      throw new Error(errMsg)
     }
 
-    console.log("MiniKit is installed, preparing to claim KStaking rewards...")
-    console.log("Contract address:", KSTAKING_CONTRACT_ADDRESS)
-    console.log("Using ABI:", JSON.stringify(kstakingContractABI))
+    console.log("claimKStakingRewards: MiniKit is installed, preparing to claim KStaking rewards...")
+    console.log("claimKStakingRewards: Contract address:", KSTAKING_CONTRACT_ADDRESS)
+    console.log("claimKStakingRewards: Using ABI (first few entries):", JSON.stringify(kstakingContractABI.slice(0, 2)))
 
+    console.log("claimKStakingRewards: Calling MiniKit.commandsAsync.sendTransaction...")
     const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
       transaction: [
         {
@@ -205,14 +241,14 @@ export async function claimKStakingRewards(
       ],
     })
 
-    console.log("MiniKit KStaking transaction response:", finalPayload)
+    console.log("claimKStakingRewards: MiniKit KStaking transaction response:", finalPayload)
 
     if (finalPayload.status === "error") {
-      console.error("Error claiming KStaking rewards:", finalPayload.message)
+      console.error("claimKStakingRewards: Error claiming KStaking rewards:", finalPayload.message)
       throw new Error(finalPayload.message || "Failed to claim KStaking rewards")
     }
 
-    console.log("KStaking rewards claimed successfully:", finalPayload)
+    console.log("claimKStakingRewards: KStaking rewards claimed successfully:", finalPayload)
 
     // Disparar evento para atualizar o saldo na UI (se necessário)
     // Exemplo: window.dispatchEvent(new CustomEvent("kpp_balance_updated"));
@@ -222,7 +258,7 @@ export async function claimKStakingRewards(
       txId: finalPayload.transaction_id,
     }
   } catch (error) {
-    console.error("Error claiming KStaking rewards:", error)
+    console.error("Error claiming KStaking rewards (outer catch):", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "An error occurred during the KStaking claim",
