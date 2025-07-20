@@ -87,12 +87,14 @@ export async function getAirdropStatus(address: string) {
     }
 
     // Se não há registro de claim anterior, permitir o claim
+    // CORREÇÃO: Se não há registro, assumir que o claim ainda não pode ser feito e iniciar countdown
+    const defaultClaimInterval = 24 * 60 * 60 // 24 horas em segundos
     return {
       success: true,
       lastClaimTime: 0,
-      nextClaimTime: 0,
-      canClaim: true,
-      timeRemaining: 0,
+      nextClaimTime: Math.floor(Date.now() / 1000) + defaultClaimInterval,
+      canClaim: false, // Definir como false para que o botão fique desativado e o countdown comece
+      timeRemaining: defaultClaimInterval, // Definir um tempo restante inicial
       airdropAmount: "50",
       rpcUsed: "simulation",
     }
