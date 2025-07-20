@@ -1,5 +1,6 @@
 import { ethers } from "ethers"
 import { TokenProvider } from "@holdstation/worldchain-sdk"
+import { KPP_TOKEN_ADDRESS } from "@/lib/airdropContractABI" // Importar KPP_TOKEN_ADDRESS
 
 // Configuração da rede Worldchain
 const WORLDCHAIN_RPC = "https://worldchain-mainnet.g.alchemy.com/public"
@@ -13,6 +14,7 @@ const KNOWN_TOKENS = {
   WDD: "0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B",
   WETH: "0x4200000000000000000000000000000000000006",
   USDCe: "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+  KPP: KPP_TOKEN_ADDRESS, // Adicionado KPP
 }
 
 class TokenProviderService {
