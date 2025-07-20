@@ -3,8 +3,8 @@ import { ethers } from "ethers"
 // Endereço do contrato de airdrop na Worldchain
 export const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237"
 
-// Endereço do token TPF
-export const TPF_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4"
+// Endereço do token KPP
+export const KPP_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4"
 
 // Lista de RPCs para World Chain
 export const RPC_ENDPOINTS = [
@@ -41,21 +41,21 @@ export const airdropContractABI = [
     type: "event",
   },
   {
-    inputs: [],
-    name: "CLAIM_INTERVAL",
-    outputs: [
+    anonymous: false,
+    inputs: [
       {
+        indexed: false,
         internalType: "uint256",
-        name: "",
+        name: "newAmount",
         type: "uint256",
       },
     ],
-    stateMutability: "view",
-    type: "function",
+    name: "DailyAirdropChanged",
+    type: "event",
   },
   {
     inputs: [],
-    name: "DAILY_AIRDROP",
+    name: "CLAIM_INTERVAL",
     outputs: [
       {
         internalType: "uint256",
@@ -81,6 +81,32 @@ export const airdropContractABI = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "dailyAirdropAmount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "kppTokenAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -119,21 +145,21 @@ export const airdropContractABI = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "tpfTokenAddress",
-    outputs: [
+    inputs: [
       {
-        internalType: "address",
-        name: "",
-        type: "address",
+        internalType: "uint256",
+        name: "newAmount",
+        type: "uint256",
       },
     ],
-    stateMutability: "view",
+    name: "setDailyAirdropAmount",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [],
-    name: "withdrawExcessTPF",
+    name: "withdrawExcessKPP",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
