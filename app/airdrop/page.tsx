@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { BackgroundEffect } from "@/components/background-effect"
 import { BottomNav } from "@/components/bottom-nav"
 import { Coins, RefreshCw } from "lucide-react"
@@ -24,7 +24,7 @@ export default function AirdropPage() {
   const [contractBalance, setContractBalance] = useState("0")
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [txId, setTxId] = useState<string | null>(null)
-  const [apiError, setApiError] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null) // State for API errors
   const [userAddress, setUserAddress] = useState<string>("")
   const [formattedBalance, setFormattedBalance] = useState<string>("0")
   const [user, setUser] = useState<any>(null)
@@ -157,6 +157,19 @@ export default function AirdropPage() {
     }
   }, [userAddress])
 
+  // Log API errors and claim errors to console for debugging
+  useEffect(() => {
+    if (apiError) {
+      console.error("API Error displayed:", apiError)
+    }
+  }, [apiError])
+
+  useEffect(() => {
+    if (claimError) {
+      console.error("Claim Error displayed:", claimError)
+    }
+  }, [claimError])
+
   // Atualizar o countdown a cada segundo
   useEffect(() => {
     if (canClaim) return
@@ -275,6 +288,29 @@ export default function AirdropPage() {
           )}
         </div>
       </motion.div>
+
+      {/* API Error Message */}
+      <AnimatePresence>
+        {apiError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mt-4 p-2 bg-red-900/30 border border-red-500/30 rounded-lg text-center relative z-10"
+          >
+            <div className="flex items-start justify-center space-x-2">
+              <div className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0">⚠️</div>
+              <div>
+                <p className="text-red-400 text-xs font-medium mb-1">Error:</p>
+                <p className="text-red-300 text-[10px]">{apiError}</p>
+                <button onClick={() => setApiError(null)} className="mt-1 text-red-400 text-[10px] hover:text-red-300">
+                  {t.kstaking?.dismiss || "Dismiss"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
