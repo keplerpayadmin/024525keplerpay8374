@@ -1,10 +1,10 @@
 import { ethers } from "ethers"
 
 // Endereço do contrato de airdrop na Worldchain
-export const AIRDROP_CONTRACT_ADDRESS = "0x7b7540d8a1713a5c7d7C9257573Bdf56E7488E05"
+export const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237"
 
 // Endereço do token TPF
-export const TPF_TOKEN_ADDRESS = "0x834a73c0a83F3BCe349A116FFB2A4c2d1C651E45"
+export const TPF_TOKEN_ADDRESS = "0x5fa570E9c8514cdFaD81DB6ce0A327D55251fBD4"
 
 // Lista de RPCs para World Chain
 export const RPC_ENDPOINTS = [
