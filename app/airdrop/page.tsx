@@ -2,67 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-// Remover Canvas, useFrame, OrbitControls, useProgress, Html, Preload
-// import { Canvas, useFrame } from "@react-three/fiber"
-// import { OrbitControls, useProgress, Html, Preload } from "@react-three/drei"
 import { BackgroundEffect } from "@/components/background-effect"
 import { BottomNav } from "@/components/bottom-nav"
-// Remover import { KPPLogoModel } from "@/components/kpp-logo-model"
 import { Coins, RefreshCw } from "lucide-react"
-// Remover type * as THREE from "three"
 import { useRouter } from "next/navigation"
 import { getAirdropStatus, getContractBalance, claimAirdrop } from "@/lib/airdropService"
 import { getCurrentLanguage, getTranslations } from "@/lib/i18n"
-
-// Remover LoadingIndicator
-// function LoadingIndicator() {
-//   const { progress } = useProgress()
-//   const language = getCurrentLanguage()
-//   const t = getTranslations(language)
-
-//   return (
-//     <Html center>
-//       <div className="flex flex-col items-center">
-//         <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-700 border-l-transparent border-r-transparent rounded-full animate-spin" />
-//         <p className="mt-4 text-white text-lg font-medium">{Math.round(progress)}%</p>
-//       </div>
-//     </Html>
-//   )
-// }
-
-// Remover RotatingCoin
-// function RotatingCoin() {
-//   const coinRef = useRef<THREE.Group>(null)
-
-//   useFrame((state, delta) => {
-//     if (coinRef.current) {
-//       coinRef.current.rotation.y += delta * 0.6
-//     }
-//   })
-
-//   return (
-//     <group position={[0.15, 0, 0]} ref={coinRef}>
-//       <KPPLogoModel scale={0.6} castShadow />
-//     </group>
-//   )
-// }
-
-// Remover Scene
-// function Scene() {
-//   return (
-//     <>
-//       <ambientLight intensity={0.8} />
-//       <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
-//       <directionalLight position={[-5, 5, -5]} intensity={1.2} castShadow />
-//       <spotLight position={[0, 5, 5]} intensity={1.5} angle={0.4} penumbra={0.5} castShadow />
-//       <pointLight position={[3, 0, 3]} intensity={1.0} distance={10} />
-//       <pointLight position={[-3, 0, -3]} intensity={1.0} distance={10} />
-//       <pointLight position={[0, 3, 0]} intensity={1.0} distance={10} color="#ffffff" />
-//       <pointLight position={[0, -3, 0]} intensity={0.8} distance={10} color="#e0e0ff" />
-//       <RotatingCoin />
-//     </>
-//   )
-// }
 
 export default function AirdropPage() {
   const [animationComplete, setAnimationComplete] = useState(false)
@@ -83,7 +28,7 @@ export default function AirdropPage() {
   const [userAddress, setUserAddress] = useState<string>("")
   const [formattedBalance, setFormattedBalance] = useState<string>("0")
   const [user, setUser] = useState<any>(null)
-  const [language, setLanguage] = useState<"en" | "pt">("en")
+  const [language, setLanguage] = useState<"en">("en") // Tipo de idioma fixo em "en"
   const router = useRouter()
   const t = getTranslations(language)
 
@@ -116,13 +61,12 @@ export default function AirdropPage() {
       }
     }
 
-    // Obter o idioma atual
-    const currentLang = getCurrentLanguage()
-    setLanguage(currentLang)
+    // Obter o idioma atual (agora fixo em "en")
+    setLanguage(getCurrentLanguage())
 
     checkAuth()
 
-    // Adicionar listener para mudanças de idioma
+    // Adicionar listener para mudanças de idioma (ainda presente, mas menos relevante com idioma fixo)
     const handleLanguageChange = () => {
       setLanguage(getCurrentLanguage())
     }
@@ -336,13 +280,12 @@ export default function AirdropPage() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full h-[300px] relative z-10 flex items-center justify-center" // Ajustado para centralizar a imagem
+        className="w-full h-[300px] relative z-10 flex items-center justify-center"
       >
-        {/* Substituído o Canvas pela imagem 2D */}
         <img
           src="/keplerpay-logo.png"
           alt="KPP Logo"
-          className="w-48 h-48 rounded-full border-4 border-gray-700 shadow-lg object-cover" // Estilo de moeda 2D
+          className="w-48 h-48 rounded-full border-4 border-gray-700 shadow-lg object-cover animate-spin-360" // Adicionado animate-spin-360
         />
       </motion.div>
 
