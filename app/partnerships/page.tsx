@@ -4,8 +4,11 @@ import { motion } from "framer-motion"
 import { BackgroundEffect } from "@/components/background-effect"
 import { BottomNav } from "@/components/bottom-nav"
 import Image from "next/image"
+import { useTranslations } from "@/lib/i18n" // Import useTranslations
 
 export default function PartnershipsPage() {
+  const { t } = useTranslations() // Use the hook to get translations
+
   return (
     <main className="relative flex min-h-screen flex-col items-center pt-6 pb-20 overflow-hidden">
       <BackgroundEffect />
@@ -24,14 +27,16 @@ export default function PartnershipsPage() {
         >
           <h1 className="text-3xl font-bold tracking-tighter">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
-              Parcerias
+              {t.partnerships?.title || "Partnerships"}
             </span>
           </h1>
-          <p className="text-gray-400 text-sm mt-2">Nossos parceiros estratégicos</p>
+          <p className="text-gray-400 text-sm mt-2">{t.partnerships?.subtitle || "Our strategic partners"}</p>
         </motion.div>
 
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full space-y-4">
-          <h2 className="text-xl font-semibold text-white mb-4 text-center">Nossos Parceiros</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 text-center">
+            {t.partnerships?.ourPartners || "Our Partners"}
+          </h2>
 
           {/* Partnership Nº1 - TPulseFi */}
           <motion.div
@@ -52,9 +57,9 @@ export default function PartnershipsPage() {
                 <h3 className="text-lg font-semibold text-white mb-2">Partnership Nº1</h3>
                 <h4 className="text-xl font-bold text-white mb-3">TPulseFi</h4>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  TPulseFi é um projeto DeFi, o foco é valorização a longo prazo e incluí varias areas em
-                  desenvolvimento como FiGames e FiStaking, tambem conta com parcerias de desenvolvimento dentro da rede
-                  Worldchain.
+                  TPulseFi is a DeFi project focused on long-term appreciation, including various areas under
+                  development such as FiGames and FiStaking. It also features development partnerships within the
+                  Worldchain network.
                 </p>
               </div>
             </div>
