@@ -1,73 +1,68 @@
 "use client"
 
-import { useState, useEffect, Suspense, useRef } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Canvas, useFrame } from "@react-three/fiber"
-import { OrbitControls, useProgress, Html, Preload } from "@react-three/drei"
+// Remover Canvas, useFrame, OrbitControls, useProgress, Html, Preload
+// import { Canvas, useFrame } from "@react-three/fiber"
+// import { OrbitControls, useProgress, Html, Preload } from "@react-three/drei"
 import { BackgroundEffect } from "@/components/background-effect"
 import { BottomNav } from "@/components/bottom-nav"
-import { KPPLogoModel } from "@/components/kpp-logo-model" // Manter TPFLogoModel por enquanto, mas o nome sugere KPP
+// Remover import { KPPLogoModel } from "@/components/kpp-logo-model"
 import { Coins, RefreshCw } from "lucide-react"
-import type * as THREE from "three"
+// Remover type * as THREE from "three"
 import { useRouter } from "next/navigation"
 import { getAirdropStatus, getContractBalance, claimAirdrop } from "@/lib/airdropService"
 import { getCurrentLanguage, getTranslations } from "@/lib/i18n"
 
-// Componente de carregamento
-function LoadingIndicator() {
-  const { progress } = useProgress()
-  const language = getCurrentLanguage()
-  const t = getTranslations(language)
+// Remover LoadingIndicator
+// function LoadingIndicator() {
+//   const { progress } = useProgress()
+//   const language = getCurrentLanguage()
+//   const t = getTranslations(language)
 
-  return (
-    <Html center>
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-700 border-l-transparent border-r-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-white text-lg font-medium">{Math.round(progress)}%</p>
-      </div>
-    </Html>
-  )
-}
+//   return (
+//     <Html center>
+//       <div className="flex flex-col items-center">
+//         <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-700 border-l-transparent border-r-transparent rounded-full animate-spin" />
+//         <p className="mt-4 text-white text-lg font-medium">{Math.round(progress)}%</p>
+//       </div>
+//     </Html>
+//   )
+// }
 
-// Componente para a moeda rotativa
-function RotatingCoin() {
-  const coinRef = useRef<THREE.Group>(null)
+// Remover RotatingCoin
+// function RotatingCoin() {
+//   const coinRef = useRef<THREE.Group>(null)
 
-  // Usar useFrame para girar a moeda a cada frame
-  useFrame((state, delta) => {
-    if (coinRef.current) {
-      // Girar em torno do eixo Y para que a moeda gire como um pião
-      coinRef.current.rotation.y += delta * 0.6 // Velocidade reduzida para melhor visualização
-    }
-  })
+//   useFrame((state, delta) => {
+//     if (coinRef.current) {
+//       coinRef.current.rotation.y += delta * 0.6
+//     }
+//   })
 
-  return (
-    <group position={[0.15, 0, 0]} ref={coinRef}>
-      <KPPLogoModel scale={0.6} castShadow /> {/* TAMANHO REDUZIDO de 0.8 para 0.6 */}
-    </group>
-  )
-}
+//   return (
+//     <group position={[0.15, 0, 0]} ref={coinRef}>
+//       <KPPLogoModel scale={0.6} castShadow />
+//     </group>
+//   )
+// }
 
-// Componente da cena melhorada com iluminação simplificada (sem Environment)
-function Scene() {
-  return (
-    <>
-      {/* Iluminação melhorada para destacar os detalhes metálicos */}
-      <ambientLight intensity={0.8} /> {/* Aumentada a intensidade da luz ambiente */}
-      <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow /> {/* Aumentada a intensidade */}
-      <directionalLight position={[-5, 5, -5]} intensity={1.2} castShadow /> {/* Aumentada a intensidade */}
-      <spotLight position={[0, 5, 5]} intensity={1.5} angle={0.4} penumbra={0.5} castShadow />{" "}
-      {/* Aumentada a intensidade */}
-      {/* Luzes pontuais para criar reflexos metálicos */}
-      <pointLight position={[3, 0, 3]} intensity={1.0} distance={10} /> {/* Aumentada a intensidade */}
-      <pointLight position={[-3, 0, -3]} intensity={1.0} distance={10} /> {/* Aumentada a intensidade */}
-      <pointLight position={[0, 3, 0]} intensity={1.0} distance={10} color="#ffffff" /> {/* Nova luz de cima */}
-      <pointLight position={[0, -3, 0]} intensity={0.8} distance={10} color="#e0e0ff" /> {/* Nova luz de baixo */}
-      {/* Moeda com rotação */}
-      <RotatingCoin />
-    </>
-  )
-}
+// Remover Scene
+// function Scene() {
+//   return (
+//     <>
+//       <ambientLight intensity={0.8} />
+//       <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+//       <directionalLight position={[-5, 5, -5]} intensity={1.2} castShadow />
+//       <spotLight position={[0, 5, 5]} intensity={1.5} angle={0.4} penumbra={0.5} castShadow />
+//       <pointLight position={[3, 0, 3]} intensity={1.0} distance={10} />
+//       <pointLight position={[-3, 0, -3]} intensity={1.0} distance={10} />
+//       <pointLight position={[0, 3, 0]} intensity={1.0} distance={10} color="#ffffff" />
+//       <pointLight position={[0, -3, 0]} intensity={0.8} distance={10} color="#e0e0ff" />
+//       <RotatingCoin />
+//     </>
+//   )
+// }
 
 export default function AirdropPage() {
   const [animationComplete, setAnimationComplete] = useState(false)
@@ -341,20 +336,14 @@ export default function AirdropPage() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full h-[300px] relative z-10 border border-gray-800/30 rounded-lg overflow-hidden"
+        className="w-full h-[300px] relative z-10 flex items-center justify-center" // Ajustado para centralizar a imagem
       >
-        <Canvas camera={{ position: [0, 0, 2.5], fov: 35 }} gl={{ alpha: true }}>
-          <Suspense fallback={<LoadingIndicator />}>
-            <Scene />
-            <Preload all />
-          </Suspense>
-          <OrbitControls
-            enableZoom={false}
-            enablePan={false}
-            minPolarAngle={Math.PI / 2 - 0.5}
-            maxPolarAngle={Math.PI / 2 + 0.5}
-          />
-        </Canvas>
+        {/* Substituído o Canvas pela imagem 2D */}
+        <img
+          src="/keplerpay-logo.png"
+          alt="KPP Logo"
+          className="w-48 h-48 rounded-full border-4 border-gray-700 shadow-lg object-cover" // Estilo de moeda 2D
+        />
       </motion.div>
 
       {animationComplete && (
