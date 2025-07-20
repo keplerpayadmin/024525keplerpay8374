@@ -341,12 +341,13 @@ export default function KStakingPage() {
             <button
               onClick={handleClaimRewards}
               disabled={
-                isClaiming || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
+                isClaiming // Manter desativado se já estiver processando
+                // Removida a condição: || !userStakingInfo?.pendingRewards || Number.parseFloat(userStakingInfo.pendingRewards) <= 0
               }
               className={`py-1.5 px-4 rounded-md font-medium text-xs transition-all duration-300 flex items-center justify-center space-x-1 ${
                 userStakingInfo?.pendingRewards && Number.parseFloat(userStakingInfo.pendingRewards) > 0
                   ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                  : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-600/50 text-gray-400" // Removido 'cursor-not-allowed' para permitir clique
               }`}
             >
               {isClaiming ? (
