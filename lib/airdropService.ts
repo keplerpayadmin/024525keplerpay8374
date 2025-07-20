@@ -62,8 +62,7 @@ export async function getAirdropStatus(address: string) {
     }
 
     // Se chegamos aqui, nenhum RPC funcionou
-    // Vamos usar uma simulação para desenvolvimento
-    console.log("All RPCs failed, using simulation mode")
+    console.warn("All RPCs failed for getAirdropStatus, using simulation mode. Last error:", lastError)
 
     // Verificar se há um último claim no localStorage
     const lastClaimTimeStr = localStorage.getItem(`lastClaim_${address}`)
@@ -150,6 +149,7 @@ export async function getContractBalance() {
     }
 
     // Se chegamos aqui, nenhum RPC funcionou, usar valor simulado
+    console.warn("All RPCs failed for getContractBalance, using simulation mode. Last error:", lastError)
     return {
       success: true,
       balance: "1000000",
