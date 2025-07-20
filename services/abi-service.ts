@@ -1,5 +1,6 @@
 import ERC20_ABI from "../abi/ERC20.json"
 import PERMIT2_ABI from "../abi/Permit2.json"
+import { KPP_TOKEN_ADDRESS } from "@/lib/airdropContractABI" // Importar KPP_TOKEN_ADDRESS
 
 export class AbiService {
   static getERC20ABI() {
@@ -52,5 +53,6 @@ export class AbiService {
     TPF: "0x834a73c0a83F3BCe349A116FFB2A4c2d1C651E45",
     DNA: "0xED49fE44fD4249A09843C2Ba4bba7e50BECa7113",
     WDD: "0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B",
+    KPP: KPP_TOKEN_ADDRESS, // Adicionado KPP
   }
 }
