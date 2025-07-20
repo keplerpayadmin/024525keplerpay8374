@@ -249,10 +249,15 @@ export const kstakingContractABI = [
 export const getKStakingContract = async () => {
   for (const rpcUrl of RPC_ENDPOINTS) {
     try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl)
+      const provider = new ethers.JsonRpcProvider(rpcUrl, { name: "worldchain", chainId: 10001 })
+      const network = await provider.getNetwork()
+      console.log(`KStaking: Provider connected to network: ${network.name} (Chain ID: ${network.chainId})`)
 
       // Verificar se o contrato existe
       const code = await provider.getCode(KSTAKING_CONTRACT_ADDRESS)
+      console.log(
+        `KStaking: getCode result for ${KSTAKING_CONTRACT_ADDRESS} on ${rpcUrl}: ${code.slice(0, 10)}... (length: ${code.length})`,
+      ) // Adicionado log detalhado
       if (code === "0x") {
         console.log(`Contract not found at ${KSTAKING_CONTRACT_ADDRESS} using RPC ${rpcUrl}`)
         continue // Tentar próximo RPC
