@@ -420,6 +420,30 @@ export interface MembershipTranslations {
   tipDescription?: string
 }
 
+// Nova interface para KStaking
+export interface KStakingTranslations {
+  title?: string
+  subtitle?: string
+  yourBalance?: string
+  pendingRewards?: string
+  lastClaim?: string
+  totalClaimed?: string
+  contractAPY?: string
+  contractBalance?: string
+  claimRewardsButton?: string
+  processingClaim?: string
+  claimSuccess?: string
+  claimError?: string
+  noKPPBalance?: string
+  noRewardsToClaim?: string
+  insufficientContractBalance?: string
+  connectWalletToStake?: string
+  lastClaimTime?: string
+  notClaimedYet?: string
+  rewardsPerDay?: string
+  rewardsPerYear?: string
+}
+
 export interface Translations {
   airdrop?: AirdropTranslations
   history?: HistoryTranslations
@@ -442,6 +466,7 @@ export interface Translations {
   level?: LevelTranslations
   events?: EventsTranslations
   membership?: MembershipTranslations
+  kstaking?: KStakingTranslations // Adicionado KStaking
 }
 
 // Função para obter o idioma atual do navegador ou o padrão (inglês)
@@ -766,7 +791,7 @@ export function getTranslations(lang: Language): Translations {
       alreadyCheckedIn: "Already checked in today!",
       points: "points",
       totalPoints: "Total points",
-      streak: "Streak",
+      streak: "streak",
       days: "days",
       checkInSuccess: "Check-in completed! +1 point",
       history: "History",
@@ -880,6 +905,28 @@ export function getTranslations(lang: Language): Translations {
       contactSupport: "After payment, contact the support team with the screenshot to:",
       tip: "Tip:",
       tipDescription: "Include the transaction screenshot and your wallet address in the email.",
+    },
+    kstaking: {
+      title: "KPP Staking",
+      subtitle: "Stake your KPP and earn rewards!",
+      yourBalance: "Your KPP Balance:",
+      pendingRewards: "Pending Rewards:",
+      lastClaim: "Last Claim:",
+      totalClaimed: "Total Claimed:",
+      contractAPY: "Contract APY:",
+      contractBalance: "Contract Reward Balance:",
+      claimRewardsButton: "Claim Rewards",
+      processingClaim: "Processing Claim...",
+      claimSuccess: "Rewards claimed successfully!",
+      claimError: "Failed to claim rewards.",
+      noKPPBalance: "No KPP tokens in wallet to stake.",
+      noRewardsToClaim: "No rewards to claim.",
+      insufficientContractBalance: "Insufficient reward balance in contract.",
+      connectWalletToStake: "Connect your wallet to view staking details.",
+      lastClaimTime: "Last Claim Time:",
+      notClaimedYet: "Not claimed yet",
+      rewardsPerDay: "Rewards per day:",
+      rewardsPerYear: "Rewards per year:",
     },
   }
 }
