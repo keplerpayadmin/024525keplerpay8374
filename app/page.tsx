@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { BackgroundEffect } from "@/components/background-effect"
-import { Title } from "@/components/title"
-import { VibratingLogo } from "@/components/vibrating-logo"
 import { ConnectButton } from "@/components/connect-button"
 import { BottomNav } from "@/components/bottom-nav"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import Image from "next/image" // Importar Image
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false)
@@ -47,8 +46,20 @@ export default function Home() {
           transition={{ duration: 0.5 }}
           className="w-full flex flex-col items-center"
         >
-          <VibratingLogo intensity={3} />
-          <Title />
+          {/* Substituído VibratingLogo por Image */}
+          <Image
+            src="/keplerpay-logo.png"
+            alt="KeplerPay Logo"
+            width={150}
+            height={150}
+            className="w-36 h-36 rounded-full border-4 border-gray-700 shadow-lg object-cover animate-spin-360"
+          />
+          {/* Substituído Title por h1 com gradiente */}
+          <h1 className="text-4xl font-bold tracking-tighter mt-4">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
+              KeplerPay
+            </span>
+          </h1>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
