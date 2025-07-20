@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import type * as THREE from "three"
 
-export function TPFLogoModel(props: any) {
+export function KPPLogoModel(props: any) {
   const group = useRef<THREE.Group>(null)
 
   return (
