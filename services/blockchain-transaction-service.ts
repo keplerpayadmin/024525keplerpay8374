@@ -1,5 +1,6 @@
 import { ethers } from "ethers"
 import type { Transaction } from "./types"
+import { KPP_TOKEN_ADDRESS } from "@/lib/airdropContractABI" // Importar KPP_TOKEN_ADDRESS
 
 // ABI simplificado para tokens ERC20
 const ERC20_ABI = [
@@ -51,6 +52,10 @@ const TOKENS_INFO = {
     symbol: "WDD",
     decimals: 18,
   },
+  [KPP_TOKEN_ADDRESS]: {
+    symbol: "KPP",
+    decimals: 18,
+  }, // Adicionado KPP
 }
 
 class BlockchainTransactionService {
