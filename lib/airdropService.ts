@@ -29,16 +29,16 @@ export async function getAirdropStatus(address: string) {
         const contract = new ethers.Contract(AIRDROP_CONTRACT_ADDRESS, airdropContractABI, provider)
 
         // Buscar dados do contrato
-        const [lastClaimTime, claimInterval, dailyAirdrop] = await Promise.all([
+        const [lastClaimTime, claimInterval, dailyAirdropAmount] = await Promise.all([
           contract.lastClaimTime(address),
           contract.CLAIM_INTERVAL(),
-          contract.DAILY_AIRDROP(),
+          contract.dailyAirdropAmount(),
         ])
 
         console.log("Contract data retrieved:", {
           lastClaimTime: Number(lastClaimTime),
           claimInterval: Number(claimInterval),
-          dailyAirdrop: dailyAirdrop.toString(),
+          dailyAirdropAmount: dailyAirdropAmount.toString(),
         })
 
         const now = Math.floor(Date.now() / 1000)
@@ -51,7 +51,7 @@ export async function getAirdropStatus(address: string) {
           nextClaimTime: nextClaimTime,
           canClaim: canClaim,
           timeRemaining: canClaim ? 0 : nextClaimTime - now,
-          airdropAmount: ethers.formatUnits(dailyAirdrop, 18),
+          airdropAmount: ethers.formatUnits(dailyAirdropAmount, 18),
           rpcUsed: rpcUrl,
         }
       } catch (error) {
@@ -135,7 +135,7 @@ export async function getContractBalance() {
         const balance = await contract.contractBalance()
         const formattedBalance = ethers.formatUnits(balance, 18)
 
-        console.log(`Contract balance: ${formattedBalance} TPF`)
+        console.log(`Contract balance: ${formattedBalance} KPP`)
 
         return {
           success: true,
@@ -205,13 +205,13 @@ export async function claimAirdrop(address: string) {
       localStorage.setItem(`lastClaim_${address}`, new Date().toISOString())
 
       // Atualizar o saldo do usuário (simulação)
-      const currentBalance = localStorage.getItem("userDefinedTPFBalance")
+      const currentBalance = localStorage.getItem("userDefinedKPPBalance")
       if (currentBalance) {
         const newBalance = Number(currentBalance) + 50
-        localStorage.setItem("userDefinedTPFBalance", newBalance.toString())
+        localStorage.setItem("userDefinedKPPBalance", newBalance.toString())
 
         // Disparar evento para atualizar o saldo na UI
-        const event = new CustomEvent("tpf_balance_updated", {
+        const event = new CustomEvent("kpp_balance_updated", {
           detail: {
             amount: newBalance,
           },
@@ -271,13 +271,13 @@ export async function processAirdrop(address: string) {
     localStorage.setItem(`lastClaim_${address}`, new Date().toISOString())
 
     // Atualizar o saldo do usuário (simulação)
-    const currentBalance = localStorage.getItem("userDefinedTPFBalance")
+    const currentBalance = localStorage.getItem("userDefinedKPPBalance")
     if (currentBalance) {
       const newBalance = Number(currentBalance) + 50
-      localStorage.setItem("userDefinedTPFBalance", newBalance.toString())
+      localStorage.setItem("userDefinedKPPBalance", newBalance.toString())
 
       // Disparar evento para atualizar o saldo na UI
-      const event = new CustomEvent("tpf_balance_updated", {
+      const event = new CustomEvent("kpp_balance_updated", {
         detail: {
           amount: newBalance,
         },
