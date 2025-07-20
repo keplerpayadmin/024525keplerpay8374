@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { motion } from "framer-motion"
 
 export function BackgroundEffect() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -13,7 +12,7 @@ export function BackgroundEffect() {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas dimensions
+    // Define as dimensões do canvas
     const setCanvasDimensions = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
@@ -22,85 +21,54 @@ export function BackgroundEffect() {
     setCanvasDimensions()
     window.addEventListener("resize", setCanvasDimensions)
 
-    // Create particles
-    const particles: Particle[] = []
-    const particleCount = 50
-
-    interface Particle {
+    interface Line {
       x: number
       y: number
-      radius: number
-      color: string
-      speedX: number
-      speedY: number
+      length: number
+      speed: number
       opacity: number
-      opacityChange: number
     }
 
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
+    const lines: Line[] = []
+    const lineCount = 40 // Número de linhas
+
+    // Inicializa as linhas
+    for (let i = 0; i < lineCount; i++) {
+      lines.push({
+        x: Math.random() * canvas.width, // Posição inicial aleatória
         y: Math.random() * canvas.height,
-        radius: Math.random() * 3 + 1,
-        color: `rgba(${150 + Math.random() * 50}, ${150 + Math.random() * 50}, ${150 + Math.random() * 50}, 1)`,
-        speedX: Math.random() * 0.5 - 0.25,
-        speedY: Math.random() * 0.5 - 0.25,
-        opacity: Math.random() * 0.5 + 0.1,
-        opacityChange: Math.random() * 0.01 * (Math.random() > 0.5 ? 1 : -1),
+        length: Math.random() * 100 + 50, // Comprimento da linha
+        speed: Math.random() * 0.5 + 0.1, // Velocidade de movimento
+        opacity: Math.random() * 0.3 + 0.05, // Opacidade da linha
       })
     }
 
-    // Animation loop
+    // Loop de animação
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw background gradient
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-      gradient.addColorStop(0, "#121212")
-      gradient.addColorStop(1, "#1a1a1a")
-      ctx.fillStyle = gradient
+      // Limpa o canvas e desenha um fundo escuro
+      ctx.fillStyle = "#121212" // Fundo muito escuro
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Update and draw particles
-      particles.forEach((particle) => {
-        particle.x += particle.speedX
-        particle.y += particle.speedY
+      // Atualiza e desenha as linhas
+      lines.forEach((line) => {
+        line.x += line.speed // Move a linha para a direita
 
-        // Bounce off edges
-        if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1
-        if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1
-
-        // Update opacity
-        particle.opacity += particle.opacityChange
-        if (particle.opacity > 0.6 || particle.opacity < 0.1) {
-          particle.opacityChange *= -1
+        // Se a linha sair da tela à direita, reinicia-a à esquerda
+        if (line.x > canvas.width) {
+          line.x = -line.length // Reinicia fora da tela à esquerda
+          line.y = Math.random() * canvas.height // Nova posição Y aleatória
+          line.speed = Math.random() * 0.5 + 0.1 // Nova velocidade
+          line.opacity = Math.random() * 0.3 + 0.05 // Nova opacidade
         }
 
-        // Draw particle
+        // Desenha a linha
         ctx.beginPath()
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-        ctx.fillStyle = particle.color.replace("1)", `${particle.opacity})`)
-        ctx.fill()
+        ctx.moveTo(line.x, line.y)
+        ctx.lineTo(line.x + line.length, line.y)
+        ctx.strokeStyle = `rgba(255, 255, 255, ${line.opacity})` // Linhas brancas
+        ctx.lineWidth = 1 // Espessura da linha
+        ctx.stroke()
       })
-
-      // Draw connections
-      ctx.strokeStyle = "rgba(150, 150, 150, 0.1)"
-      ctx.lineWidth = 0.5
-
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const distance = Math.sqrt(dx * dx + dy * dy)
-
-          if (distance < 100) {
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-          }
-        }
-      }
 
       requestAnimationFrame(animate)
     }
@@ -115,26 +83,8 @@ export function BackgroundEffect() {
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 w-full h-full -z-10" />
-
-      {/* Additional overlay effects */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black/20 to-black/60 -z-10" />
-
-      {/* Radial gradient in center */}
-      <div className="fixed inset-0 bg-radial-gradient -z-10" />
-
-      {/* Animated light beams */}
-      <motion.div
-        className="fixed top-0 left-1/4 w-1/2 h-screen bg-gradient-to-b from-gray-500/5 to-transparent -z-10 skew-x-12"
-        animate={{
-          opacity: [0.1, 0.2, 0.1],
-          x: ["-5%", "5%", "-5%"],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: "reverse",
-        }}
-      />
+      {/* Adiciona uma sobreposição sutil para escurecer um pouco o fundo e dar profundidade */}
+      <div className="fixed inset-0 bg-black/30 -z-10" />
     </>
   )
 }
