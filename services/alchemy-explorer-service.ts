@@ -1,4 +1,5 @@
 import type { Transaction } from "./types"
+import { KPP_TOKEN_ADDRESS } from "@/lib/airdropContractABI" // Importar KPP_TOKEN_ADDRESS
 
 class AlchemyExplorerService {
   private baseUrl = "https://worldchain-mainnet.explorer.alchemy.com/api"
@@ -255,6 +256,7 @@ class AlchemyExplorerService {
           "0x2cFc85d8E48F8EAB294be644d9E25C3030863003": "WLD",
           "0xED49fE44fD4249A09843C2Ba4bba7e50BECa7113": "DNA",
           "0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B": "WDD",
+          [KPP_TOKEN_ADDRESS]: "KPP", // Adicionado KPP
         }
         tokenSymbol = knownTokens[tx.contractAddress] || tokenSymbol
       }
