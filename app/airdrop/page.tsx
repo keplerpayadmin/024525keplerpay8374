@@ -6,7 +6,7 @@ import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, useProgress, Html, Preload } from "@react-three/drei"
 import { BackgroundEffect } from "@/components/background-effect"
 import { BottomNav } from "@/components/bottom-nav"
-import { TPFLogoModel } from "@/components/tpf-logo-model"
+import { KPPLogoModel } from "@/components/kpp-logo-model" // Manter TPFLogoModel por enquanto, mas o nome sugere KPP
 import { Coins, RefreshCw } from "lucide-react"
 import type * as THREE from "three"
 import { useRouter } from "next/navigation"
@@ -43,7 +43,7 @@ function RotatingCoin() {
 
   return (
     <group position={[0.15, 0, 0]} ref={coinRef}>
-      <TPFLogoModel scale={0.6} castShadow /> {/* TAMANHO REDUZIDO de 0.8 para 0.6 */}
+      <KPPLogoModel scale={0.6} castShadow /> {/* TAMANHO REDUZIDO de 0.8 para 0.6 */}
     </group>
   )
 }
@@ -316,7 +316,7 @@ export default function AirdropPage() {
             <span className="text-gray-400 text-xs">{t.airdrop?.availableForAirdrop}</span>
             <div className="flex items-center">
               <span className="text-white font-medium">{formattedBalance}</span>
-              <span className="text-gray-400 text-xs ml-1">TPF</span>
+              <span className="text-gray-400 text-xs ml-1">KPP</span>
               <button
                 onClick={fetchContractBalance}
                 disabled={isRefreshingBalance}
