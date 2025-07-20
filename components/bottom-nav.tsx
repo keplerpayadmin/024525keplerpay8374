@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { Home, Wallet, Star, User, Gift, Coins, Info, Handshake, Menu, X } from "lucide-react"
+import { Gift, Coins, Info, Handshake, Menu, X } from "lucide-react" // Importar apenas os ícones necessários para o menu
 import { getCurrentLanguage, getTranslations } from "@/lib/i18n"
 
 interface BottomNavProps {
@@ -20,7 +20,7 @@ interface BottomNavProps {
     | "news"
     | "learn"
     | "partnerships"
-    | "kstaking" // Adicionado KStaking
+    | "kstaking"
 }
 
 export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
@@ -46,7 +46,7 @@ export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
 
   const menuItems = [
     { name: translations.airdrop?.title || "Airdrop", icon: Gift, path: "/airdrop" },
-    { name: "KStaking", icon: Coins, path: "/kstaking" }, // Adicionado KStaking
+    { name: "KStaking", icon: Coins, path: "/kstaking" },
     { name: translations.about?.title || "About", icon: Info, path: "/about" },
     { name: translations.partnerships?.title || "Partnerships", icon: Handshake, path: "/partnerships" },
   ]
@@ -114,7 +114,7 @@ export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
         {/* Background preto sólido */}
         <div className="absolute inset-0 bg-black rounded-t-xl shadow-lg border-t border-gray-800 overflow-hidden" />
 
-        {/* Menu Button */}
+        {/* Menu Button - Centralizado */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-10">
           <motion.button
             onClick={toggleMenu}
@@ -126,31 +126,7 @@ export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
           </motion.button>
         </div>
 
-        {/* Navigation Items */}
-        <div className="relative h-full flex items-center justify-around px-4">
-          {/* Itens da navegação principal */}
-          {[
-            { name: "Home", icon: Home, path: "/home" },
-            { name: "Wallet", icon: Wallet, path: "/wallet" },
-            { name: "Airdrop", icon: Star, path: "/airdrop" }, // Usando Star para Airdrop na nav principal
-            { name: "Profile", icon: User, path: "/profile" },
-          ].map((item) => (
-            <Link href={item.path} key={item.name}>
-              <motion.div
-                className={`flex flex-col items-center justify-center w-16 h-14 rounded-lg ${
-                  activeTab === item.name.toLowerCase() ? "bg-gray-800/50" : "bg-transparent"
-                } text-white hover:text-gray-300 transition-colors`}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <item.icon
-                  className={`h-6 w-6 ${activeTab === item.name.toLowerCase() ? "text-white" : "text-gray-400"}`}
-                />
-                <span className="text-xs mt-1">{item.name}</span>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
+        {/* Não há outros itens de navegação aqui, apenas o botão central */}
       </motion.div>
     </>
   )
