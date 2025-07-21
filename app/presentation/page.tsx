@@ -3,9 +3,11 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info } from "lucide-react"
+import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye } from "lucide-react" // Added Eye, EyeOff
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { useMiniKit } from "../hooks/use-minikit" // Import useMiniKit
+import MiniWallet from "../components/mini-wallet" // Import MiniWallet
 
 // Simplified language support
 const LANGUAGES = [
@@ -37,6 +39,7 @@ const translations = {
       language: "Language",
       close: "Close",
       back: "Back",
+      wallet: "Wallet", // Added wallet translation
     },
   },
   pt: {
@@ -53,6 +56,7 @@ const translations = {
       language: "Idioma",
       close: "Fechar",
       back: "Voltar",
+      wallet: "Carteira", // Added wallet translation
     },
   },
   es: {
@@ -69,6 +73,7 @@ const translations = {
       language: "Idioma",
       close: "Cerrar",
       back: "Atrás",
+      wallet: "Billetera", // Added wallet translation
     },
   },
   id: {
@@ -85,6 +90,7 @@ const translations = {
       language: "Bahasa",
       close: "Tutup",
       back: "Kembali",
+      wallet: "Dompet", // Added wallet translation
     },
   },
 }
@@ -100,9 +106,18 @@ const Presentation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
-  const [isConnected, setIsConnected] = useState(false) // Simulate wallet connection
-  const [isLoading, setIsLoading] = useState(false) // Simulate loading state
+  const [showMiniWallet, setShowMiniWallet] = useState(false) // State for MiniWallet visibility
   const router = useRouter()
+
+  // Use MiniKit hook
+  const miniKitContext = useMiniKit()
+  const {
+    user = null,
+    isAuthenticated = false,
+    isLoading = false,
+    connectWallet = async () => {},
+    disconnectWallet = async () => {},
+  } = miniKitContext || {}
 
   // Get translations for current language
   const t = translations[currentLang]
@@ -115,24 +130,30 @@ const Presentation: React.FC = () => {
     }
   }, [])
 
+  // Show mini wallet when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setShowMiniWallet(true)
+    } else {
+      setShowMiniWallet(false)
+    }
+  }, [isAuthenticated, user])
+
   const navigationItems: NavItem[] = [
     {
       id: "airdrop",
       labelKey: "airdrop",
       icon: Gift,
-      // Removed href to prevent "page not found" as there are no other pages
     },
     {
       id: "fistaking",
       labelKey: "fistaking",
       icon: TrendingUp,
-      // Removed href
     },
     {
       id: "about",
       labelKey: "about",
       icon: Info,
-      // Removed href
     },
   ]
 
@@ -144,13 +165,28 @@ const Presentation: React.FC = () => {
     setIsMenuOpen(false) // Close menu when language changes
   }
 
-  const handleWalletConnect = async () => {
-    setIsLoading(true)
-    // Simulate an async connection
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsConnected(true)
-    setIsLoading(false)
-    console.log("Wallet connected!")
+  // Handle disconnect
+  const handleWalletDisconnect = async () => {
+    console.log("🔌 Disconnect button clicked")
+    try {
+      await disconnectWallet()
+      setShowMiniWallet(false)
+      console.log("✅ Wallet disconnected and mini wallet hidden")
+    } catch (error) {
+      console.error("❌ Error during disconnect:", error)
+    }
+  }
+
+  // Handle minimize wallet
+  const handleMinimizeWallet = () => {
+    setShowMiniWallet(false)
+  }
+
+  // Handle show wallet again
+  const handleShowWallet = () => {
+    if (isAuthenticated) {
+      setShowMiniWallet(true)
+    }
   }
 
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
@@ -160,10 +196,11 @@ const Presentation: React.FC = () => {
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50 p-6">
         <div className="flex items-center justify-between">
-          {/* Left Side - Connect Wallet Button */}
+          {/* Left Side - Connect Wallet Button / Mini Wallet Toggle */}
           <div className="flex items-center space-x-3">
-            {!isConnected && (
-              <button onClick={handleWalletConnect} disabled={isLoading} className="relative group">
+            {/* Connect Wallet Button (only when not connected) */}
+            {!isAuthenticated && (
+              <button onClick={connectWallet} disabled={isLoading} className="relative group">
                 <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
@@ -173,11 +210,18 @@ const Presentation: React.FC = () => {
                 </div>
               </button>
             )}
-            {isConnected && (
-              <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-green-700/50 rounded-full flex items-center space-x-2 text-green-300">
-                <Wallet className="w-5 h-5" />
-                <span>Connected!</span>
-              </div>
+
+            {/* Wallet Button (when wallet is connected but hidden) */}
+            {isAuthenticated && !showMiniWallet && (
+              <button onClick={handleShowWallet} className="relative group">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Eye className="w-4 h-4 text-green-300 relative z-10" />
+                  <span className="text-green-300 text-sm font-medium relative z-10">
+                    {t.common?.wallet || "Wallet"}
+                  </span>
+                </div>
+              </button>
             )}
           </div>
 
@@ -226,6 +270,24 @@ const Presentation: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Mini Wallet - Positioned with safe spacing from top navigation */}
+      <AnimatePresence>
+        {showMiniWallet && user && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-24 left-6 z-40" // Adjusted top position
+          >
+            <MiniWallet
+              walletAddress={user.walletAddress}
+              onMinimize={handleMinimizeWallet}
+              onDisconnect={handleWalletDisconnect}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation Bar with Menu Button */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
@@ -331,12 +393,12 @@ const Presentation: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 text-center">
         {/* Logo */}
-        <div className="relative w-[560px] h-[560px] flex items-center justify-center">
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
           <Image
             src="/images/keplerpay-rb.png"
             alt="KeplerPay Logo"
-            width={560}
-            height={560}
+            width={320}
+            height={320}
             className="w-full h-full object-contain"
           />
         </div>
