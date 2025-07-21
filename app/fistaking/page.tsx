@@ -76,43 +76,13 @@ const translations = {
   },
 }
 
-// Staking contracts configuration
+// Staking contracts configuration - UPDATED TO ONLY INCLUDE YOUR ADDRESS
 const STAKING_CONTRACTS = {
-  WDD: {
-    name: "Drachma",
-    symbol: "WDD",
-    address: "0xc4F3ae925E647aa2623200901a43BF65e8542c23",
-    image: "/images/drachma-token.png",
-  },
-  TPT: {
-    name: "TradePulse Token",
-    symbol: "TPT",
-    address: "0x4c1f9CF3c5742c73a00864a32048988b87121e2f",
-    image: "/images/logo-tpf.png",
-  },
-  RFX: {
-    name: "Roflex MemeToken",
-    symbol: "RFX",
-    address: "0x9FA697Ece25F4e2A94d7dEb99418B2b0c4b96FE2",
-    image: "/images/roflex-token.png",
-  },
-  RCC: {
-    name: "RoseChana Coin",
-    symbol: "RCC",
-    address: "0xA8785DABbc9902173b819f488e5A6A0Dbc45A9dF",
-    image: "/images/rosechana-coin.png",
-  },
-  EDEN: {
-    name: "Project Eden Token",
-    symbol: "EDEN",
-    address: "0x6BAD88b93d67590656c83371d65DCB35d17deC87",
-    image: "/images/eden-logo.png",
-  },
-  KPP: {
-    name: "KeplerPay",
-    symbol: "KPP",
-    address: "0x2aaeC7df37AA5799a9E721A1B338aa2d591acd64",
-    image: "/images/keplerpay-logo.png",
+  MST: {
+    name: "My Staking Token",
+    symbol: "MST",
+    address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C",
+    image: "/placeholder.svg?height=32&width=32",
   },
 }
 
