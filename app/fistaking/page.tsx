@@ -99,8 +99,8 @@ const STAKING_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: false, internalType: "uint256", name: "oldAPY", type: "uint256" },
-      { indexed: false, internalType: "uint256", name: "newAPY", type: "uint256" },
+      { internalType: "uint256", name: "oldAPY", type: "uint256" },
+      { internalType: "uint256", name: "newAPY", type: "uint256" },
     ],
     name: "APYUpdated",
     type: "event",
@@ -266,7 +266,7 @@ const STAKING_ABI = [
   {
     inputs: [],
     name: "owner",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    outputs: [{ internalType: "address", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },
@@ -332,49 +332,12 @@ interface StakingInfo {
   canClaim: boolean
 }
 
-// Battery Component
-function BatteryIndicator({ currentLang }: { currentLang: SupportedLanguage }) {
-  const [batteryLevel, setBatteryLevel] = useState(0)
-  const t = translations[currentLang]
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBatteryLevel((prev) => {
-        if (prev >= 100) return 0
-        return prev + 2
-      })
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="flex flex-col items-center">
-      {/* Battery */}
-      <div className="relative w-8 h-4 border border-green-400 rounded-sm bg-black/50">
-        {/* Battery tip */}
-        <div className="absolute -right-1 top-1 w-1 h-2 bg-green-400 rounded-r-sm"></div>
-        {/* Battery fill */}
-        <div
-          className="h-full bg-gradient-to-r from-green-500 to-green-300 rounded-sm transition-all duration-100"
-          style={{ width: `${batteryLevel}%` }}
-        ></div>
-        {/* Battery percentage text */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[6px] font-bold text-white drop-shadow-sm">{batteryLevel}%</span>
-        </div>
-      </div>
-      {/* Power Activated text */}
-      <div className="text-green-400 text-[8px] font-medium mt-1 text-center">{t.powerActivated}</div>
-    </div>
-  )
-}
+// Removed BatteryIndicator component
 
 export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
-  // Removed rewardsPerSecond state and related loading state
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -389,8 +352,6 @@ export default function FiStakingPage() {
 
   // Get translations for current language
   const t = translations[currentLang]
-
-  // Removed fetchRewardsPerSecond function and its useEffect
 
   const handleClaim = async (tokenKey: string) => {
     const contract = STAKING_CONTRACTS[tokenKey as keyof typeof STAKING_CONTRACTS]
@@ -428,7 +389,6 @@ export default function FiStakingPage() {
       if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
         setClaimSuccess(tokenKey)
-        // Removed fetchRewardsPerSecond call after claim
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -465,87 +425,41 @@ export default function FiStakingPage() {
   const isClaimingKPP = claiming === "KPP"
 
   return (
-    <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
-      {/* Background Effects - Reduced */}
-      <div className="absolute inset-0">
-        {[...Array(8)].map((_, i) => (
+    <main className="min-h-screen relative overflow-hidden flex flex-col items-center pt-4 pb-6 bg-gray-900">
+      {/* Moving Light Lines Background (from presentation.tsx) */}
+      <div className="absolute inset-0 bg-gray-900">
+        {/* Horizontal Moving Lines */}
+        {[...Array(12)].map((_, i) => (
           <div
             key={`h-line-${i}`}
-            className="absolute h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-pulse"
+            className="absolute h-px bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
             style={{
-              top: `${10 + i * 10}%`,
+              top: `${8 + i * 8}%`,
               left: "-100%",
               width: "200%",
-              animation: `moveRight 5s linear infinite`,
-              animationDelay: `${i * 0.4}s`,
-            }}
-          />
-        ))}
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={`v-line-${i}`}
-            className="absolute w-px bg-gradient-to-b from-transparent via-blue-400/30 to-transparent"
-            style={{
-              left: `${15 + i * 15}%`,
-              top: "-100%",
-              height: "200%",
-              animation: `moveDown 6s linear infinite`,
-              animationDelay: `${i * 0.5}s`,
+              animation: `moveRight 4s linear infinite`,
+              animationDelay: `${i * 0.3}s`,
             }}
           />
         ))}
       </div>
-
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(34,211,238,0.2) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34,211,238,0.2) 1px, transparent 1px)
-          `,
-          backgroundSize: "80px 80px",
-        }}
-      />
-
-      {/* Reduced background effects */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-64 h-64 bg-white/3 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute w-48 h-48 bg-cyan-400/5 rounded-full blur-2xl animate-pulse"
-          style={{ animationDelay: "0.5s" }}
-        />
-      </div>
-
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={`particle-${i}`}
-          className="absolute rounded-full animate-ping"
-          style={{
-            width: `${1 + Math.random() * 2}px`,
-            height: `${1 + Math.random() * 2}px`,
-            backgroundColor:
-              i % 3 === 0 ? "rgba(255,255,255,0.4)" : i % 3 === 1 ? "rgba(34,211,238,0.3)" : "rgba(59,130,246,0.2)",
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 4}s`,
-            animationDuration: `${2 + Math.random() * 3}s`,
-          }}
-        />
-      ))}
 
       <style jsx>{`
         @keyframes moveRight {
-          0% { transform: translateX(-100%); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateX(100vw); opacity: 0; }
-        }
-        
-        @keyframes moveDown {
-          0% { transform: translateY(-100%); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(100vh); opacity: 0; }
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100vw);
+            opacity: 0;
+          }
         }
 
         @keyframes glow-light {
@@ -554,15 +468,7 @@ export default function FiStakingPage() {
         }
       `}</style>
 
-      {/* Battery Indicator - Top Right */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="absolute top-4 right-4 z-20"
-      >
-        <BatteryIndicator currentLang={currentLang} />
-      </motion.div>
+      {/* Removed Battery Indicator */}
 
       {/* Back Button */}
       <motion.div
