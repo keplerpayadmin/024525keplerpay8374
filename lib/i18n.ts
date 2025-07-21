@@ -23,6 +23,7 @@ export interface HistoryTranslations {
   loading?: string
   loadMore?: string
   noTransactions?: string
+  noTransactions?: string
   showAllTransactions?: string
   received?: string
   sent?: string
@@ -421,7 +422,7 @@ export interface MembershipTranslations {
 }
 
 // Nova interface para KStaking
-export interface KStakingTranslations {
+export interface FiStakingTranslations {
   title?: string
   subtitle?: string
   yourBalance?: string
@@ -442,8 +443,14 @@ export interface KStakingTranslations {
   notClaimedYet?: string
   rewardsPerDay?: string
   rewardsPerYear?: string
-  dismiss?: string // Adicionado para o botão de dispensar
-  powerActivated?: string // Adicionado para o indicador de bateria
+  dismiss?: string
+  powerActivated?: string
+  description?: string // Adicionado para a nova página FiStaking
+  claiming?: string // Adicionado para o estado de carregamento do botão
+  claim?: string // Adicionado para o texto do botão
+  claimFailed?: string // Adicionado para erro de claim
+  rewardsClaimedSuccess?: string // Adicionado para mensagem de sucesso
+  connectWalletFirst?: string // Adicionado para mensagem de conectar carteira
 }
 
 export interface Translations {
@@ -468,7 +475,7 @@ export interface Translations {
   level?: LevelTranslations
   events?: EventsTranslations
   membership?: MembershipTranslations
-  kstaking?: KStakingTranslations // Adicionado KStaking
+  fistaking?: FiStakingTranslations // Renomeado de kstaking para fistaking
 }
 
 // Função para obter o idioma atual do navegador ou o padrão (inglês)
@@ -909,10 +916,10 @@ export function getTranslations(lang: Language): Translations {
         tip: "Tip:",
         tipDescription: "Include the transaction screenshot and your wallet address in the email.",
       },
-      kstaking: {
-        title: "KPP Staking",
-        subtitle:
-          "Just for holding KPP, you are entitled to passive earnings from other tokens. The more KPP you have, the more you earn!",
+      fistaking: {
+        // Renomeado de kstaking para fistaking
+        title: "FiStaking",
+        subtitle: "Stake your tokens and earn passive rewards from other tokens.",
         yourBalance: "Your KPP Balance:",
         pendingRewards: "Pending Rewards:",
         lastClaim: "Last Claim:",
@@ -933,6 +940,12 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Rewards per year:",
         dismiss: "Dismiss",
         powerActivated: "Power Activated",
+        description: "The more you stake, the more you earn!", // Novo
+        claiming: "Claiming...", // Novo
+        claim: "Claim", // Novo
+        claimFailed: "Claim Failed", // Novo
+        rewardsClaimedSuccess: "Rewards claimed for {token} successfully!", // Novo
+        connectWalletFirst: "Connect your wallet first to view staking details.", // Novo
       },
     },
     pt: {
@@ -1209,7 +1222,7 @@ export function getTranslations(lang: Language): Translations {
         transactionPending: "Transação pendente. Por favor, aguarde...",
       },
       connectButton: {
-        connect: "Conectar Carteira",
+        title: "Conectar Carteira",
         connecting: "Conectando...",
         connected: "Conectado",
         installMiniKit: "Por favor, instale o aplicativo Worldcoin para conectar sua carteira",
@@ -1358,10 +1371,10 @@ export function getTranslations(lang: Language): Translations {
         tip: "Dica:",
         tipDescription: "Inclua a captura de tela da transação e o endereço da sua carteira no e-mail.",
       },
-      kstaking: {
-        title: "KPP Staking",
-        subtitle:
-          "Só por teres KPP tens direito a ganhos passivos de outros tokens, quanto mais KPP tiveres, mais ganhas!",
+      fistaking: {
+        // Renomeado de kstaking para fistaking
+        title: "FiStaking",
+        subtitle: "Só por teres KPP tens direito a ganhos passivos de outros tokens.",
         yourBalance: "Seu Saldo KPP:",
         pendingRewards: "Recompensas Pendentes:",
         lastClaim: "Último Claim:",
@@ -1382,6 +1395,12 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Recompensas por ano:",
         dismiss: "Dispensar",
         powerActivated: "Energia Ativada",
+        description: "Quanto mais KPP tiveres, mais ganhas!", // Novo
+        claiming: "Reivindicando...", // Novo
+        claim: "Reivindicar", // Novo
+        claimFailed: "Reivindicação Falhou", // Novo
+        rewardsClaimedSuccess: "Recompensas reivindicadas para {token} com sucesso!", // Novo
+        connectWalletFirst: "Conecte sua carteira primeiro para ver os detalhes do staking.", // Novo
       },
     },
     es: {
@@ -1810,10 +1829,10 @@ export function getTranslations(lang: Language): Translations {
         tipDescription:
           "Incluye la captura de pantalla de la transacción y la dirección de tu billetera en el correo electrónico.",
       },
-      kstaking: {
-        title: "KPP Staking",
-        subtitle:
-          "¡Solo por tener KPP tienes derecho a ganancias pasivas de otros tokens, cuanto más KPP tengas, más ganas!",
+      fistaking: {
+        // Renomeado de kstaking para fistaking
+        title: "FiStaking",
+        subtitle: "¡Solo por tener KPP tienes derecho a ganancias pasivas de otros tokens.",
         yourBalance: "Tu Saldo KPP:",
         pendingRewards: "Recompensas Pendientes:",
         lastClaim: "Último Reclamo:",
@@ -1834,6 +1853,12 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Recompensas por año:",
         dismiss: "Descartar",
         powerActivated: "Energía Activada",
+        description: "¡Cuanto más KPP tengas, más ganas!", // Nuevo
+        claiming: "Reclamando...", // Nuevo
+        claim: "Reclamar", // Nuevo
+        claimFailed: "Reclamo Fallido", // Nuevo
+        rewardsClaimedSuccess: "¡Recompensas reclamadas para {token} con éxito!", // Nuevo
+        connectWalletFirst: "Conecta tu billetera primero para ver los detalles del staking.", // Nuevo
       },
     },
     id: {
@@ -2257,8 +2282,9 @@ export function getTranslations(lang: Language): Translations {
         tip: "Tip:",
         tipDescription: "Sertakan tangkapan layar transaksi e o endereço da sua carteira no email.",
       },
-      kstaking: {
-        title: "KPP Staking",
+      fistaking: {
+        // Renomeado de kstaking para fistaking
+        title: "FiStaking",
         subtitle:
           "Hanya com KPP você tem direito a ganhos passivos de outros tokens, quanto mais KPP você tiver, mais você ganha!",
         yourBalance: "Seu Saldo KPP:",
@@ -2281,6 +2307,12 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Recompensas por ano:",
         dismiss: "Dispensar",
         powerActivated: "Energia Ativada",
+        description: "Semakin banyak KPP yang Anda miliki, semakin banyak yang Anda hasilkan!", // Novo
+        claiming: "Mengklaim...", // Novo
+        claim: "Klaim", // Novo
+        claimFailed: "Klaim Gagal", // Novo
+        rewardsClaimedSuccess: "Hadiah berhasil diklaim untuk {token}!", // Novo
+        connectWalletFirst: "Hubungkan dompet Anda terlebih dahulu untuk melihat detail staking.", // Novo
       },
     },
   }
