@@ -1,409 +1,315 @@
 "use client"
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-
-import { useState, useEffect, useCallback } from "react"
-import { ArrowLeft, TrendingUp, Gift, Loader2, CheckCircle, Clock } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { useMiniKit } from "@/hooks/use-minikit"
-import { TransactionEffect } from "@/components/transaction-effects"
-import { MiniKit } from "@worldcoin/minikit-js"
-import { ethers } from "ethers"
-import { STAKING_CONTRACTS, SOFT_STAKING_ABI } from "@/lib/constants/staking-contracts"
-import { useTranslations } from "@/lib/i18n"
-import Image from "next/image"
-import { getRobustProvider } from "@/lib/utils/ethers-utils"
-import { BottomNav } from "@/components/bottom-nav" // Importar BottomNav
-import { BackgroundEffect } from "@/components/background-effect" // Importar BackgroundEffect
+import { formatUnits } from "ethers"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Token } from "@/lib/constants/tokens"
+import { useTranslation } from "@/lib/i18n"
+import { formatTimeDifference } from "@/lib/utils"
+import { getKPPTokenContract, getFiStakingContract, getProvider } from "@/lib/utils/ethers-utils"
+import TransactionEffects from "@/components/transaction-effects"
 
-interface StakingInfo {
+interface StakingData {
+  userKPPBalance: string
   pendingRewards: string
-  canClaim: boolean
+  lastClaimTime: number
+  totalClaimed: string
+  contractAPY: string
+  contractRewardBalance: string
+  nextClaimIn: string
+  isClaiming: boolean
 }
 
-export default function FiStakingPage() {
-  const router = useRouter()
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useMiniKit()
-  const { t } = useTranslations()
+const formatNumber = (value: string, decimals = 2) => {
+  const num = Number.parseFloat(value)
+  if (isNaN(num)) return "0.00"
+  return num.toFixed(decimals)
+}
 
-  const [stakingData, setStakingData] = useState<Record<string, StakingInfo>>({})
+export default function FiStaking() {
+  const { address, miniKit, isConnected } = useMiniKit()
+  const { t } = useTranslation()
+  const [stakingData, setStakingData] = useState<StakingData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [claiming, setClaiming] = useState<string | null>(null)
-  const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
-  const [claimError, setClaimError] = useState<string | null>(null)
-  const [apiError, setApiError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [claimStatus, setClaimStatus] = useState<{ success: boolean; message: string } | null>(null)
 
-  const [showClaimEffect, setShowClaimEffect] = useState(false)
-
-  const loadStakingData = useCallback(async () => {
-    if (!user?.walletAddress) {
-      console.log("FiStaking: No wallet address, skipping data load.")
+  const loadStakingData = async () => {
+    if (!isConnected || !address) {
+      console.log("Wallet not connected or address missing, cannot load staking data.")
       setLoading(false)
+      setStakingData(null)
+      setError(t.fistaking?.connectWalletFirst || "Connect your wallet first to view staking details.")
       return
     }
 
     setLoading(true)
-    setApiError(null)
+    setError(null)
+    console.log("Loading staking data for address:", address)
 
     try {
-      console.log("FiStaking: Attempting to get robust RPC provider...")
-      const provider = await getRobustProvider()
-      console.log("FiStaking: Robust RPC provider obtained.")
+      const provider = getProvider()
+      console.log("Provider connected to network:", (await provider.getNetwork()).name)
 
-      const newStakingData: Record<string, StakingInfo> = {}
+      const fiStakingContract = getFiStakingContract(provider)
+      const kppTokenContract = getKPPTokenContract(provider)
 
-      for (const [key, contract] of Object.entries(STAKING_CONTRACTS)) {
-        console.log(`FiStaking: Processing contract ${contract.symbol} at address ${contract.address || "N/A"}`)
-
-        if (!contract.address) {
-          console.log(`FiStaking: ${contract.symbol} has no contract address, setting default staking info.`)
-          newStakingData[key] = {
-            pendingRewards: "0",
-            canClaim: false,
-          }
-          continue
-        }
-
-        try {
-          const code = await provider.getCode(contract.address)
-          if (code === "0x") {
-            console.warn(`FiStaking: Contract code not found for ${contract.symbol} at ${contract.address}. Skipping.`)
-            newStakingData[key] = {
-              pendingRewards: "0",
-              canClaim: false,
-            }
-            continue
-          }
-          console.log(`FiStaking: Contract code found for ${contract.symbol}.`)
-
-          const stakingContract = new ethers.Contract(contract.address, SOFT_STAKING_ABI, provider)
-          console.log(`FiStaking: Fetching pending rewards for ${contract.symbol} for user ${user.walletAddress}...`)
-          const pendingRewards = await stakingContract.calculatePendingRewards(user.walletAddress)
-          console.log(`FiStaking: Raw pending rewards for ${contract.symbol}: ${pendingRewards.toString()}`)
-
-          const formattedPendingRewards = ethers.formatUnits(pendingRewards, 18)
-          const canClaim = Number.parseFloat(formattedPendingRewards) > 0
-
-          newStakingData[key] = {
-            pendingRewards: formattedPendingRewards,
-            canClaim: canClaim,
-          }
-          console.log(`FiStaking: ${contract.symbol} staking data loaded:`, newStakingData[key])
-        } catch (error) {
-          console.error(`FiStaking: Error loading ${contract.symbol} staking data:`, error)
-          setApiError(
-            `Failed to load ${contract.symbol} data: ${error instanceof Error ? error.message : String(error)}`,
-          )
-          newStakingData[key] = {
-            pendingRewards: "0",
-            canClaim: false,
-          }
-        }
+      if (!fiStakingContract || !kppTokenContract) {
+        throw new Error("Failed to get contract instances. Check contract ABIs and addresses.")
       }
+      console.log("FiStaking Contract Address:", await fiStakingContract.getAddress())
+      console.log("KPP Token Contract Address:", await kppTokenContract.getAddress())
 
-      setStakingData(newStakingData)
-    } catch (error) {
-      console.error("FiStaking: Error in loadStakingData (outer catch):", error)
-      setApiError(error instanceof Error ? error.message : t.common?.unexpectedError || "An unexpected error occurred.")
+      const [
+        userKPPBalanceRaw,
+        pendingRewardsRaw,
+        lastClaimTimeRaw,
+        totalClaimedRaw,
+        contractAPYRaw,
+        contractRewardBalanceRaw,
+      ] = await Promise.all([
+        kppTokenContract.balanceOf(address),
+        fiStakingContract.pendingRewards(address),
+        fiStakingContract.lastClaimTime(address),
+        fiStakingContract.totalClaimed(address),
+        fiStakingContract.apy(),
+        fiStakingContract.getContractBalance(),
+      ])
+
+      console.log("Raw Data:", {
+        userKPPBalanceRaw: userKPPBalanceRaw.toString(),
+        pendingRewardsRaw: pendingRewardsRaw.toString(),
+        lastClaimTimeRaw: lastClaimTimeRaw.toString(),
+        totalClaimedRaw: totalClaimedRaw.toString(),
+        contractAPYRaw: contractAPYRaw.toString(),
+        contractRewardBalanceRaw: contractRewardBalanceRaw.toString(),
+      })
+
+      const userKPPBalance = formatUnits(userKPPBalanceRaw, Token.KPP.decimals)
+      const pendingRewards = formatUnits(pendingRewardsRaw, Token.WLD.decimals) // Assuming WLD for rewards
+      const lastClaimTime = Number(lastClaimTimeRaw) * 1000 // Convert to milliseconds
+      const totalClaimed = formatUnits(totalClaimedRaw, Token.WLD.decimals)
+      const contractAPY = formatUnits(contractAPYRaw, 16) // APY is percentage, likely fixed point
+      const contractRewardBalance = formatUnits(contractRewardBalanceRaw, Token.WLD.decimals)
+
+      console.log("Formatted Data:", {
+        userKPPBalance,
+        pendingRewards,
+        lastClaimTime,
+        totalClaimed,
+        contractAPY,
+        contractRewardBalance,
+      })
+
+      const nextClaimIn =
+        lastClaimTime > 0
+          ? formatTimeDifference(lastClaimTime + 24 * 60 * 60 * 1000)
+          : t.fistaking?.availableNow || "Available now!"
+
+      setStakingData({
+        userKPPBalance,
+        pendingRewards,
+        lastClaimTime,
+        totalClaimed,
+        contractAPY,
+        contractRewardBalance,
+        nextClaimIn,
+        isClaiming: false,
+      })
+    } catch (err) {
+      console.error("Error loading staking data:", err)
+      setError(t.common?.unexpectedError || "An unexpected error occurred.")
+      setStakingData(null)
     } finally {
       setLoading(false)
     }
-  }, [user, t.common?.unexpectedError])
+  }
 
-  useEffect(() => {
-    if (!isAuthLoading && isAuthenticated && user?.walletAddress) {
-      loadStakingData()
-      const interval = setInterval(loadStakingData, 30000)
-      return () => clearInterval(interval)
-    } else if (!isAuthLoading && !isAuthenticated) {
-      router.push("/")
+  const handleClaimRewards = async () => {
+    if (!miniKit || !miniKit.provider || !address) {
+      setError(t.fistaking?.connectWalletToStake || "Connect your wallet to stake.")
+      return
     }
-  }, [isAuthenticated, user, isAuthLoading, loadStakingData, router])
 
-  const handleClaim = async (tokenKey: string) => {
-    const contract = STAKING_CONTRACTS[tokenKey as keyof typeof STAKING_CONTRACTS]
-    if (!contract.address || !user?.walletAddress) return
+    if (!stakingData || Number.parseFloat(stakingData.pendingRewards) <= 0) {
+      setError(t.fistaking?.noRewardsToClaim || "No rewards to claim.")
+      return
+    }
 
-    setClaiming(tokenKey)
-    setClaimError(null)
-    setApiError(null)
+    setStakingData((prev) => (prev ? { ...prev, isClaiming: true } : null))
+    setClaimStatus(null)
 
     try {
-      console.log(`FiStaking: 🎁 Claiming ${contract.symbol} rewards...`)
+      const signer = miniKit.provider.getSigner()
+      const fiStakingContract = getFiStakingContract(signer)
+      console.log("Attempting to claim rewards...")
 
-      if (!MiniKit.isInstalled()) {
-        throw new Error("MiniKit not available. Please use World App.")
-      }
+      const tx = await fiStakingContract.claimRewards()
+      console.log("Transaction sent:", tx.hash)
+      setClaimStatus({ success: true, message: t.fistaking?.processingClaim || "Processing Claim..." })
 
-      console.log("FiStaking: Calling MiniKit.commandsAsync.sendTransaction...")
-      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [
-          {
-            address: contract.address,
-            abi: SOFT_STAKING_ABI,
-            functionName: "claimRewards",
-            args: [],
-          },
-        ],
+      await tx.wait()
+      console.log("Transaction confirmed!")
+      setClaimStatus({
+        success: true,
+        message: t.fistaking?.rewardsClaimedSuccess?.replace("{token}", "WLD") || "Rewards claimed successfully!",
       })
 
-      console.log("FiStaking: MiniKit transaction final payload:", finalPayload)
-
-      if (finalPayload.status === "error") {
-        throw new Error(
-          `Transaction failed: ${finalPayload.errorMessage || finalPayload.message || t.common?.unexpectedError || "Unknown error"}`,
-        )
-      }
-
-      if (finalPayload.status === "success") {
-        console.log(`FiStaking: ✅ ${contract.symbol} rewards claimed successfully!`)
-
-        setShowClaimEffect(true)
-        setClaimSuccess(tokenKey)
-
-        setTimeout(() => {
-          loadStakingData()
-          setShowClaimEffect(false)
-          setClaimSuccess(null)
-        }, 3000)
-      }
-    } catch (error) {
-      console.error(`FiStaking: ❌ ${contract.symbol} claim failed:`, error)
-      let errorMessage = t.fistaking?.claimFailed || "Failed to claim rewards."
-
-      if (error instanceof Error) {
-        errorMessage = error.message
-      }
-
-      if (errorMessage.includes("simulation_failed")) {
-        errorMessage = "Transaction simulation failed. You may not have enough tokens or rewards to claim."
-      } else if (errorMessage.includes("user_rejected")) {
-        errorMessage = "Transaction was rejected by user."
-      } else if (errorMessage.includes("insufficient funds")) {
-        errorMessage = "Insufficient funds for transaction (check gas or token balance)."
-      }
-
-      setClaimError(errorMessage)
+      await loadStakingData() // Reload data after successful claim
+    } catch (err) {
+      console.error("Error claiming rewards:", err)
+      setError(t.fistaking?.claimError || "Failed to claim rewards.")
+      setClaimStatus({ success: false, message: t.fistaking?.claimFailed || "Claim Failed" })
     } finally {
-      setClaiming(null)
+      setStakingData((prev) => (prev ? { ...prev, isClaiming: false } : null))
     }
   }
 
-  const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount)
-    if (isNaN(num)) return "0.00"
-    if (num < 0.0001 && num !== 0) return num.toFixed(8)
-    if (num < 1 && num !== 0) return num.toFixed(4)
-    return num.toLocaleString(undefined, { maximumFractionDigits: 4 })
-  }
-
-  if (isAuthLoading || loading) {
-    return (
-      <main className="relative flex min-h-screen flex-col items-center justify-center pt-6 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/80" />
-        <div className="flex flex-col items-center text-white z-10">
-          <Loader2 className="w-16 h-16 text-cyan-400 animate-spin" />
-          <p className="mt-4 text-lg font-medium">{t.history?.loading || "Loading..."}</p>
-        </div>
-      </main>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <main className="relative flex min-h-screen flex-col items-center justify-center pt-6 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/80" />
-        <div className="text-center text-white z-10 p-4">
-          <h2 className="text-2xl font-bold mb-4">
-            {t.fistaking?.connectWalletToStake || "Connect your wallet to view staking details."}
-          </h2>
-          <Button onClick={() => router.push("/")}>{t.connectButton?.connect || "Connect Wallet"}</Button>
-        </div>
-        <BottomNav activeTab="fistaking" />
-      </main>
-    )
-  }
+  useEffect(() => {
+    loadStakingData()
+    const interval = setInterval(loadStakingData, 30000) // Refresh every 30 seconds
+    return () => clearInterval(interval)
+  }, [isConnected, address])
 
   return (
-    <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
-      <BackgroundEffect />
+    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-4">
+        <h1 className="text-3xl font-bold text-center">{t.fistaking?.title}</h1>
+        <p className="text-center text-gray-500 dark:text-gray-400">{t.fistaking?.subtitle}</p>
 
-      <TransactionEffect
-        isVisible={showClaimEffect}
-        type="claim"
-        message={t.fistaking?.claimSuccess || "Rewards Claimed!"}
-        onComplete={() => setShowClaimEffect(false)}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="absolute top-6 left-4 z-20"
-      >
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">{t.common?.back || "Back"}</span>
-        </button>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-6 relative z-10"
-      >
-        <h1 className="text-3xl font-bold tracking-tighter flex items-center justify-center">
-          <TrendingUp className="w-6 h-6 mr-2 text-purple-400" />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
-            {t.fistaking?.title || "FiStaking"}
-          </span>
-        </h1>
-        <p className="text-gray-400 text-sm mt-1 leading-relaxed">
-          {t.fistaking?.subtitle || "Stake your tokens and earn passive rewards."}
-          <br />
-          {t.fistaking?.description || "The more you stake, the more you earn!"}
-        </p>
-      </motion.div>
-
-      <div className="w-full max-w-md px-4 relative z-10 space-y-4">
-        <AnimatePresence>
-          {claimSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-green-500/10 border border-green-500/30 rounded-lg p-4"
-            >
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-green-400 text-sm font-medium mb-1">{t.fistaking?.claimSuccess}</p>
-                  <p className="text-green-300 text-xs">
-                    {t.fistaking?.rewardsClaimedSuccess?.replace(
-                      "{token}",
-                      STAKING_CONTRACTS[claimSuccess as keyof typeof STAKING_CONTRACTS]?.symbol || "",
-                    ) || `Rewards claimed for ${claimSuccess}!`}
-                  </p>
+        {!isConnected ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.fistaking?.connectWalletToStake}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{t.fistaking?.connectWalletFirst}</p>
+            </CardContent>
+          </Card>
+        ) : loading ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <Skeleton className="h-6 w-3/4" />
+              </CardTitle>
+              <CardDescription>
+                <Skeleton className="h-4 w-full" />
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-red-500">{t.common?.error}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-red-400">{error}</p>
+              <Button onClick={loadStakingData} className="mt-4">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : stakingData ? (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>{t.fistaking?.yourBalance}</CardTitle>
+                <CardDescription>{t.fistaking?.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span>KPP:</span>
+                  <span className="font-medium">{formatNumber(stakingData.userKPPBalance)} KPP</span>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {claimError && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-red-500/10 border border-red-500/30 rounded-lg p-4"
-            >
-              <div className="flex items-start space-x-3">
-                <div className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0">⚠️</div>
-                <div>
-                  <p className="text-red-400 text-sm font-medium mb-1">{t.fistaking?.claimFailed || "Claim Failed"}</p>
-                  <p className="text-red-300 text-xs">{claimError}</p>
-                  <button onClick={() => setClaimError(null)} className="mt-2 text-red-400 text-xs hover:text-red-300">
-                    {t.fistaking?.dismiss || "Dismiss"}
-                  </button>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.pendingRewards}</span>
+                  <span className="font-medium">{formatNumber(stakingData.pendingRewards)} WLD</span>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {apiError && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-red-500/10 border border-red-500/30 rounded-lg p-4"
-            >
-              <div className="flex items-start space-x-3">
-                <div className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0">⚠️</div>
-                <div>
-                  <p className="text-red-400 text-sm font-medium mb-1">{t.common?.error || "Error"}</p>
-                  <p className="text-red-300 text-xs">{apiError}</p>
-                  <button onClick={() => setApiError(null)} className="mt-2 text-red-400 text-xs hover:text-red-300">
-                    {t.fistaking?.dismiss || "Dismiss"}
-                  </button>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.totalClaimed}</span>
+                  <span className="font-medium">{formatNumber(stakingData.totalClaimed)} WLD</span>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {Object.entries(STAKING_CONTRACTS).map(([key, contract], index) => {
-          const data = stakingData[key]
-          const isClaimingThis = claiming === key
-          const hasRewards = data && Number.parseFloat(data.pendingRewards) > 0
-
-          return (
-            <motion.div
-              key={key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Image
-                    src={contract.image || "/placeholder.svg"}
-                    alt={contract.name}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <h3 className="text-white font-medium text-lg">{contract.symbol}</h3>
-                    {data && (
-                      <p className="text-gray-400 text-xs">
-                        {t.fistaking?.pendingRewards || "Pending Rewards"}: {formatAmount(data.pendingRewards)}{" "}
-                        {contract.symbol}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleClaim(key)}
-                  disabled={!contract.address || !data?.canClaim || isClaimingThis || !hasRewards}
-                  className={`py-2 px-6 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center space-x-2 ${
-                    !contract.address
-                      ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                      : data?.canClaim && hasRewards
-                        ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                        : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  {isClaimingThis ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : !contract.address ? (
-                    <Clock className="w-4 h-4" />
-                  ) : (
-                    <Gift className="w-4 h-4" />
-                  )}
-                  <span>
-                    {isClaimingThis
-                      ? t.fistaking?.claiming || "Claiming..."
-                      : !contract.address
-                        ? t.common?.comingSoon || "Coming Soon"
-                        : t.fistaking?.claim || "Claim"}
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.lastClaimTime}</span>
+                  <span className="font-medium">
+                    {stakingData.lastClaimTime > 0
+                      ? new Date(stakingData.lastClaimTime).toLocaleString()
+                      : t.fistaking?.notClaimedYet}
                   </span>
-                </button>
-              </div>
-            </motion.div>
-          )
-        })}
+                </div>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.nextClaimIn}</span>
+                  <span className="font-medium">{stakingData.nextClaimIn}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t.fistaking?.contractBalance}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.contractAPY}</span>
+                  <span className="font-medium">{formatNumber(stakingData.contractAPY)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.rewardsPerDay}</span>
+                  <span className="font-medium">
+                    {formatNumber(
+                      (Number.parseFloat(stakingData.contractAPY) / 36500) *
+                        Number.parseFloat(stakingData.userKPPBalance),
+                    )}{" "}
+                    WLD
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.rewardsPerYear}</span>
+                  <span className="font-medium">
+                    {formatNumber(
+                      (Number.parseFloat(stakingData.contractAPY) / 100) *
+                        Number.parseFloat(stakingData.userKPPBalance),
+                    )}{" "}
+                    WLD
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{t.fistaking?.contractRewardBalance}</span>
+                  <span className="font-medium">{formatNumber(stakingData.contractRewardBalance)} WLD</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              onClick={handleClaimRewards}
+              className="w-full"
+              disabled={
+                stakingData.isClaiming ||
+                Number.parseFloat(stakingData.pendingRewards) <= 0 ||
+                Number.parseFloat(stakingData.contractRewardBalance) <= 0
+              }
+            >
+              {stakingData.isClaiming ? t.fistaking?.claiming : t.fistaking?.claim}
+            </Button>
+            {claimStatus && (
+              <TransactionEffects
+                success={claimStatus.success}
+                message={claimStatus.message}
+                onDismiss={() => setClaimStatus(null)}
+              />
+            )}
+          </>
+        ) : null}
       </div>
-      <BottomNav activeTab="fistaking" />
     </main>
   )
 }
