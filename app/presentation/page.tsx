@@ -6,8 +6,8 @@ import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useMiniKit } from "../../hooks/use-minikit"
-import MiniWallet from "../../components/mini-wallet"
+import { useMiniKit } from "../hooks/use-minikit"
+import MiniWallet from "../components/mini-wallet"
 
 // Simplified language support
 const LANGUAGES = [
@@ -236,16 +236,19 @@ const Presentation: React.FC = () => {
       id: "airdrop",
       labelKey: "airdrop",
       icon: Gift,
+      href: "/airdrop",
     },
     {
       id: "fistaking",
       labelKey: "fistaking",
       icon: TrendingUp,
+      href: "/fistaking",
     },
     {
       id: "about",
       labelKey: "about",
       icon: Info,
+      href: "/about",
     },
   ]
 
@@ -435,6 +438,9 @@ const Presentation: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                       onClick={() => {
+                        if (item.href) {
+                          router.push(item.href)
+                        }
                         setIsMenuOpen(false)
                       }}
                       className="group p-2 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300"
