@@ -6,8 +6,8 @@ import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useMiniKit } from "../hooks/use-minikit"
-import MiniWallet from "../components/mini-wallet"
+import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
+import MiniWallet from "../../components/mini-wallet" // Corrected path
 
 // Simplified language support
 const LANGUAGES = [
