@@ -31,8 +31,7 @@ const translations = {
   },
   pt: {
     title: "FiStaking",
-    subtitle:
-      "Só por teres TPulseFi tens direito a ganhos passivos de outros tokens, quanto mais TPF tiveres, mais ganhas!",
+    subtitle: "Só por teres KPP ganhas tokens a longo prazo com APY a 12%, do que estás á espera de obter mais?", // Updated subtitle
     back: "Voltar",
     claim: "Reclamar",
     claiming: "Reclamando...",
@@ -76,13 +75,13 @@ const translations = {
   },
 }
 
-// Staking contracts configuration - Reverted to original structure with single address
+// Staking contracts configuration - Updated for KPP only
 const STAKING_CONTRACTS = {
-  MST: {
-    name: "My Staking Token",
-    symbol: "MST",
-    address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C",
-    image: "/placeholder.svg?height=32&width=32",
+  KPP: {
+    name: "KeplerPay",
+    symbol: "KPP",
+    address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C", // Using the user-provided address
+    image: "/images/keplerpay-logo.png",
   },
 }
 
@@ -374,8 +373,6 @@ export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
-  const [stakingData, setStakingData] = useState<Record<string, StakingInfo>>({}) // Reverted to original state
-  const [loading, setLoading] = useState(true) // Reverted to original state
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -458,6 +455,9 @@ export default function FiStakingPage() {
       setClaiming(null)
     }
   }
+
+  const kppContract = STAKING_CONTRACTS.KPP
+  const isClaimingKPP = claiming === "KPP"
 
   return (
     <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
@@ -585,7 +585,7 @@ export default function FiStakingPage() {
         <p className="text-gray-400 text-xs mt-1 leading-relaxed px-4">{t.subtitle}</p>
       </motion.div>
 
-      <div className="w-full max-w-sm px-4 relative z-10 space-y-3">
+      <div className="w-full max-w-sm px-4 relative z-10 space-y-3 flex flex-col items-center justify-center flex-grow">
         {/* Success Message */}
         <AnimatePresence>
           {claimSuccess && (
@@ -593,7 +593,7 @@ export default function FiStakingPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-green-500/10 border border-green-500/30 rounded-lg p-3"
+              className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 w-full"
             >
               <div className="flex items-start space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
@@ -616,7 +616,7 @@ export default function FiStakingPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-red-500/10 border border-red-500/30 rounded-lg p-3"
+              className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 w-full"
             >
               <div className="flex items-start space-x-2">
                 <div className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0">⚠️</div>
@@ -639,69 +639,64 @@ export default function FiStakingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center"
+            className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center w-full"
           >
             <p className="text-blue-400 text-xs">{t.connectWalletFirst}</p>
           </motion.div>
         ) : (
           <>
-            {/* Staking Tokens - Compact (Reverted to original structure) */}
-            {Object.entries(STAKING_CONTRACTS).map(([key, contract], index) => {
-              const isClaimingThis = claiming === key
+            {/* KPP Logo in the middle */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col items-center justify-center my-8"
+            >
+              <Image
+                src={kppContract.image || "/placeholder.svg"}
+                alt={kppContract.name}
+                width={128} // Larger size for central display
+                height={128}
+                className="rounded-full border-4 border-cyan-400/50 shadow-lg shadow-cyan-500/30" // Added border and shadow for emphasis
+              />
+              <h3 className="text-white font-bold text-2xl mt-4">{kppContract.symbol}</h3>
+              <p className="text-gray-400 text-sm">{kppContract.name}</p>
+            </motion.div>
 
-              return (
-                <motion.div
-                  key={key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Image
-                        src={contract.image || "/placeholder.svg"}
-                        alt={contract.name}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <h3 className="text-white font-medium text-sm">{contract.symbol}</h3>
-                        <p className="text-gray-400 text-[10px]">{contract.name}</p>
-                      </div>
-                    </div>
-
-                    {/* Claim Button - Compact */}
-                    <button
-                      onClick={() => handleClaim(key)}
-                      disabled={isClaimingThis}
-                      className={`py-1.5 px-4 rounded-md font-medium text-xs transition-all duration-300 flex items-center justify-center space-x-1 ${
-                        isClaimingThis
-                          ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                          : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                      }`}
-                    >
-                      {isClaimingThis ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>{t.claiming}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Gift className="w-3 h-3" />
-                          <span>{t.claim}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </motion.div>
-              )
-            })}
+            {/* Claim Button below the logo */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="w-full mt-8" // Added margin-top for spacing
+            >
+              <button
+                onClick={() => handleClaim("KPP")}
+                disabled={isClaimingKPP}
+                className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+                  isClaimingKPP
+                    ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30"
+                }`}
+              >
+                {isClaimingKPP ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{t.claiming}</span>
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-5 h-5" />
+                    <span>
+                      {t.claim} {kppContract.symbol}
+                    </span>
+                  </>
+                )}
+              </button>
+            </motion.div>
           </>
         )}
       </div>
-      {/* Removed the fixed claim button and pending rewards display */}
     </main>
   )
 }
