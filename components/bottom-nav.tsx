@@ -20,10 +20,10 @@ interface BottomNavProps {
     | "news"
     | "learn"
     | "partnerships"
-    | "kstaking"
+    | "fistaking"
 }
 
-export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
+export function BottomNav({ activeTab = "fistaking" }: BottomNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [translations, setTranslations] = useState(getTranslations(getCurrentLanguage()))
 
@@ -46,7 +46,7 @@ export function BottomNav({ activeTab = "airdrop" }: BottomNavProps) {
 
   const menuItems = [
     { name: translations.airdrop?.title || "Airdrop", icon: Gift, path: "/airdrop" },
-    { name: "KStaking", icon: Coins, path: "/kstaking" },
+    { name: "FiStaking", icon: Coins, path: "/fistaking" },
     { name: translations.about?.title || "About", icon: Info, path: "/about" },
     { name: translations.partnerships?.title || "Partnerships", icon: Handshake, path: "/partnerships" },
   ]
