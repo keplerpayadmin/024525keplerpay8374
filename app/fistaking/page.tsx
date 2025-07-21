@@ -28,10 +28,11 @@ const translations = {
     pendingRewards: "Pending Rewards",
     dismiss: "Dismiss",
     powerActivated: "Power Activated",
+    rewardsPerSecond: "Rewards per second", // New translation
   },
   pt: {
     title: "FiStaking",
-    subtitle: "Só por teres KPP ganhas tokens a longo prazo com APY a 12%, do que estás á espera de obter mais?", // Updated subtitle
+    subtitle: "Só por teres KPP ganhas tokens a longo prazo com APY a 12%, do que estás á espera de obter mais?",
     back: "Voltar",
     claim: "Reclamar",
     claiming: "Reclamando...",
@@ -42,6 +43,7 @@ const translations = {
     pendingRewards: "Recompensas Pendentes",
     dismiss: "Dispensar",
     powerActivated: "Energia Ativada",
+    rewardsPerSecond: "Recompensas por segundo", // New translation
   },
   es: {
     title: "FiStaking",
@@ -57,6 +59,7 @@ const translations = {
     pendingRewards: "Recompensas Pendientes",
     dismiss: "Descartar",
     powerActivated: "Energía Activada",
+    rewardsPerSecond: "Recompensas por segundo", // New translation
   },
   id: {
     title: "FiStaking",
@@ -72,15 +75,16 @@ const translations = {
     pendingRewards: "Hadiah Tertunda",
     dismiss: "Tutup",
     powerActivated: "Daya Diaktifkan",
+    rewardsPerSecond: "Hadiah per detik", // New translation
   },
 }
 
-// Staking contracts configuration - Updated for KPP only
+// Staking contracts configuration
 const STAKING_CONTRACTS = {
   KPP: {
     name: "KeplerPay",
     symbol: "KPP",
-    address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C", // Using the user-provided address
+    address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C",
     image: "/images/keplerpay-logo.png",
   },
 }
@@ -373,6 +377,8 @@ export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
+  const [rewardsPerSecond, setRewardsPerSecond] = useState<string | null>(null) // New state for rewards per second
+  const [loadingRewardsPerSecond, setLoadingRewardsPerSecond] = useState(true) // New state for loading
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -387,6 +393,49 @@ export default function FiStakingPage() {
 
   // Get translations for current language
   const t = translations[currentLang]
+
+  // Function to fetch rewards per second
+  const fetchRewardsPerSecond = async () => {
+    if (!isAuthenticated || !user?.walletAddress) {
+      setRewardsPerSecond(null)
+      setLoadingRewardsPerSecond(false)
+      return
+    }
+
+    const contract = STAKING_CONTRACTS.KPP
+    if (!contract.address) {
+      setRewardsPerSecond(null)
+      setLoadingRewardsPerSecond(false)
+      return
+    }
+
+    try {
+      setLoadingRewardsPerSecond(true)
+      const result = await MiniKit.commandsAsync.readContract({
+        address: contract.address,
+        abi: STAKING_ABI,
+        functionName: "calculateRewardsPerSecond",
+        args: [user.walletAddress],
+      })
+      // Assuming result is a string or can be directly displayed.
+      // For proper formatting, you might need to divide by token decimals (e.g., 10^18 for ERC20)
+      // For now, we'll just display it as a number with a few decimal places.
+      const formattedResult = (Number.parseFloat(result as string) / 1e18).toFixed(8) // Example: assuming 18 decimals
+      setRewardsPerSecond(formattedResult)
+    } catch (error) {
+      console.error("Error fetching rewards per second:", error)
+      setRewardsPerSecond("0.00000000") // Default to 0 on error
+    } finally {
+      setLoadingRewardsPerSecond(false)
+    }
+  }
+
+  // Fetch rewards per second on mount and every 2 seconds
+  useEffect(() => {
+    fetchRewardsPerSecond()
+    const interval = setInterval(fetchRewardsPerSecond, 2000) // Refresh every 2 seconds
+    return () => clearInterval(interval)
+  }, [isAuthenticated, user?.walletAddress])
 
   const handleClaim = async (tokenKey: string) => {
     const contract = STAKING_CONTRACTS[tokenKey as keyof typeof STAKING_CONTRACTS]
@@ -424,6 +473,7 @@ export default function FiStakingPage() {
       if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
         setClaimSuccess(tokenKey)
+        fetchRewardsPerSecond() // Refresh rewards per second after claim
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -655,12 +705,30 @@ export default function FiStakingPage() {
               <Image
                 src={kppContract.image || "/placeholder.svg"}
                 alt={kppContract.name}
-                width={128} // Larger size for central display
+                width={128}
                 height={128}
-                className="rounded-full border-4 border-cyan-400/50 shadow-lg shadow-cyan-500/30" // Added border and shadow for emphasis
+                className="rounded-full border-4 border-cyan-400/50 shadow-lg shadow-cyan-500/30"
               />
               <h3 className="text-white font-bold text-2xl mt-4">{kppContract.symbol}</h3>
               <p className="text-gray-400 text-sm">{kppContract.name}</p>
+            </motion.div>
+
+            {/* Rewards Per Second Display */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col items-center justify-center my-4 p-2 bg-gray-800/50 border border-gray-700/50 rounded-lg w-full max-w-[200px]"
+            >
+              <p className="text-gray-400 text-xs font-medium mb-1">{t.rewardsPerSecond}</p>
+              {loadingRewardsPerSecond ? (
+                <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+              ) : (
+                <p className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
+                  {rewardsPerSecond !== null ? rewardsPerSecond : "0.00000000"} {kppContract.symbol}
+                </p>
+              )}
+              {/* Note: The displayed value assumes 18 decimals for formatting. Adjust `1e18` if your token has different decimals. */}
             </motion.div>
 
             {/* Claim Button below the logo */}
@@ -668,7 +736,7 @@ export default function FiStakingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="w-full mt-8" // Added margin-top for spacing
+              className="w-full mt-8"
             >
               <button
                 onClick={() => handleClaim("KPP")}
