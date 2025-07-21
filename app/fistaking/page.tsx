@@ -28,7 +28,7 @@ const translations = {
     pendingRewards: "Pending Rewards",
     dismiss: "Dismiss",
     powerActivated: "Power Activated",
-    // rewardsPerSecond: "Rewards per second", // Removed
+    rewardsPerSecond: "Rewards per second", // Re-added translation
   },
   pt: {
     title: "FiStaking",
@@ -40,10 +40,10 @@ const translations = {
     claimSuccess: "Reclamação Bem-sucedida!",
     claimFailed: "Reclamação Falhou",
     connectWalletFirst: "Conecte sua carteira primeiro",
-    pendingRewards: "Recompensas Pendentes", // Re-using existing translation
+    pendingRewards: "Recompensas Pendentes",
     dismiss: "Dispensar",
     powerActivated: "Energia Ativada",
-    // rewardsPerSecond: "Recompensas por segundo", // Removed
+    rewardsPerSecond: "Recompensas por segundo", // Re-added translation
   },
   es: {
     title: "FiStaking",
@@ -59,7 +59,7 @@ const translations = {
     pendingRewards: "Recompensas Pendientes",
     dismiss: "Descartar",
     powerActivated: "Energía Activada",
-    // rewardsPerSecond: "Recompensas por segundo", // Removed
+    rewardsPerSecond: "Recompensas por segundo", // Re-added translation
   },
   id: {
     title: "FiStaking",
@@ -75,7 +75,7 @@ const translations = {
     pendingRewards: "Hadiah Tertunda",
     dismiss: "Tutup",
     powerActivated: "Daya Diaktifkan",
-    // rewardsPerSecond: "Hadiah per detik", // Removed
+    rewardsPerSecond: "Hadiah per detik", // Re-added translation
   },
 }
 
@@ -377,8 +377,8 @@ export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
-  const [pendingRewards, setPendingRewards] = useState<string | null>(null) // State for pending rewards
-  const [loadingPendingRewards, setLoadingPendingRewards] = useState(true) // State for loading pending rewards
+  const [rewardsPerSecond, setRewardsPerSecond] = useState<string | null>(null) // Reverted to rewardsPerSecond
+  const [loadingRewardsPerSecond, setLoadingRewardsPerSecond] = useState(true) // Reverted loading state
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -394,45 +394,43 @@ export default function FiStakingPage() {
   // Get translations for current language
   const t = translations[currentLang]
 
-  // Function to fetch pending rewards
-  const fetchPendingRewards = async () => {
+  // Function to fetch rewards per second (reverted)
+  const fetchRewardsPerSecond = async () => {
     if (!isAuthenticated || !user?.walletAddress) {
-      setPendingRewards(null)
-      setLoadingPendingRewards(false)
+      setRewardsPerSecond(null)
+      setLoadingRewardsPerSecond(false)
       return
     }
 
     const contract = STAKING_CONTRACTS.KPP
     if (!contract.address) {
-      setPendingRewards(null)
-      setLoadingPendingRewards(false)
+      setRewardsPerSecond(null)
+      setLoadingRewardsPerSecond(false)
       return
     }
 
     try {
-      setLoadingPendingRewards(true)
+      setLoadingRewardsPerSecond(true)
       const result = await MiniKit.commandsAsync.readContract({
         address: contract.address,
         abi: STAKING_ABI,
-        functionName: "calculatePendingRewards", // Changed back to calculatePendingRewards
+        functionName: "calculateRewardsPerSecond", // Changed back to calculateRewardsPerSecond
         args: [user.walletAddress],
       })
-      // Assuming result is a string (BigInt from contract).
-      // For proper formatting, you might need to divide by token decimals (e.g., 10^18 for ERC20)
       const formattedResult = (Number.parseFloat(result as string) / 1e18).toFixed(8) // Example: assuming 18 decimals
-      setPendingRewards(formattedResult)
+      setRewardsPerSecond(formattedResult)
     } catch (error) {
-      console.error("Error fetching pending rewards:", error)
-      setPendingRewards("0.00000000") // Default to 0 on error
+      console.error("Error fetching rewards per second:", error)
+      setRewardsPerSecond("0.00000000") // Default to 0 on error
     } finally {
-      setLoadingPendingRewards(false)
+      setLoadingRewardsPerSecond(false)
     }
   }
 
-  // Fetch pending rewards on mount and every 2 seconds
+  // Fetch rewards per second on mount and every 2 seconds (reverted)
   useEffect(() => {
-    fetchPendingRewards()
-    const interval = setInterval(fetchPendingRewards, 2000) // Refresh every 2 seconds
+    fetchRewardsPerSecond()
+    const interval = setInterval(fetchRewardsPerSecond, 2000) // Refresh every 2 seconds
     return () => clearInterval(interval)
   }, [isAuthenticated, user?.walletAddress])
 
@@ -472,7 +470,7 @@ export default function FiStakingPage() {
       if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
         setClaimSuccess(tokenKey)
-        fetchPendingRewards() // Refresh pending rewards after successful claim
+        fetchRewardsPerSecond() // Refresh rewards per second after successful claim
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -712,19 +710,19 @@ export default function FiStakingPage() {
               <p className="text-gray-400 text-sm">{kppContract.name}</p>
             </motion.div>
 
-            {/* Pending Rewards Display */}
+            {/* Rewards Per Second Display (Reverted) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col items-center justify-center my-4 p-2 bg-gray-800/50 border border-gray-700/50 rounded-lg w-full max-w-[250px]"
             >
-              <p className="text-gray-400 text-xs font-medium mb-1">{t.pendingRewards}</p>
-              {loadingPendingRewards ? (
+              <p className="text-gray-400 text-xs font-medium mb-1">{t.rewardsPerSecond}</p>
+              {loadingRewardsPerSecond ? (
                 <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
               ) : (
                 <p className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
-                  {pendingRewards !== null ? pendingRewards : "0.00000000"} {kppContract.symbol}
+                  {rewardsPerSecond !== null ? rewardsPerSecond : "0.00000000"} {kppContract.symbol}
                 </p>
               )}
               {/* Note: The displayed value assumes 18 decimals for formatting. Adjust `1e18` if your token has different decimals. */}
@@ -739,9 +737,9 @@ export default function FiStakingPage() {
             >
               <button
                 onClick={() => handleClaim("KPP")}
-                disabled={isClaimingKPP || loadingPendingRewards || pendingRewards === "0.00000000"} // Disable if no rewards
+                disabled={isClaimingKPP || loadingRewardsPerSecond} // Disabled state reverted
                 className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
-                  isClaimingKPP || loadingPendingRewards || (pendingRewards === "0.00000000")
+                  isClaimingKPP || loadingRewardsPerSecond
                     ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30"
                 }`}
