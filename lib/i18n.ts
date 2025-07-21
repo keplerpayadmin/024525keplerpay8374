@@ -1,5 +1,9 @@
 "use client"
 
+import { useEffect } from "react"
+
+import { useState } from "react"
+
 // Tipos para internacionalização
 export type Language = "en" | "pt" | "es" | "id"
 
@@ -479,7 +483,7 @@ export interface Translations {
   events?: EventsTranslations
   membership?: MembershipTranslations
   fistaking?: FiStakingTranslations
-  common?: CommonTranslations // Adicionado CommonTranslations
+  common?: CommonTranslations
 }
 
 export function getCurrentLanguage(): Language {
@@ -1757,7 +1761,7 @@ export function getTranslations(lang: Language): Translations {
         expenseBreakdown: "Distribución de Gastos",
         noData: "No hay datos disponibles",
         totalRevenue: "Ingresos Totales",
-        totalExpenses: "Total Expenses",
+        totalExpenses: "Gastos Totales",
       },
       partnerships: {
         title: "Asociaciones",
@@ -1795,11 +1799,11 @@ export function getTranslations(lang: Language): Translations {
           remaining: "restante",
         },
         snakeTournament: {
-          registrationTitle: "Inscripción al Torneo",
+          registrationTitle: "Inscripción al Torneio",
           registrationDescription: "Envía 200.000 KPP para inscribirte en el torneo",
           tournamentTitle: "Torneo de Juego de la Serpiente",
           tournamentDescription: "Obtén la puntuación más alta en el juego de la serpiente para ganar el gran premio",
-          instructions: "Instrucciones:",
+          instructions: "Instruções:",
           rules: {
             rule1: "El jugador que obtenga la puntuación más alta en el juego de la serpiente gana el gran premio",
             rule2:
@@ -2095,10 +2099,10 @@ export function getTranslations(lang: Language): Translations {
         tokenomics: "Tokenomics",
         whyChoose: "Mengapa memilih KeplerPay?",
         airdrops: "Airdrop Harian",
-        community: "Komunitas Aktif",
+        community: "Comunidade Ativa",
         utility: "Utilitas",
         longTerm: "Visi Jangka Panjang",
-        growthStrategy: "Strategi Pertumbuhan",
+        growthStrategy: "Estratégia Pertumbuhan",
         marketing: "Pemasaran",
         incentives: "Insentif",
         governance: "Tata Kelola",
@@ -2107,12 +2111,12 @@ export function getTranslations(lang: Language): Translations {
         phase2: "Fase 2",
         phase2Development: "Dalam Pengembangan",
         phase3: "Fase 3",
-        phase3Future: "Tujuan Masa Depan",
+        phase3Future: "Tujuan Masa Futura",
         tokenLaunch: "Peluncuran Token",
-        websiteDocs: "Situs Web dan Dokumentasi",
+        websiteDocs: "Situs Web e Documentação",
         communityGrowth: "Pertumbuhan Komunitas",
         miniApp: "Mini-App (Worldcoin AppStore)",
-        airdropCampaigns: "Kampanye Airdrop",
+        airdropCampaigns: "Campanhas de Airdrop",
         fiGames: "Fi Games",
         fiStaking: "FiStaking (12% APY)",
         pulseGame: "Pulse Game",
@@ -2225,7 +2229,7 @@ export function getTranslations(lang: Language): Translations {
         subtitle: "Mitra strategis kami",
         ourPartners: "Mitra Kami",
         holdstationTitle: "HoldStation",
-        holdstationDescription: "Platform perdagangan dan pertukaran canggih para WorldChain",
+        holdstationDescription: "Platform perdagangan e pertukaran canggih para WorldChain",
         visitApp: "Kunjungi Aplikasi",
         poweredBy: "Didukung oleh",
         swapIntegration: "Integrasi Pertukaran",
@@ -2341,6 +2345,26 @@ export function getTranslations(lang: Language): Translations {
   return translations[lang] || translations["en"]
 }
 
-import { useTranslation } from "./useTranslation"
+// Hook para usar traduções em componentes
+export function useTranslation() {
+  const [language, setLanguage] = useState<Language>(getCurrentLanguage())
 
-export { useTranslation }
+  useEffect(() => {
+    setLanguage(getCurrentLanguage())
+
+    const handleLanguageChange = () => {
+      setLanguage(getCurrentLanguage())
+    }
+
+    window.addEventListener("languageChange", handleLanguageChange)
+    return () => window.removeEventListener("languageChange", handleLanguageChange)
+  }, [])
+
+  const translations = getTranslations(language)
+
+  return {
+    language,
+    setLanguage: setCurrentLanguage,
+    t: translations,
+  }
+}
