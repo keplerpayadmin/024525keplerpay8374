@@ -1,3 +1,5 @@
+import { MiniKit } from "@worldcoin/minikit-js"
+
 export interface AirdropStatus {
   canClaim: boolean
   lastClaimTime: number | null
@@ -107,21 +109,75 @@ export class AirdropService {
 
   async claimAirdrop(address: string): Promise<ClaimResult> {
     try {
-      console.log(`Simulating airdrop claim for address: ${address}`)
+      console.log(`Claiming airdrop for address: ${address}`)
 
-      // Simulate a successful transaction
-      await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate network delay
+      if (!MiniKit.isInstalled()) {
+        throw new Error("MiniKit is not installed")
+      }
+
+      // Use the real contract address and ABI
+      const contractAddress = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237"
+      const contractABI = [
+        {
+          inputs: [],
+          name: "claimAirdrop",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "dailyAirdropAmount",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "", type: "address" }],
+          name: "lastClaimTime",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+      ]
+
+      console.log("Calling MiniKit.commandsAsync.sendTransaction...")
+      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
+        transaction: [
+          {
+            address: contractAddress,
+            abi: contractABI,
+            functionName: "claimAirdrop",
+            args: [],
+          },
+        ],
+      })
+
+      console.log("MiniKit transaction response:", finalPayload)
+
+      if (finalPayload.status === "error") {
+        console.error("Error claiming airdrop:", finalPayload.message)
+        return {
+          success: false,
+          error: finalPayload.message || "Failed to claim airdrop",
+        }
+      }
+
+      console.log("Airdrop claimed successfully:", finalPayload)
+
+      // Save claim timestamp to localStorage
+      localStorage.setItem(`lastClaim_${address}`, new Date().toISOString())
 
       return {
         success: true,
-        txHash: "0x" + Math.random().toString(16).substr(2, 64), // Mock transaction hash
+        txHash: finalPayload.transaction_id || "0x" + Math.random().toString(16).substr(2, 64),
         amount: "1.0",
       }
     } catch (error) {
-      console.error("Error simulating airdrop claim:", error)
+      console.error("Error claiming airdrop:", error)
       return {
         success: false,
-        error: error.message || "Failed to simulate airdrop claim",
+        error: error.message || "Failed to claim airdrop",
       }
     }
   }
