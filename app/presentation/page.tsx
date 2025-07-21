@@ -3,16 +3,8 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import {
-  Menu,
-  X,
-  Globe,
-  Gift,
-  TrendingUp,
-  Info,
-  PresentationIcon as AnimatePresence,
-  MoveIcon as motion,
-} from "lucide-react"
+import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 
 // Simplified language support
@@ -32,48 +24,64 @@ const LANGUAGES = [
 // Translations
 const translations = {
   en: {
+    presentation: {
+      connectWallet: "Connect Wallet",
+    },
     navigation: {
       airdrop: "Airdrop",
       fistaking: "Fi Staking",
       about: "About",
     },
     common: {
+      loading: "Loading...",
       language: "Language",
       close: "Close",
       back: "Back",
     },
   },
   pt: {
+    presentation: {
+      connectWallet: "Conectar Carteira",
+    },
     navigation: {
       airdrop: "Airdrop",
       fistaking: "Fi Staking",
       about: "Sobre",
     },
     common: {
+      loading: "Carregando...",
       language: "Idioma",
       close: "Fechar",
       back: "Voltar",
     },
   },
   es: {
+    presentation: {
+      connectWallet: "Conectar Billetera",
+    },
     navigation: {
       airdrop: "Airdrop",
       fistaking: "Fi Staking",
       about: "Acerca de",
     },
     common: {
+      loading: "Cargando...",
       language: "Idioma",
       close: "Cerrar",
       back: "Atrás",
     },
   },
   id: {
+    presentation: {
+      connectWallet: "Hubungkan Dompet",
+    },
     navigation: {
       airdrop: "Airdrop",
       fistaking: "Fi Staking",
       about: "Tentang",
     },
     common: {
+      loading: "Memuat...",
       language: "Bahasa",
       close: "Tutup",
       back: "Kembali",
@@ -92,6 +100,8 @@ const Presentation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
+  const [isConnected, setIsConnected] = useState(false) // Simulate wallet connection
+  const [isLoading, setIsLoading] = useState(false) // Simulate loading state
   const router = useRouter()
 
   // Get translations for current language
@@ -110,19 +120,19 @@ const Presentation: React.FC = () => {
       id: "airdrop",
       labelKey: "airdrop",
       icon: Gift,
-      href: "/airdrop",
+      // Removed href to prevent "page not found" as there are no other pages
     },
     {
       id: "fistaking",
       labelKey: "fistaking",
       icon: TrendingUp,
-      href: "/fistaking",
+      // Removed href
     },
     {
       id: "about",
       labelKey: "about",
       icon: Info,
-      href: "/about",
+      // Removed href
     },
   ]
 
@@ -131,60 +141,93 @@ const Presentation: React.FC = () => {
     setCurrentLang(newLanguage)
     localStorage.setItem("preferred-language", newLanguage)
     setShowLanguageMenu(false)
-    setIsMenuOpen(false)
+    setIsMenuOpen(false) // Close menu when language changes
+  }
+
+  const handleWalletConnect = async () => {
+    setIsLoading(true)
+    // Simulate an async connection
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setIsConnected(true)
+    setIsLoading(false)
+    console.log("Wallet connected!")
   }
 
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-900">
-      {/* Right Side - Language Selector */}
-      <div className="absolute top-6 right-6 z-50">
-        <div className="relative">
-          <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
-            <div className="px-3 py-2 bg-black/20 backdrop-blur-md border border-white/10 rounded-full flex items-center space-x-2 hover:bg-white/10 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Globe className="w-4 h-4 text-purple-300 relative z-10" />
-              <span className="text-purple-300 text-sm font-medium relative z-10">
-                {currentLanguage?.flag} {currentLanguage?.code.toUpperCase()}
-              </span>
-            </div>
-          </button>
-
-          {/* Language Dropdown */}
-          <AnimatePresence>
-            {showLanguageMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="absolute top-12 right-0 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-2 min-w-[200px] shadow-2xl"
-              >
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => handleLanguageChange(lang.code as keyof typeof translations)}
-                    className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
-                      currentLang === lang.code
-                        ? `bg-gradient-to-r ${lang.gradient} bg-opacity-20 text-white`
-                        : "hover:bg-white/5 text-gray-300 hover:text-white"
-                    }`}
-                  >
-                    <span className="text-lg">{lang.flag}</span>
-                    <div className="text-left">
-                      <div className="text-sm font-medium">{lang.nativeName}</div>
-                      <div className="text-xs opacity-70">{lang.name}</div>
-                    </div>
-                    {currentLang === lang.code && <div className="ml-auto text-green-400">✓</div>}
-                  </button>
-                ))}
-              </motion.div>
+      {/* Top Navigation */}
+      <div className="absolute top-0 left-0 right-0 z-50 p-6">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Connect Wallet Button */}
+          <div className="flex items-center space-x-3">
+            {!isConnected && (
+              <button onClick={handleWalletConnect} disabled={isLoading} className="relative group">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
+                  <span className="text-white font-medium relative z-10">
+                    {isLoading ? t.common?.loading || "Loading..." : t.presentation?.connectWallet || "Connect Wallet"}
+                  </span>
+                </div>
+              </button>
             )}
-          </AnimatePresence>
+            {isConnected && (
+              <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-green-700/50 rounded-full flex items-center space-x-2 text-green-300">
+                <Wallet className="w-5 h-5" />
+                <span>Connected!</span>
+              </div>
+            )}
+          </div>
+
+          {/* Right Side - Language Selector */}
+          <div className="relative">
+            <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
+              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <Globe className="w-4 h-4 text-purple-300 relative z-10" />
+                <span className="text-purple-300 text-sm font-medium relative z-10">
+                  {currentLanguage?.flag} {currentLanguage?.code.toUpperCase()}
+                </span>
+              </div>
+            </button>
+
+            {/* Language Dropdown */}
+            <AnimatePresence>
+              {showLanguageMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="absolute top-12 right-0 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-2 min-w-[200px] shadow-2xl"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code as keyof typeof translations)}
+                      className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                        currentLang === lang.code
+                          ? `bg-gradient-to-r ${lang.gradient} bg-opacity-20 text-white`
+                          : "hover:bg-gray-700/50 text-gray-300 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-lg">{lang.flag}</span>
+                      <div className="text-left">
+                        <div className="text-sm font-medium">{lang.nativeName}</div>
+                        <div className="text-xs opacity-70">{lang.name}</div>
+                      </div>
+                      {currentLang === lang.code && <div className="ml-auto text-green-400">✓</div>}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      {/* Bottom Navigation Bar with Wallet Icon + Menu Button */}
+      {/* Bottom Navigation Bar with Menu Button */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
         {/* Futuristic Bottom Bar */}
         <div className="relative">
@@ -197,7 +240,7 @@ const Presentation: React.FC = () => {
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative group">
                 <div className="w-8 h-8 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl">
                   {/* Pulsing Ring */}
-                  <div className="bg-gray-600/70 rounded-full animate-ping opacity-75" />
+                  <div className="absolute inset-0 bg-gray-600/70 rounded-full animate-ping opacity-75" />
                   {/* Inner Glow */}
                   <div className="absolute inset-1 bg-gray-700/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {/* Icon */}
@@ -243,10 +286,8 @@ const Presentation: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                       onClick={() => {
-                        if (item.href) {
-                          router.push(item.href)
-                          setIsMenuOpen(false)
-                        }
+                        // No navigation, just close menu
+                        setIsMenuOpen(false)
                       }}
                       className="group p-2 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300"
                     >
@@ -285,62 +326,19 @@ const Presentation: React.FC = () => {
             }}
           />
         ))}
-
-        {/* Vertical Moving Lines */}
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={`v-line-${i}`}
-            className="absolute w-px bg-gradient-to-b from-transparent via-white/50 to-transparent"
-            style={{
-              left: `${10 + i * 10}%`,
-              top: "-100%",
-              height: "200%",
-              animation: `moveDown 5s linear infinite`,
-              animationDelay: `${i * 0.4}s`,
-            }}
-          />
-        ))}
-
-        {/* Diagonal Moving Lines */}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={`d-line-${i}`}
-            className="absolute h-px bg-gradient-to-r from-transparent via-white/30 to-transparent rotate-45"
-            style={{
-              top: `${15 + i * 12}%`,
-              left: "-100%",
-              width: "200%",
-              animation: `moveRight 6s linear infinite`,
-              animationDelay: `${i * 0.5}s`,
-            }}
-          />
-        ))}
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 text-center">
-        {/* Logo with Ultra Vibrant Auras and Vibration */}
-        <div className="relative w-32 h-32 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-white rounded-full shadow-2xl"
-            style={{
-              boxShadow: `
-                0 0 50px rgba(255,255,255,0.8),
-                0 0 100px rgba(229,231,235,0.6),
-                0 0 150px rgba(209,213,219,0.4)
-              `,
-              animation: "pulseWhite 1.5s ease-in-out infinite alternate",
-            }}
+        {/* Logo */}
+        <div className="relative w-[560px] h-[560px] flex items-center justify-center">
+          <Image
+            src="/images/keplerpay-rb.png"
+            alt="KeplerPay Logo"
+            width={560}
+            height={560}
+            className="w-full h-full object-contain"
           />
-          <div className="relative z-10 w-28 h-28 rounded-full overflow-hidden bg-white p-2">
-            <Image
-              src="/images/keplerpay-rb.png"
-              alt="KeplerPay Logo"
-              width={112}
-              height={112}
-              className="w-full h-full object-contain"
-            />
-          </div>
         </div>
       </div>
 
@@ -359,32 +357,6 @@ const Presentation: React.FC = () => {
           100% {
             transform: translateX(100vw);
             opacity: 0;
-          }
-        }
-
-        @keyframes moveDown {
-          0% {
-            transform: translateY(-100%);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh);
-            opacity: 0;
-          }
-        }
-
-        @keyframes pulseWhite {
-          0% {
-            box-shadow: 0 0 50px rgba(255,255,255,0.8), 0 0 100px rgba(229,231,235,0.6), 0 0 150px rgba(209,213,219,0.4);
-          }
-          100% {
-            box-shadow: 0 0 60px rgba(255,255,255,1), 0 0 120px rgba(229,231,235,0.8), 0 0 180px rgba(209,213,219,0.6);
           }
         }
       `}</style>
