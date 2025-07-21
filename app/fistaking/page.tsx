@@ -11,9 +11,11 @@ import { TransactionEffect } from "@/components/transaction-effects"
 import { MiniKit } from "@worldcoin/minikit-js"
 import { ethers } from "ethers"
 import { STAKING_CONTRACTS, SOFT_STAKING_ABI } from "@/lib/constants/staking-contracts"
-import { useTranslations } from "@/lib/i18n" // Usar o hook de tradução existente
+import { useTranslations } from "@/lib/i18n"
 import Image from "next/image"
-import { getRobustProvider } from "@/lib/utils/ethers-utils" // Importar o provedor robusto
+import { getRobustProvider } from "@/lib/utils/ethers-utils"
+import { BottomNav } from "@/components/bottom-nav" // Importar BottomNav
+import { BackgroundEffect } from "@/components/background-effect" // Importar BackgroundEffect
 
 interface StakingInfo {
   pendingRewards: string
@@ -30,12 +32,10 @@ export default function FiStakingPage() {
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [apiError, setApiError] = useState<string | null>(null) // Para erros gerais da API/RPC
+  const [apiError, setApiError] = useState<string | null>(null)
 
-  // Transaction Effect States
   const [showClaimEffect, setShowClaimEffect] = useState(false)
 
-  // Load staking data for all contracts
   const loadStakingData = useCallback(async () => {
     if (!user?.walletAddress) {
       console.log("FiStaking: No wallet address, skipping data load.")
@@ -44,7 +44,7 @@ export default function FiStakingPage() {
     }
 
     setLoading(true)
-    setApiError(null) // Clear previous API errors
+    setApiError(null)
 
     try {
       console.log("FiStaking: Attempting to get robust RPC provider...")
@@ -66,7 +66,6 @@ export default function FiStakingPage() {
         }
 
         try {
-          // Verify contract code exists at address
           const code = await provider.getCode(contract.address)
           if (code === "0x") {
             console.warn(`FiStaking: Contract code not found for ${contract.symbol} at ${contract.address}. Skipping.`)
@@ -83,7 +82,7 @@ export default function FiStakingPage() {
           const pendingRewards = await stakingContract.calculatePendingRewards(user.walletAddress)
           console.log(`FiStaking: Raw pending rewards for ${contract.symbol}: ${pendingRewards.toString()}`)
 
-          const formattedPendingRewards = ethers.formatUnits(pendingRewards, 18) // Assuming 18 decimals for all
+          const formattedPendingRewards = ethers.formatUnits(pendingRewards, 18)
           const canClaim = Number.parseFloat(formattedPendingRewards) > 0
 
           newStakingData[key] = {
@@ -106,19 +105,19 @@ export default function FiStakingPage() {
       setStakingData(newStakingData)
     } catch (error) {
       console.error("FiStaking: Error in loadStakingData (outer catch):", error)
-      setApiError(error instanceof Error ? error.message : "Failed to connect to blockchain or load data.")
+      setApiError(error instanceof Error ? error.message : t.common?.unexpectedError || "An unexpected error occurred.")
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [user, t.common?.unexpectedError])
 
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated && user?.walletAddress) {
       loadStakingData()
-      const interval = setInterval(loadStakingData, 30000) // Refresh every 30 seconds
+      const interval = setInterval(loadStakingData, 30000)
       return () => clearInterval(interval)
     } else if (!isAuthLoading && !isAuthenticated) {
-      router.push("/") // Redirect if not authenticated
+      router.push("/")
     }
   }, [isAuthenticated, user, isAuthLoading, loadStakingData, router])
 
@@ -128,7 +127,7 @@ export default function FiStakingPage() {
 
     setClaiming(tokenKey)
     setClaimError(null)
-    setApiError(null) // Clear general API errors
+    setApiError(null)
 
     try {
       console.log(`FiStaking: 🎁 Claiming ${contract.symbol} rewards...`)
@@ -152,7 +151,9 @@ export default function FiStakingPage() {
       console.log("FiStaking: MiniKit transaction final payload:", finalPayload)
 
       if (finalPayload.status === "error") {
-        throw new Error(`Transaction failed: ${finalPayload.errorMessage || finalPayload.message || "Unknown error"}`)
+        throw new Error(
+          `Transaction failed: ${finalPayload.errorMessage || finalPayload.message || t.common?.unexpectedError || "Unknown error"}`,
+        )
       }
 
       if (finalPayload.status === "success") {
@@ -162,10 +163,10 @@ export default function FiStakingPage() {
         setClaimSuccess(tokenKey)
 
         setTimeout(() => {
-          loadStakingData() // Reload staking data
+          loadStakingData()
           setShowClaimEffect(false)
           setClaimSuccess(null)
-        }, 3000) // Show effect for 3 seconds, then reload and clear success
+        }, 3000)
       }
     } catch (error) {
       console.error(`FiStaking: ❌ ${contract.symbol} claim failed:`, error)
@@ -200,7 +201,7 @@ export default function FiStakingPage() {
   if (isAuthLoading || loading) {
     return (
       <main className="relative flex min-h-screen flex-col items-center justify-center pt-6 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/80" /> {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/80" />
         <div className="flex flex-col items-center text-white z-10">
           <Loader2 className="w-16 h-16 text-cyan-400 animate-spin" />
           <p className="mt-4 text-lg font-medium">{t.history?.loading || "Loading..."}</p>
@@ -212,7 +213,7 @@ export default function FiStakingPage() {
   if (!isAuthenticated) {
     return (
       <main className="relative flex min-h-screen flex-col items-center justify-center pt-6 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/80" /> {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/80" />
         <div className="text-center text-white z-10 p-4">
           <h2 className="text-2xl font-bold mb-4">
             {t.fistaking?.connectWalletToStake || "Connect your wallet to view staking details."}
@@ -226,10 +227,8 @@ export default function FiStakingPage() {
 
   return (
     <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
-      {/* Background Effects - Simplified for brevity, assuming it's handled by BackgroundEffect */}
       <BackgroundEffect />
 
-      {/* Transaction Effect */}
       <TransactionEffect
         isVisible={showClaimEffect}
         type="claim"
@@ -237,7 +236,6 @@ export default function FiStakingPage() {
         onComplete={() => setShowClaimEffect(false)}
       />
 
-      {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -273,7 +271,6 @@ export default function FiStakingPage() {
       </motion.div>
 
       <div className="w-full max-w-md px-4 relative z-10 space-y-4">
-        {/* Success Message */}
         <AnimatePresence>
           {claimSuccess && (
             <motion.div
@@ -298,7 +295,6 @@ export default function FiStakingPage() {
           )}
         </AnimatePresence>
 
-        {/* Error Message */}
         <AnimatePresence>
           {claimError && (
             <motion.div
@@ -321,7 +317,6 @@ export default function FiStakingPage() {
           )}
         </AnimatePresence>
 
-        {/* General API/RPC Error Message */}
         <AnimatePresence>
           {apiError && (
             <motion.div
@@ -344,7 +339,6 @@ export default function FiStakingPage() {
           )}
         </AnimatePresence>
 
-        {/* Staking Tokens */}
         {Object.entries(STAKING_CONTRACTS).map(([key, contract], index) => {
           const data = stakingData[key]
           const isClaimingThis = claiming === key
@@ -378,7 +372,6 @@ export default function FiStakingPage() {
                   </div>
                 </div>
 
-                {/* Claim Button */}
                 <button
                   onClick={() => handleClaim(key)}
                   disabled={!contract.address || !data?.canClaim || isClaimingThis || !hasRewards}
