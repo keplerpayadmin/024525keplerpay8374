@@ -944,38 +944,6 @@ export default function MiniWallet({ walletAddress, onMinimize, onDisconnect }: 
               </div>
 
               {/* Quick Actions */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <div className="grid grid-cols-4 gap-2">
-                  <button
-                    onClick={() => setViewMode("send")}
-                    className="flex flex-col items-center justify-center space-y-1 py-2 px-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg transition-all duration-200 text-blue-300 hover:text-blue-200"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span className="text-xs font-medium">{t.send}</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("receive")}
-                    className="flex flex-col items-center justify-center space-y-1 py-2 px-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 rounded-lg transition-all duration-200 text-green-300 hover:text-green-200"
-                  >
-                    <ArrowDownLeft className="w-4 h-4" />
-                    <span className="text-xs font-medium">{t.receive}</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("swap")}
-                    className="flex flex-col items-center justify-center space-y-1 py-2 px-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200"
-                  >
-                    <ArrowLeftRight className="w-4 h-4" />
-                    <span className="text-xs font-medium">{t.swap}</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("history")}
-                    className="flex flex-col items-center justify-center space-y-1 py-2 px-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg transition-all duration-200 text-purple-300 hover:text-purple-200"
-                  >
-                    <History className="w-4 h-4" />
-                    <span className="text-xs font-medium">{t.history}</span>
-                  </button>
-                </div>
-              </div>
             </motion.div>
           )}
 
