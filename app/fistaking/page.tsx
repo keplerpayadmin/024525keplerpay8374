@@ -600,7 +600,7 @@ export default function FiStakingPage() {
                 className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
                   isClaimingKPP
                     ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30"
+                    : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg shadow-blue-500/30"
                 }`}
               >
                 {isClaimingKPP ? (
