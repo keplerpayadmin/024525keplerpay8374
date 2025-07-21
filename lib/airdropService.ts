@@ -1,5 +1,3 @@
-import { MiniKit } from "@worldcoin/minikit-js"
-
 export interface AirdropStatus {
   canClaim: boolean
   lastClaimTime: number | null
@@ -109,97 +107,22 @@ export class AirdropService {
 
   async claimAirdrop(address: string): Promise<ClaimResult> {
     try {
-      console.log(`Claiming airdrop for address: ${address}`)
+      console.log(`Simulating airdrop claim for address: ${address}`)
 
-      if (!MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not installed")
-      }
-
-      // Use the real contract address and ABI
-      const contractAddress = "0x993814a0AEc15a7EcFa9Bd26B4Fd3F62cAd07e81"
-      const contractABI = [
-        {
-          inputs: [],
-          name: "claimAirdrop",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "dailyAirdropAmount",
-          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [{ internalType: "address", name: "", type: "address" }],
-          name: "lastClaimTime",
-          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-          stateMutability: "view",
-          type: "function",
-        },
-      ]
-
-      console.log("Calling MiniKit.commandsAsync.sendTransaction...")
-      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [
-          {
-            address: contractAddress,
-            abi: contractABI,
-            functionName: "claimAirdrop",
-            args: [],
-          },
-        ],
-      })
-
-      console.log("MiniKit transaction response:", finalPayload)
-
-      if (finalPayload.status === "error") {
-        console.error("Error claiming airdrop:", finalPayload.message)
-        return {
-          success: false,
-          error: finalPayload.message || "Failed to claim airdrop",
-        }
-      }
-
-      console.log("Airdrop claimed successfully:", finalPayload)
-
-      // Save claim timestamp to localStorage
-      localStorage.setItem(`lastClaim_${address}`, new Date().toISOString())
+      // Simulate a successful transaction
+      await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate network delay
 
       return {
         success: true,
-        txHash: finalPayload.transaction_id || "0x" + Math.random().toString(16).substr(2, 64),
+        txHash: "0x" + Math.random().toString(16).substr(2, 64), // Mock transaction hash
         amount: "1.0",
       }
     } catch (error) {
-      console.error("Error claiming airdrop:", error)
+      console.error("Error simulating airdrop claim:", error)
       return {
         success: false,
-        error: error.message || "Failed to claim airdrop",
+        error: error.message || "Failed to simulate airdrop claim",
       }
-    }
-  }
-
-  async verifyWorldId(): Promise<string> {
-    try {
-      if (!MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not installed")
-      }
-
-      // Simulate World ID verification
-      const mockProof = {
-        merkle_root: "0x" + Math.random().toString(16).substr(2, 64),
-        nullifier_hash: "0x" + Math.random().toString(16).substr(2, 64),
-        proof: "0x" + Math.random().toString(16).substr(2, 512),
-        verification_level: "orb",
-      }
-
-      return JSON.stringify(mockProof)
-    } catch (error) {
-      console.error("Error verifying World ID:", error)
-      throw error
     }
   }
 }
