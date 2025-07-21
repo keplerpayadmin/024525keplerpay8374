@@ -76,13 +76,13 @@ const translations = {
   },
 }
 
-// Staking contracts configuration - UPDATED TO ONLY INCLUDE YOUR ADDRESS
+// Staking contracts configuration
 const STAKING_CONTRACTS = {
   MST: {
     name: "My Staking Token",
     symbol: "MST",
     address: "0x15bB53A800D6DCf0A5935850f65233Be62Bb405C",
-    image: "/placeholder.svg?height=32&width=32",
+    image: "/placeholder.svg?height=32&width=32", // Updated image query for glow
   },
 }
 
@@ -374,8 +374,8 @@ export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
-  const [stakingData, setStakingData] = useState<Record<string, StakingInfo>>({})
-  const [loading, setLoading] = useState(true)
+  const [pendingRewards, setPendingRewards] = useState<string | null>(null) // New state for pending rewards
+  const [loadingRewards, setLoadingRewards] = useState(true) // New state for loading rewards
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -390,6 +390,48 @@ export default function FiStakingPage() {
 
   // Get translations for current language
   const t = translations[currentLang]
+
+  // Function to fetch pending rewards
+  const fetchPendingRewards = async () => {
+    if (!isAuthenticated || !user?.walletAddress) {
+      setPendingRewards(null)
+      setLoadingRewards(false)
+      return
+    }
+
+    const contract = STAKING_CONTRACTS.MST // Only one contract now
+    if (!contract.address) {
+      setPendingRewards(null)
+      setLoadingRewards(false)
+      return
+    }
+
+    try {
+      setLoadingRewards(true)
+      const result = await MiniKit.commandsAsync.readContract({
+        address: contract.address,
+        abi: STAKING_ABI,
+        functionName: "calculatePendingRewards",
+        args: [user.walletAddress],
+      })
+      // Assuming result is a string or can be directly displayed.
+      // For proper formatting, you might need to divide by token decimals (e.g., 10^18 for ERC20)
+      // Example: const formattedRewards = parseFloat(result) / (10 ** 18);
+      setPendingRewards(result as string)
+    } catch (error) {
+      console.error("Error fetching pending rewards:", error)
+      setPendingRewards("0") // Default to 0 on error
+    } finally {
+      setLoadingRewards(false)
+    }
+  }
+
+  // Fetch pending rewards on mount and every 5 seconds
+  useEffect(() => {
+    fetchPendingRewards()
+    const interval = setInterval(fetchPendingRewards, 5000) // Refresh every 5 seconds
+    return () => clearInterval(interval)
+  }, [isAuthenticated, user?.walletAddress]) // Re-fetch if auth status or wallet changes
 
   const handleClaim = async (tokenKey: string) => {
     const contract = STAKING_CONTRACTS[tokenKey as keyof typeof STAKING_CONTRACTS]
@@ -427,6 +469,7 @@ export default function FiStakingPage() {
       if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
         setClaimSuccess(tokenKey)
+        fetchPendingRewards() // Refresh rewards after successful claim
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -458,6 +501,9 @@ export default function FiStakingPage() {
       setClaiming(null)
     }
   }
+
+  const mstContract = STAKING_CONTRACTS.MST
+  const isClaimingMST = claiming === "MST"
 
   return (
     <main className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center pt-4 pb-6">
@@ -541,6 +587,15 @@ export default function FiStakingPage() {
           10% { opacity: 1; }
           90% { opacity: 1; }
           100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(34, 211, 238, 0.5); }
+          50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(34, 211, 238, 0.8); }
+        }
+
+        .glow-animation {
+          animation: glow 2s infinite alternate;
         }
       `}</style>
 
@@ -645,62 +700,84 @@ export default function FiStakingPage() {
           </motion.div>
         ) : (
           <>
-            {/* Staking Tokens - Compact */}
-            {Object.entries(STAKING_CONTRACTS).map(([key, contract], index) => {
-              const isClaimingThis = claiming === key
-
-              return (
-                <motion.div
-                  key={key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Image
-                        src={contract.image || "/placeholder.svg"}
-                        alt={contract.name}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <h3 className="text-white font-medium text-sm">{contract.symbol}</h3>
-                        <p className="text-gray-400 text-[10px]">{contract.name}</p>
-                      </div>
-                    </div>
-
-                    {/* Claim Button - Compact */}
-                    <button
-                      onClick={() => handleClaim(key)}
-                      disabled={isClaimingThis}
-                      className={`py-1.5 px-4 rounded-md font-medium text-xs transition-all duration-300 flex items-center justify-center space-x-1 ${
-                        isClaimingThis
-                          ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                          : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                      }`}
-                    >
-                      {isClaimingThis ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>{t.claiming}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Gift className="w-3 h-3" />
-                          <span>{t.claim}</span>
-                        </>
-                      )}
-                    </button>
+            {/* Staking Token Display (without claim button) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Image
+                    src={mstContract.image || "/placeholder.svg"}
+                    alt={mstContract.name}
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 rounded-full glow-animation" // Added glow-animation class
+                  />
+                  <div>
+                    <h3 className="text-white font-medium text-sm">{mstContract.symbol}</h3>
+                    <p className="text-gray-400 text-[10px]">{mstContract.name}</p>
                   </div>
-                </motion.div>
-              )
-            })}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Pending Rewards Display - Center of the screen */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col items-center justify-center my-8 p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg"
+            >
+              <p className="text-gray-400 text-sm font-medium mb-2">{t.pendingRewards}</p>
+              {loadingRewards ? (
+                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+              ) : (
+                <p className="text-5xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
+                  {pendingRewards !== null ? pendingRewards : "0"} {mstContract.symbol}
+                </p>
+              )}
+              {/* Note: The displayed value might need formatting based on token decimals (e.g., divide by 10^18) */}
+            </motion.div>
           </>
         )}
       </div>
+
+      {/* Claim Button - Fixed at the bottom */}
+      {isAuthenticated && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="fixed bottom-6 w-full max-w-sm px-4 z-20"
+        >
+          <button
+            onClick={() => handleClaim("MST")}
+            disabled={isClaimingMST || loadingRewards || pendingRewards === "0"} // Disable if no rewards
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+              isClaimingMST || loadingRewards || pendingRewards === "0"
+                ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30"
+            }`}
+          >
+            {isClaimingMST ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>{t.claiming}</span>
+              </>
+            ) : (
+              <>
+                <Gift className="w-5 h-5" />
+                <span>
+                  {t.claim} {mstContract.symbol}
+                </span>
+              </>
+            )}
+          </button>
+        </motion.div>
+      )}
     </main>
   )
 }
