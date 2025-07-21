@@ -83,6 +83,19 @@ export const AIRDROP_CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "kppTokenAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -91,44 +104,6 @@ export const AIRDROP_CONTRACT_ABI = [
       },
     ],
     name: "lastClaimTime",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "canClaim",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "totalClaimed",
     outputs: [
       {
         internalType: "uint256",
@@ -167,27 +142,14 @@ export const AIRDROP_CONTRACT_ABI = [
   },
   {
     inputs: [],
-    name: "tpfTokenAddress",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdrawExcessTPF",
+    name: "withdrawExcessKPP",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
 ] as const
 
-export const AIRDROP_CONTRACT_ADDRESS = "0x993814a0AEc15a7EcFa9Bd26B4Fd3F62cAd07e81"
+export const AIRDROP_CONTRACT_ADDRESS = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237"
 
 export const RPC_ENDPOINTS = [
   "https://rpc.worldchain.org",
