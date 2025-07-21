@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Coins, Gift, Lock, ArrowLeft, Clock } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { MiniKit } from "@worldcoin/minikit-js"
 
 export default function AirdropClient() {
   const { t } = useI18n()
@@ -138,12 +139,75 @@ export default function AirdropClient() {
       setClaimError(null)
       setClaimSuccess(false)
 
-      console.log("Starting mock claim process...")
+      console.log("Starting claim process...")
 
-      // Simulate a successful claim after a delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      if (!MiniKit.isInstalled()) {
+        throw new Error("MiniKit is not installed")
+      }
 
-      console.log("Mock airdrop claimed successfully!")
+      // Use the real contract address and ABI
+      const contractAddress = "0x8125d4634A0A58ad6bAFbb5d78Da3b735019E237"
+      const contractABI = [
+        {
+          inputs: [],
+          name: "claimAirdrop",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "dailyAirdropAmount",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "", type: "address" }],
+          name: "lastClaimTime",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+      ]
+
+      console.log("Calling MiniKit.commandsAsync.sendTransaction...")
+      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
+        transaction: [
+          {
+            address: contractAddress,
+            abi: contractABI,
+            functionName: "claimAirdrop",
+            args: [],
+          },
+        ],
+      })
+
+      console.log("MiniKit transaction response:", finalPayload)
+
+      if (finalPayload.status === "error") {
+        console.error("Error claiming airdrop:", finalPayload.message)
+
+        // Check if error is due to already claimed (24h cooldown)
+        if (
+          finalPayload.message &&
+          (finalPayload.message.includes("Wait 24h") ||
+            finalPayload.message.includes("24h between claims") ||
+            finalPayload.message.includes("already claimed"))
+        ) {
+          // Start cooldown even on error if it's due to already claimed
+          setTimeout(() => {
+            setClaimSuccess(false)
+            startCooldown()
+          }, 2000)
+          setClaimError("You have already claimed today. Please wait 24 hours.")
+        } else {
+          throw new Error(finalPayload.message || "Failed to claim airdrop")
+        }
+        return
+      }
+
+      console.log("Airdrop claimed successfully:", finalPayload)
 
       setClaimSuccess(true)
       setCanClaim(false)
@@ -156,7 +220,21 @@ export default function AirdropClient() {
     } catch (error) {
       console.error("Error claiming airdrop:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
-      setClaimError(t.airdrop.claimFailed)
+
+      // Check if error is due to already claimed
+      if (
+        errorMessage.includes("Wait 24h") ||
+        errorMessage.includes("24h between claims") ||
+        errorMessage.includes("already claimed")
+      ) {
+        setTimeout(() => {
+          setClaimSuccess(false)
+          startCooldown()
+        }, 2000)
+        setClaimError("You have already claimed today. Please wait 24 hours.")
+      } else {
+        setClaimError(t.airdrop.claimFailed)
+      }
     } finally {
       setIsClaiming(false)
     }
