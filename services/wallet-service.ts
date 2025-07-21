@@ -59,34 +59,7 @@ const ERC20_ABI = [
 
 // Informações dos tokens
 const TOKENS_INFO = {
-  TPF: {
-    symbol: "TPF",
-    name: "TPulseFi",
-    address: "0x834a73c0a83F3BCe349A116FFB2A4c2d1C651E45",
-    logo: "/images/logo-tpf.png",
-    decimals: 18,
-  },
-  WLD: {
-    symbol: "WLD",
-    name: "Worldcoin",
-    address: "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
-    logo: "/images/worldcoin.jpeg",
-    decimals: 18,
-  },
-  WDD: {
-    symbol: "WDD",
-    name: "Drachma",
-    address: "0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B",
-    logo: "/images/drachma-token.png",
-    decimals: 18,
-  },
-  USDC: {
-    symbol: "USDC",
-    name: "USD Coin",
-    address: "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
-    logo: "/images/usdc.png",
-    decimals: 6,
-  },
+  
   KPP: {
     symbol: "KPP",
     name: "KeplerPay",
