@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { Coins, Gift, Lock, Shield, CheckCircle, ArrowLeft, X, Clock } from "lucide-react"
-import { MiniKit, type VerifyCommandInput, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js"
+import { Coins, Gift, Lock, ArrowLeft, Clock } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 export default function AirdropClient() {
@@ -13,9 +12,6 @@ export default function AirdropClient() {
 
   const [chainsBreaking, setChainsBreaking] = useState(false)
   const [chainsBroken, setChainsBroken] = useState(false)
-  const [worldIdVerifying, setWorldIdVerifying] = useState(false)
-  const [worldIdVerified, setWorldIdVerified] = useState(false)
-  const [worldIdFailed, setWorldIdFailed] = useState(false)
   const [boxOpened, setBoxOpened] = useState(false)
   const [canClaim, setCanClaim] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
@@ -55,11 +51,9 @@ export default function AirdropClient() {
     checkCooldownStatus()
   }, [])
 
-  // Reset World ID verification on component mount to ensure fresh verification each time
+  // Reset state on component mount if not in cooldown
   useEffect(() => {
     if (!isInCooldown) {
-      setWorldIdVerified(false)
-      setWorldIdFailed(false)
       setChainsBroken(false)
       setBoxOpened(false)
       setShowReward(false)
@@ -81,7 +75,6 @@ export default function AirdropClient() {
             setBoxOpened(false)
             setShowReward(false)
             setChainsBroken(false)
-            setWorldIdVerified(false)
             localStorage.removeItem("airdrop_last_claim")
             return 24 * 60 * 60 // Reset to 24 hours
           }
@@ -125,107 +118,15 @@ export default function AirdropClient() {
       setTimeout(() => {
         setChainsBroken(true)
         setChainsBreaking(false)
-        // Start World ID verification
-        handleWorldIdVerification()
-      }, 1500)
-    }
-  }
-
-  const proceedAfterVerification = () => {
-    setWorldIdVerified(true)
-    setWorldIdVerifying(false)
-    setWorldIdFailed(false)
-
-    // Open box after verification
-    setTimeout(() => {
-      setBoxOpened(true)
-      setTimeout(() => {
-        setShowReward(true)
-        setCanClaim(true)
-      }, 1000)
-    }, 500)
-  }
-
-  const failVerification = () => {
-    setWorldIdVerified(false)
-    setWorldIdVerifying(false)
-    setWorldIdFailed(true)
-  }
-
-  const handleWorldIdVerification = async () => {
-    setWorldIdVerifying(true)
-    setWorldIdFailed(false)
-    setClaimError(null)
-
-    try {
-      if (!MiniKit.isInstalled()) {
-        console.log("MiniKit not installed, simulating error...")
+        // Directly open box after chains broken (no World ID)
         setTimeout(() => {
-          proceedAfterVerification() // Se der erro → World ID verificado
-        }, 2000)
-        return
-      }
-
-      const verifyPayload: VerifyCommandInput = {
-        action: "world_id",
-        signal: `airdrop_${Date.now()}`,
-        verification_level: VerificationLevel.Orb,
-      }
-
-      try {
-        console.log("Starting World ID verification...")
-
-        // Set up a timeout - Se demorar mais de 10 segundos → World ID não verificado
-        const verificationTimeout = setTimeout(() => {
-          console.log("World ID verification timeout - NOT VERIFIED")
-          failVerification()
-        }, 10000) // 10 seconds timeout
-
-        const { finalPayload } = await MiniKit.commandsAsync.verify(verifyPayload)
-
-        // Clear the timeout since we got a response
-        clearTimeout(verificationTimeout)
-
-        console.log("World ID verification response:", finalPayload)
-
-        // Se clicar X (cancelar) → World ID não verificado
-        if (finalPayload.status === "error") {
-          console.log("World ID verification cancelled by user - NOT VERIFIED")
-          failVerification()
-          return
-        }
-
-        // Try backend verification but don't fail if it doesn't work
-        try {
-          const verifyResponse = await fetch("/api/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              payload: finalPayload as ISuccessResult,
-              action: "world_id",
-              signal: verifyPayload.signal,
-            }),
-          })
-
-          const verifyResponseJson = await verifyResponse.json()
-          console.log("Backend verification response:", verifyResponseJson)
-        } catch (backendError) {
-          console.log("Backend verification error, but continuing anyway:", backendError)
-        }
-
-        // Success case
-        proceedAfterVerification()
-      } catch (verifyError) {
-        console.log("World ID verification error - VERIFIED (as per requirements):", verifyError)
-        // Se der erro → World ID verificado
-        proceedAfterVerification()
-      }
-    } catch (error) {
-      console.log("General error in World ID verification - VERIFIED (as per requirements):", error)
-      // Se der erro → World ID verificado
-      proceedAfterVerification()
+          setBoxOpened(true)
+          setTimeout(() => {
+            setShowReward(true)
+            setCanClaim(true)
+          }, 1000)
+        }, 500)
+      }, 1500)
     }
   }
 
@@ -237,75 +138,12 @@ export default function AirdropClient() {
       setClaimError(null)
       setClaimSuccess(false)
 
-      console.log("Starting claim process...")
+      console.log("Starting mock claim process...")
 
-      if (!MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not installed")
-      }
+      // Simulate a successful claim after a delay
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Use the real contract address and ABI
-      const contractAddress = "0x993814a0AEc15a7EcFa9Bd26B4Fd3F62cAd07e81"
-      const contractABI = [
-        {
-          inputs: [],
-          name: "claimAirdrop",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "dailyAirdropAmount",
-          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [{ internalType: "address", name: "", type: "address" }],
-          name: "lastClaimTime",
-          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-          stateMutability: "view",
-          type: "function",
-        },
-      ]
-
-      console.log("Calling MiniKit.commandsAsync.sendTransaction...")
-      const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [
-          {
-            address: contractAddress,
-            abi: contractABI,
-            functionName: "claimAirdrop",
-            args: [],
-          },
-        ],
-      })
-
-      console.log("MiniKit transaction response:", finalPayload)
-
-      if (finalPayload.status === "error") {
-        console.error("Error claiming airdrop:", finalPayload.message)
-
-        // Check if error is due to already claimed (24h cooldown)
-        if (
-          finalPayload.message &&
-          (finalPayload.message.includes("Wait 24h") ||
-            finalPayload.message.includes("24h between claims") ||
-            finalPayload.message.includes("already claimed"))
-        ) {
-          // Start cooldown even on error if it's due to already claimed
-          setTimeout(() => {
-            setClaimSuccess(false)
-            startCooldown()
-          }, 2000)
-          setClaimError("You have already claimed today. Please wait 24 hours.")
-        } else {
-          throw new Error(finalPayload.message || "Failed to claim airdrop")
-        }
-        return
-      }
-
-      console.log("Airdrop claimed successfully:", finalPayload)
+      console.log("Mock airdrop claimed successfully!")
 
       setClaimSuccess(true)
       setCanClaim(false)
@@ -318,21 +156,7 @@ export default function AirdropClient() {
     } catch (error) {
       console.error("Error claiming airdrop:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
-
-      // Check if error is due to already claimed
-      if (
-        errorMessage.includes("Wait 24h") ||
-        errorMessage.includes("24h between claims") ||
-        errorMessage.includes("already claimed")
-      ) {
-        setTimeout(() => {
-          setClaimSuccess(false)
-          startCooldown()
-        }, 2000)
-        setClaimError("You have already claimed today. Please wait 24 hours.")
-      } else {
-        setClaimError(t.airdrop.claimFailed)
-      }
+      setClaimError(t.airdrop.claimFailed)
     } finally {
       setIsClaiming(false)
     }
@@ -532,56 +356,6 @@ export default function AirdropClient() {
 
                 {/* Animated border */}
                 <div className="absolute inset-0 rounded-2xl border border-cyan-400/30 animate-pulse" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* World ID Status */}
-        <AnimatePresence>
-          {worldIdVerifying && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-2 border-t-blue-400 border-blue-700 rounded-full animate-spin" />
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-400 font-medium">{t.airdrop.verifying}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {worldIdVerified && !boxOpened && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-green-900/30 border border-green-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 font-medium">{t.airdrop.verified}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {worldIdFailed && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-red-900/30 border border-red-500/30 rounded-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <X className="w-5 h-5 text-red-400" />
-                <span className="text-red-400 font-medium">{t.airdrop.verificationFailed}</span>
               </div>
             </motion.div>
           )}
@@ -818,7 +592,7 @@ export default function AirdropClient() {
                         />
                         <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
                           <Image
-                            src="/images/logo-tpf.png"
+                            src="/placeholder.svg?height=88&width=88"
                             alt="TPF Logo"
                             width={88}
                             height={88}
