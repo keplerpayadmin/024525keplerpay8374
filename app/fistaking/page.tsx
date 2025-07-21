@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, TrendingUp, Gift, Loader2, CheckCircle } from "lucide-react"
+import { ArrowLeft, Gift, Loader2, CheckCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
@@ -15,9 +15,8 @@ type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 // Translations
 const translations = {
   en: {
-    title: "FiStaking",
-    subtitle:
-      "Just for having TPulseFi you are entitled to passive earnings from other tokens, the more TPF you have, the more you earn!",
+    title: "FiStaking", // This will be removed in JSX
+    subtitle: "Passive earnings in KPP", // Updated subtitle
     back: "Back",
     claim: "Claim",
     claiming: "Claiming...",
@@ -28,11 +27,11 @@ const translations = {
     pendingRewards: "Pending Rewards",
     dismiss: "Dismiss",
     powerActivated: "Power Activated",
-    rewardsPerSecond: "Rewards per second", // Re-added translation
+    // rewardsPerSecond: "Rewards per second", // Removed
   },
   pt: {
-    title: "FiStaking",
-    subtitle: "Só por teres KPP ganhas tokens a longo prazo com APY a 12%, do que estás á espera de obter mais?",
+    title: "FiStaking", // This will be removed in JSX
+    subtitle: "Ganhos passivos em KPP", // Updated subtitle
     back: "Voltar",
     claim: "Reclamar",
     claiming: "Reclamando...",
@@ -43,12 +42,11 @@ const translations = {
     pendingRewards: "Recompensas Pendentes",
     dismiss: "Dispensar",
     powerActivated: "Energia Ativada",
-    rewardsPerSecond: "Recompensas por segundo", // Re-added translation
+    // rewardsPerSecond: "Recompensas por segundo", // Removed
   },
   es: {
-    title: "FiStaking",
-    subtitle:
-      "¡Solo por tener TPulseFi tienes derecho a ganancias pasivas de otros tokens, cuanto más TPF tengas, más ganas!",
+    title: "FiStaking", // This will be removed in JSX
+    subtitle: "Ganancias pasivas en KPP", // Updated subtitle
     back: "Volver",
     claim: "Reclamar",
     claiming: "Reclamando...",
@@ -59,12 +57,11 @@ const translations = {
     pendingRewards: "Recompensas Pendientes",
     dismiss: "Descartar",
     powerActivated: "Energía Activada",
-    rewardsPerSecond: "Recompensas por segundo", // Re-added translation
+    // rewardsPerSecond: "Recompensas por segundo", // Removed
   },
   id: {
-    title: "FiStaking",
-    subtitle:
-      "Hanya dengan memiliki TPulseFi Anda berhak mendapat penghasilan pasif dari token lain, semakin banyak TPF yang Anda miliki, semakin banyak yang Anda peroleh!",
+    title: "FiStaking", // This will be removed in JSX
+    subtitle: "Penghasilan pasif di KPP", // Updated subtitle
     back: "Kembali",
     claim: "Klaim",
     claiming: "Mengklaim...",
@@ -75,7 +72,7 @@ const translations = {
     pendingRewards: "Hadiah Tertunda",
     dismiss: "Tutup",
     powerActivated: "Daya Diaktifkan",
-    rewardsPerSecond: "Hadiah per detik", // Re-added translation
+    // rewardsPerSecond: "Hadiah per detik", // Removed
   },
 }
 
@@ -377,8 +374,7 @@ export default function FiStakingPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useMiniKit()
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>("en")
-  const [rewardsPerSecond, setRewardsPerSecond] = useState<string | null>(null) // Reverted to rewardsPerSecond
-  const [loadingRewardsPerSecond, setLoadingRewardsPerSecond] = useState(true) // Reverted loading state
+  // Removed rewardsPerSecond state and related loading state
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
@@ -394,45 +390,7 @@ export default function FiStakingPage() {
   // Get translations for current language
   const t = translations[currentLang]
 
-  // Function to fetch rewards per second (reverted)
-  const fetchRewardsPerSecond = async () => {
-    if (!isAuthenticated || !user?.walletAddress) {
-      setRewardsPerSecond(null)
-      setLoadingRewardsPerSecond(false)
-      return
-    }
-
-    const contract = STAKING_CONTRACTS.KPP
-    if (!contract.address) {
-      setRewardsPerSecond(null)
-      setLoadingRewardsPerSecond(false)
-      return
-    }
-
-    try {
-      setLoadingRewardsPerSecond(true)
-      const result = await MiniKit.commandsAsync.readContract({
-        address: contract.address,
-        abi: STAKING_ABI,
-        functionName: "calculateRewardsPerSecond", // Changed back to calculateRewardsPerSecond
-        args: [user.walletAddress],
-      })
-      const formattedResult = (Number.parseFloat(result as string) / 1e18).toFixed(8) // Example: assuming 18 decimals
-      setRewardsPerSecond(formattedResult)
-    } catch (error) {
-      console.error("Error fetching rewards per second:", error)
-      setRewardsPerSecond("0.00000000") // Default to 0 on error
-    } finally {
-      setLoadingRewardsPerSecond(false)
-    }
-  }
-
-  // Fetch rewards per second on mount and every 2 seconds (reverted)
-  useEffect(() => {
-    fetchRewardsPerSecond()
-    const interval = setInterval(fetchRewardsPerSecond, 2000) // Refresh every 2 seconds
-    return () => clearInterval(interval)
-  }, [isAuthenticated, user?.walletAddress])
+  // Removed fetchRewardsPerSecond function and its useEffect
 
   const handleClaim = async (tokenKey: string) => {
     const contract = STAKING_CONTRACTS[tokenKey as keyof typeof STAKING_CONTRACTS]
@@ -470,7 +428,7 @@ export default function FiStakingPage() {
       if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
         setClaimSuccess(tokenKey)
-        fetchRewardsPerSecond() // Refresh rewards per second after successful claim
+        // Removed fetchRewardsPerSecond call after claim
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -589,6 +547,11 @@ export default function FiStakingPage() {
           90% { opacity: 1; }
           100% { transform: translateY(100vh); opacity: 0; }
         }
+
+        @keyframes glow-light {
+          0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(34, 211, 238, 0.3); }
+          50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(34, 211, 238, 0.6); }
+        }
       `}</style>
 
       {/* Battery Indicator - Top Right */}
@@ -623,12 +586,7 @@ export default function FiStakingPage() {
         transition={{ duration: 0.5 }}
         className="text-center mb-4 relative z-10"
       >
-        <h1 className="text-2xl font-bold tracking-tighter flex items-center justify-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-purple-400" />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-300">
-            {t.title}
-          </span>
-        </h1>
+        {/* Removed h1 title */}
         <p className="text-gray-400 text-xs mt-1 leading-relaxed px-4">{t.subtitle}</p>
       </motion.div>
 
@@ -692,7 +650,7 @@ export default function FiStakingPage() {
           </motion.div>
         ) : (
           <>
-            {/* KPP Logo in the middle */}
+            {/* KPP Logo in the middle with light effect */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -704,28 +662,23 @@ export default function FiStakingPage() {
                 alt={kppContract.name}
                 width={128}
                 height={128}
-                className="rounded-full border-4 border-cyan-400/50 shadow-lg shadow-cyan-500/30"
+                className="rounded-full border-4 border-cyan-400/50 shadow-lg shadow-cyan-500/30 animate-[glow-light_2s_ease-in-out_infinite]" // Added glow-light animation
               />
               <h3 className="text-white font-bold text-2xl mt-4">{kppContract.symbol}</h3>
               <p className="text-gray-400 text-sm">{kppContract.name}</p>
             </motion.div>
 
-            {/* Rewards Per Second Display (Reverted) */}
+            {/* APY Display */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col items-center justify-center my-4 p-2 bg-gray-800/50 border border-gray-700/50 rounded-lg w-full max-w-[250px]"
             >
-              <p className="text-gray-400 text-xs font-medium mb-1">{t.rewardsPerSecond}</p>
-              {loadingRewardsPerSecond ? (
-                <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-              ) : (
-                <p className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
-                  {rewardsPerSecond !== null ? rewardsPerSecond : "0.00000000"} {kppContract.symbol}
-                </p>
-              )}
-              {/* Note: The displayed value assumes 18 decimals for formatting. Adjust `1e18` if your token has different decimals. */}
+              <p className="text-gray-400 text-xs font-medium mb-1">APY</p>
+              <p className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
+                12%
+              </p>
             </motion.div>
 
             {/* Claim Button below the logo */}
@@ -737,9 +690,9 @@ export default function FiStakingPage() {
             >
               <button
                 onClick={() => handleClaim("KPP")}
-                disabled={isClaimingKPP || loadingRewardsPerSecond} // Disabled state reverted
+                disabled={isClaimingKPP} // Disabled state simplified
                 className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
-                  isClaimingKPP || loadingRewardsPerSecond
+                  isClaimingKPP
                     ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30"
                 }`}
