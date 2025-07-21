@@ -1,7 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-
 // Tipos para internacionalização
 export type Language = "en" | "pt" | "es" | "id"
 
@@ -22,7 +20,6 @@ export interface HistoryTranslations {
   all?: string
   loading?: string
   loadMore?: string
-  noTransactions?: string
   noTransactions?: string
   showAllTransactions?: string
   received?: string
@@ -421,7 +418,6 @@ export interface MembershipTranslations {
   tipDescription?: string
 }
 
-// Nova interface para KStaking
 export interface FiStakingTranslations {
   title?: string
   subtitle?: string
@@ -445,12 +441,19 @@ export interface FiStakingTranslations {
   rewardsPerYear?: string
   dismiss?: string
   powerActivated?: string
-  description?: string // Adicionado para a nova página FiStaking
-  claiming?: string // Adicionado para o estado de carregamento do botão
-  claim?: string // Adicionado para o texto do botão
-  claimFailed?: string // Adicionado para erro de claim
-  rewardsClaimedSuccess?: string // Adicionado para mensagem de sucesso
-  connectWalletFirst?: string // Adicionado para mensagem de conectar carteira
+  description?: string
+  claiming?: string
+  claim?: string
+  claimFailed?: string
+  rewardsClaimedSuccess?: string
+  connectWalletFirst?: string
+}
+
+export interface CommonTranslations {
+  back?: string
+  error?: string
+  unexpectedError?: string
+  comingSoon?: string
 }
 
 export interface Translations {
@@ -475,17 +478,16 @@ export interface Translations {
   level?: LevelTranslations
   events?: EventsTranslations
   membership?: MembershipTranslations
-  fistaking?: FiStakingTranslations // Renomeado de kstaking para fistaking
+  fistaking?: FiStakingTranslations
+  common?: CommonTranslations // Adicionado CommonTranslations
 }
 
-// Função para obter o idioma atual do navegador ou o padrão (inglês)
 export function getCurrentLanguage(): Language {
   if (typeof window === "undefined") return "en"
   const storedLanguage = localStorage.getItem("tpf_language") as Language | null
   return storedLanguage || "en"
 }
 
-// Função para definir o idioma atual
 export function setCurrentLanguage(lang: Language): void {
   if (typeof window === "undefined") return
   localStorage.setItem("tpf_language", lang)
@@ -493,7 +495,6 @@ export function setCurrentLanguage(lang: Language): void {
   window.dispatchEvent(event)
 }
 
-// Função para obter as traduções para um idioma específico
 export function getTranslations(lang: Language): Translations {
   const translations: { [key in Language]: Translations } = {
     en: {
@@ -917,7 +918,6 @@ export function getTranslations(lang: Language): Translations {
         tipDescription: "Include the transaction screenshot and your wallet address in the email.",
       },
       fistaking: {
-        // Renomeado de kstaking para fistaking
         title: "FiStaking",
         subtitle: "Stake your tokens and earn passive rewards from other tokens.",
         yourBalance: "Your KPP Balance:",
@@ -940,12 +940,18 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Rewards per year:",
         dismiss: "Dismiss",
         powerActivated: "Power Activated",
-        description: "The more you stake, the more you earn!", // Novo
-        claiming: "Claiming...", // Novo
-        claim: "Claim", // Novo
-        claimFailed: "Claim Failed", // Novo
-        rewardsClaimedSuccess: "Rewards claimed for {token} successfully!", // Novo
-        connectWalletFirst: "Connect your wallet first to view staking details.", // Novo
+        description: "The more you stake, the more you earn!",
+        claiming: "Claiming...",
+        claim: "Claim",
+        claimFailed: "Claim Failed",
+        rewardsClaimedSuccess: "Rewards claimed for {token} successfully!",
+        connectWalletFirst: "Connect your wallet first to view staking details.",
+      },
+      common: {
+        back: "Back",
+        error: "Error",
+        unexpectedError: "An unexpected error occurred.",
+        comingSoon: "Coming Soon",
       },
     },
     pt: {
@@ -1372,7 +1378,6 @@ export function getTranslations(lang: Language): Translations {
         tipDescription: "Inclua a captura de tela da transação e o endereço da sua carteira no e-mail.",
       },
       fistaking: {
-        // Renomeado de kstaking para fistaking
         title: "FiStaking",
         subtitle: "Só por teres KPP tens direito a ganhos passivos de outros tokens.",
         yourBalance: "Seu Saldo KPP:",
@@ -1395,12 +1400,18 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Recompensas por ano:",
         dismiss: "Dispensar",
         powerActivated: "Energia Ativada",
-        description: "Quanto mais KPP tiveres, mais ganhas!", // Novo
-        claiming: "Reivindicando...", // Novo
-        claim: "Reivindicar", // Novo
-        claimFailed: "Reivindicação Falhou", // Novo
-        rewardsClaimedSuccess: "Recompensas reivindicadas para {token} com sucesso!", // Novo
-        connectWalletFirst: "Conecte sua carteira primeiro para ver os detalhes do staking.", // Novo
+        description: "Quanto mais KPP tiveres, mais ganhas!",
+        claiming: "Reivindicando...",
+        claim: "Reivindicar",
+        claimFailed: "Reivindicação Falhou",
+        rewardsClaimedSuccess: "Recompensas reivindicadas para {token} com sucesso!",
+        connectWalletFirst: "Conecte sua carteira primeiro para ver os detalhes do staking.",
+      },
+      common: {
+        back: "Voltar",
+        error: "Erro",
+        unexpectedError: "Ocorreu um erro inesperado.",
+        comingSoon: "Em Breve",
       },
     },
     es: {
@@ -1746,7 +1757,7 @@ export function getTranslations(lang: Language): Translations {
         expenseBreakdown: "Distribución de Gastos",
         noData: "No hay datos disponibles",
         totalRevenue: "Ingresos Totales",
-        totalExpenses: "Gastos Totales",
+        totalExpenses: "Total Expenses",
       },
       partnerships: {
         title: "Asociaciones",
@@ -1830,7 +1841,6 @@ export function getTranslations(lang: Language): Translations {
           "Incluye la captura de pantalla de la transacción y la dirección de tu billetera en el correo electrónico.",
       },
       fistaking: {
-        // Renomeado de kstaking para fistaking
         title: "FiStaking",
         subtitle: "¡Solo por tener KPP tienes derecho a ganancias pasivas de otros tokens.",
         yourBalance: "Tu Saldo KPP:",
@@ -1852,13 +1862,19 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerDay: "Recompensas por día:",
         rewardsPerYear: "Recompensas por año:",
         dismiss: "Descartar",
-        powerActivated: "Energía Activada",
-        description: "¡Cuanto más KPP tengas, más ganas!", // Nuevo
-        claiming: "Reclamando...", // Nuevo
-        claim: "Reclamar", // Nuevo
-        claimFailed: "Reclamo Fallido", // Nuevo
-        rewardsClaimedSuccess: "¡Recompensas reclamadas para {token} con éxito!", // Nuevo
-        connectWalletFirst: "Conecta tu billetera primero para ver los detalles del staking.", // Nuevo
+        powerActivated: "Energia Activada",
+        description: "¡Cuanto más KPP tengas, más ganas!",
+        claiming: "Reclamando...",
+        claim: "Reclamar",
+        claimFailed: "Reclamo Fallido",
+        rewardsClaimedSuccess: "¡Recompensas reclamadas para {token} con éxito!",
+        connectWalletFirst: "Conecta tu billetera primero para ver los detalles del staking.",
+      },
+      common: {
+        back: "Volver",
+        error: "Error",
+        unexpectedError: "Ocurrió un error inesperado.",
+        comingSoon: "Próximamente",
       },
     },
     id: {
@@ -2244,7 +2260,7 @@ export function getTranslations(lang: Language): Translations {
           registrationDescription: "Kirim 200.000 KPP para mendaftar turnamen",
           tournamentTitle: "Turnamen Game Ular",
           tournamentDescription: "Dapatkan skor tertinggi di game ular para memenangkan hadiah utama",
-          instructions: "Instruksi:",
+          instructions: "Instruções:",
           rules: {
             rule1: "Pemain que mencapai o maior pontuação no game ular ganha o grande prêmio",
             rule2: "Tangkapan layar skor Anda harus dikirim ke support@keplerpay.com pada hari terakhir turnamen",
@@ -2283,7 +2299,6 @@ export function getTranslations(lang: Language): Translations {
         tipDescription: "Sertakan tangkapan layar transaksi e o endereço da sua carteira no email.",
       },
       fistaking: {
-        // Renomeado de kstaking para fistaking
         title: "FiStaking",
         subtitle:
           "Hanya com KPP você tem direito a ganhos passivos de outros tokens, quanto mais KPP você tiver, mais você ganha!",
@@ -2307,12 +2322,18 @@ export function getTranslations(lang: Language): Translations {
         rewardsPerYear: "Recompensas por ano:",
         dismiss: "Dispensar",
         powerActivated: "Energia Ativada",
-        description: "Semakin banyak KPP yang Anda miliki, semakin banyak yang Anda hasilkan!", // Novo
-        claiming: "Mengklaim...", // Novo
-        claim: "Klaim", // Novo
-        claimFailed: "Klaim Gagal", // Novo
-        rewardsClaimedSuccess: "Hadiah berhasil diklaim untuk {token}!", // Novo
-        connectWalletFirst: "Hubungkan dompet Anda terlebih dahulu untuk melihat detail staking.", // Novo
+        description: "Semakin banyak KPP yang Anda miliki, semakin banyak yang Anda hasilkan!",
+        claiming: "Mengklaim...",
+        claim: "Klaim",
+        claimFailed: "Klaim Gagal",
+        rewardsClaimedSuccess: "Hadiah berhasil diklaim untuk {token}!",
+        connectWalletFirst: "Hubungkan dompet Anda terlebih dahulu untuk melihat detail staking.",
+      },
+      common: {
+        back: "Kembali",
+        error: "Kesalahan",
+        unexpectedError: "Terjadi kesalahan yang tidak terduga.",
+        comingSoon: "Segera Hadir",
       },
     },
   }
@@ -2320,29 +2341,6 @@ export function getTranslations(lang: Language): Translations {
   return translations[lang] || translations["en"]
 }
 
-// Hook para usar traduções em componentes
-export function useTranslation() {
-  const [language, setLanguage] = useState<Language>(getCurrentLanguage())
+import { useTranslation } from "./useTranslation"
 
-  useEffect(() => {
-    setLanguage(getCurrentLanguage())
-
-    const handleLanguageChange = () => {
-      setLanguage(getCurrentLanguage())
-    }
-
-    window.addEventListener("languageChange", handleLanguageChange)
-    return () => window.removeEventListener("languageChange", handleLanguageChange)
-  }, [])
-
-  const translations = getTranslations(language)
-
-  return {
-    language,
-    setLanguage: setCurrentLanguage,
-    t: translations,
-  }
-}
-
-// Alias para compatibilidade
-export const useTranslations = useTranslation
+export { useTranslation }
