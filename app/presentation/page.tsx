@@ -48,7 +48,7 @@ const translations = {
     },
     navigation: {
       airdrop: "Airdrop",
-      fistaking: "Fi Staking",
+      fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "About",
     },
     common: {
@@ -88,7 +88,7 @@ const translations = {
     },
     navigation: {
       airdrop: "Airdrop",
-      fistaking: "Fi Staking",
+      fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Sobre",
     },
     common: {
@@ -129,7 +129,7 @@ const translations = {
     },
     navigation: {
       airdrop: "Airdrop",
-      fistaking: "Fi Staking",
+      fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Acerca de",
     },
     common: {
@@ -170,7 +170,7 @@ const translations = {
     },
     navigation: {
       airdrop: "Airdrop",
-      fistaking: "Fi Staking",
+      fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Tentang",
     },
     common: {
@@ -240,7 +240,7 @@ const Presentation: React.FC = () => {
     },
     {
       id: "fistaking",
-      labelKey: "fistaking",
+      labelKey: "fistaking", // This key now points to "KStaking" in translations
       icon: TrendingUp,
       href: "/fistaking",
     },
@@ -429,8 +429,8 @@ const Presentation: React.FC = () => {
               <div className="p-4 pb-4">
                 {/* Menu Glow Effect */}
                 <div className="absolute inset-0 bg-gray-700/10 rounded-2xl" />
-                {/* Menu Items Grid */}
-                <div className="relative z-10 grid grid-cols-2 gap-3 mb-4">
+                {/* Menu Items List (changed from grid to flex-col) */}
+                <div className="relative z-10 flex flex-col space-y-3 mb-4">
                   {navigationItems.map((item, index) => (
                     <motion.button
                       key={item.id}
@@ -443,16 +443,17 @@ const Presentation: React.FC = () => {
                         }
                         setIsMenuOpen(false)
                       }}
-                      className="group p-2 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300"
+                      className="group p-3 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4" // Added flex items-center space-x-4
                     >
-                      <div className="flex flex-col items-center space-y-1">
-                        <div className="w-6 h-6 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300">
-                          <item.icon className="w-3 h-3 text-gray-400 group-hover:text-white transition-colors" />
-                        </div>
-                        <span className="text-gray-300 group-hover:text-white font-medium text-xs tracking-wide">
-                          {t.navigation[item.labelKey]}
-                        </span>
+                      <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0">
+                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />{" "}
+                        {/* Increased icon size */}
                       </div>
+                      <span className="text-gray-300 group-hover:text-white font-medium text-base tracking-wide">
+                        {" "}
+                        {/* Adjusted text size */}
+                        {t.navigation[item.labelKey]}
+                      </span>
                     </motion.button>
                   ))}
                 </div>
