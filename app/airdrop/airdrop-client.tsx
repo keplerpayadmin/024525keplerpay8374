@@ -478,24 +478,30 @@ export default function AirdropClient() {
           )}
         </motion.div>
 
-        {/* KeplerPay Logo Reveal - Positioned above and to the left of the button */}
+        {/* Group for KeplerPay Logo and Claim Button */}
         <AnimatePresence>
-          {showClaimButton && (
+          {showClaimButton && !showCountdown && !isInCooldown && (
             <motion.div
-              className="absolute bottom-[120px] left-1/2 -translate-x-[calc(50%+40px)]" // Adjusted positioning
-              initial={{ y: 50, opacity: 0, scale: 0.5 }}
-              animate={{
-                y: 0,
-                opacity: 1,
-                scale: 1,
-                rotateY: [0, 360],
-              }}
-              transition={{
-                duration: 1,
-                rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative z-10 flex flex-col items-center" // Flex container to stack and center
             >
-              <div className="relative w-24 h-24">
+              {/* KeplerPay Logo */}
+              <motion.div
+                className="relative w-24 h-24 mb-8" // Added mb-8 for spacing, removed absolute positioning
+                initial={{ y: 50, opacity: 0, scale: 0.5 }}
+                animate={{
+                  y: 0,
+                  opacity: 1,
+                  scale: 1,
+                  rotateY: [0, 360],
+                }}
+                transition={{
+                  duration: 1,
+                  rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+                }}
+              >
                 {/* Glow Effect */}
                 <div
                   className="absolute inset-0 bg-white rounded-full"
@@ -510,27 +516,16 @@ export default function AirdropClient() {
                 />
                 <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
                   <Image
-                    src="/images/keplerpay-logo.png" // Using the specified logo
+                    src="/images/keplerpay-logo.png"
                     alt="KeplerPay Logo"
                     width={88}
                     height={88}
                     className="w-full h-full object-contain"
                   />
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
 
-        {/* Claim Button */}
-        <AnimatePresence>
-          {showClaimButton && !showCountdown && !isInCooldown && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="relative z-10"
-            >
+              {/* Claim Button */}
               <button
                 className={`w-56 py-3 px-5 rounded-full ${
                   showClaimButton
