@@ -16,22 +16,22 @@ const SUPPORTED_LANGUAGES = [
 // Translation texts
 const translations = {
   en: {
-    title: "Welcome to TPulseFi",
+    title: "Welcome to KeplerPay",
     subtitle: "For the best user experience, please select your preferred language",
     continue: "Continue",
   },
   pt: {
-    title: "Bem-vindo ao TPulseFi",
+    title: "Bem-vindo ao KeplerPay",
     subtitle: "Para a melhor experiência do usuário, selecione seu idioma preferido",
     continue: "Continuar",
   },
   es: {
-    title: "Bienvenido a TPulseFi",
+    title: "Bienvenido a KeplerPay",
     subtitle: "Para la mejor experiencia de usuario, selecciona tu idioma preferido",
     continue: "Continuar",
   },
   id: {
-    title: "Selamat datang di TPulseFi",
+    title: "Selamat datang di KeplerPay",
     subtitle: "Untuk pengalaman pengguna terbaik, silakan pilih bahasa pilihan Anda",
     continue: "Lanjutkan",
   },
@@ -138,8 +138,8 @@ export default function LanguageWelcome({ onComplete }: LanguageWelcomeProps) {
             <div className="flex items-center justify-center mb-4 animate-vibrate-container">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center p-2 shadow-2xl animate-vibrate-logo animate-pulse-glow">
                 <Image
-                  src="/images/logo-tpf.png"
-                  alt="TPulseFi Logo"
+                  src="/images/keplerpay-logo.png"
+                  alt="KeplerPay Logo"
                   width={48}
                   height={48}
                   className="w-full h-full object-contain animate-vibrate-logo"
