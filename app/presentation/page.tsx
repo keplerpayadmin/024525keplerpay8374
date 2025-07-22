@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye } from "lucide-react"
+import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
@@ -50,6 +50,16 @@ const translations = {
       airdrop: "Airdrop",
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "About",
+      partnerships: "Partnerships",
+    },
+    partnerships: {
+      title: "Our Partnerships",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi is a DeFi project focused on long-term value appreciation, and our main partner/developer.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet is your go-to app for easily claiming crypto airdrops on the World Chain. Access top airdrops like KPP, swap them for USDC or WLD, and earn HUB—Drop Wallet’s native token—via daily check-ins and swaps. Upcoming features include cross-chain, fiat on-ramps, staking, and crypto savings – making Web3 earning simple for everyone.",
     },
     common: {
       loading: "Loading...",
@@ -90,6 +100,16 @@ const translations = {
       airdrop: "Airdrop",
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Sobre",
+      partnerships: "Parcerias",
+    },
+    partnerships: {
+      title: "Nossas Parcerias",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi é um projeto DeFi focado na valorização a longo prazo, e nosso principal parceiro/desenvolvedor.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet é o seu aplicativo ideal para reivindicar facilmente airdrops de criptomoedas na World Chain. Acesse os melhores airdrops como KPP, troque-os por USDC ou WLD e ganhe HUB — o token nativo da Drop Wallet — através de check-ins diários e trocas. Os próximos recursos incluem cross-chain, on-ramps fiduciárias, staking e poupança de criptomoedas – tornando o ganho Web3 simples para todos.",
     },
     common: {
       loading: "Carregando...",
@@ -131,6 +151,16 @@ const translations = {
       airdrop: "Airdrop",
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Acerca de",
+      partnerships: "Asociaciones",
+    },
+    partnerships: {
+      title: "Nuestras Asociaciones",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo plazo, y nuestro principal socio/desarrollador.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Accede a los mejores airdrops como KPP, intercámbialos por USDC o WLD, y gana HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
     },
     common: {
       loading: "Cargando...",
@@ -172,6 +202,16 @@ const translations = {
       airdrop: "Airdrop",
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Tentang",
+      partnerships: "Kemitraan",
+    },
+    partnerships: {
+      title: "Kemitraan Kami",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi adalah proyek DeFi yang berfokus pada apresiasi nilai jangka panjang, dan mitra/pengembang utama kami.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet adalah aplikasi pilihan Anda untuk dengan mudah mengklaim airdrop kripto di World Chain. Akses airdrop teratas seperti KPP, tukarkan dengan USDC atau WLD, dan dapatkan HUB—token asli Drop Wallet—melalui check-in harian dan pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, dan tabungan kripto – membuat penghasilan Web3 sederhana untuk semua orang.",
     },
     common: {
       loading: "Memuat...",
@@ -249,6 +289,12 @@ const Presentation: React.FC = () => {
       labelKey: "about",
       icon: Info,
       href: "/about",
+    },
+    {
+      id: "partnerships", // Novo item
+      labelKey: "partnerships",
+      icon: Users, // Ícone para parcerias
+      href: "/partnerships",
     },
   ]
 
@@ -451,7 +497,6 @@ const Presentation: React.FC = () => {
                       </div>
                       <span className="text-gray-300 group-hover:text-white font-medium text-base tracking-wide">
                         {" "}
-                        {/* Adjusted text size */}
                         {t.navigation[item.labelKey]}
                       </span>
                     </motion.button>
