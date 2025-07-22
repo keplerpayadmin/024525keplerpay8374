@@ -229,7 +229,7 @@ export default function AirdropClient() {
   const timeDisplay = formatTime(countdownTime)
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-gray-900 relative overflow-hidden flex flex-col">
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-50">
         <Link
@@ -241,13 +241,13 @@ export default function AirdropClient() {
         </Link>
       </div>
 
-      {/* Moving Light Lines Background - Same as presentation.tsx */}
-      <div className="absolute inset-0">
+      {/* Moving Light Lines Background - Matches presentation.tsx */}
+      <div className="absolute inset-0 bg-gray-900">
         {/* Horizontal Moving Lines */}
         {[...Array(12)].map((_, i) => (
           <div
             key={`h-line-${i}`}
-            className="absolute h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent animate-pulse"
+            className="absolute h-px bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
             style={{
               top: `${8 + i * 8}%`,
               left: "-100%",
@@ -257,73 +257,6 @@ export default function AirdropClient() {
             }}
           />
         ))}
-
-        {/* Vertical Moving Lines */}
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={`v-line-${i}`}
-            className="absolute w-px bg-gradient-to-b from-transparent via-blue-400/50 to-transparent"
-            style={{
-              left: `${10 + i * 10}%`,
-              top: "-100%",
-              height: "200%",
-              animation: `moveDown 5s linear infinite`,
-              animationDelay: `${i * 0.4}s`,
-            }}
-          />
-        ))}
-
-        {/* Diagonal Moving Lines */}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={`d-line-${i}`}
-            className="absolute h-px bg-gradient-to-r from-transparent via-white/30 to-transparent rotate-45"
-            style={{
-              top: `${15 + i * 12}%`,
-              left: "-100%",
-              width: "200%",
-              animation: `moveRight 6s linear infinite`,
-              animationDelay: `${i * 0.5}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Static Grid */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(34,211,238,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34,211,238,0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      {/* Central Glow Effect */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute w-80 h-80 bg-cyan-400/10 rounded-full blur-2xl animate-pulse"
-          style={{ animationDelay: "0.5s" }}
-        />
-        <div
-          className="absolute w-64 h-64 bg-blue-400/15 rounded-full blur-xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
-      </div>
-
-      {/* Rotating Rings */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div
-          className="w-72 h-72 border border-white/10 rounded-full animate-spin"
-          style={{ animationDuration: "20s" }}
-        />
-        <div
-          className="absolute w-80 h-80 border border-cyan-400/15 rounded-full animate-spin"
-          style={{ animationDuration: "25s", animationDirection: "reverse" }}
-        />
       </div>
 
       {/* Main Content */}
@@ -511,50 +444,6 @@ export default function AirdropClient() {
                 )}
               </AnimatePresence>
             </motion.div>
-
-            {/* KeplerPay Logo Reveal - Now appears with the claim button */}
-            <AnimatePresence>
-              {showClaimButton && (
-                <motion.div
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                  initial={{ y: 50, opacity: 0, scale: 0.5 }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                    scale: 1,
-                    rotateY: [0, 360],
-                  }}
-                  transition={{
-                    duration: 1,
-                    rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-                  }}
-                >
-                  <div className="relative w-24 h-24">
-                    {/* Glow Effect */}
-                    <div
-                      className="absolute inset-0 bg-white rounded-full"
-                      style={{
-                        boxShadow: `
-                  0 0 40px rgba(255, 255, 255, 0.8),
-                  0 0 80px rgba(255, 255, 255, 0.6),
-                  0 0 120px rgba(255, 255, 255, 0.4)
-                `,
-                        animation: "pulse 1s ease-in-out infinite",
-                      }}
-                    />
-                    <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
-                      <Image
-                        src="/images/keplerpay-logo.png" // Updated path
-                        alt="KeplerPay Logo" // Updated alt text
-                        width={88}
-                        height={88}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
           {/* Instruction text */}
@@ -588,6 +477,50 @@ export default function AirdropClient() {
             </motion.p>
           )}
         </motion.div>
+
+        {/* KeplerPay Logo Reveal - Positioned above and to the left of the button */}
+        <AnimatePresence>
+          {showClaimButton && (
+            <motion.div
+              className="absolute bottom-[120px] left-1/2 -translate-x-[calc(50%+40px)]" // Adjusted positioning
+              initial={{ y: 50, opacity: 0, scale: 0.5 }}
+              animate={{
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                rotateY: [0, 360],
+              }}
+              transition={{
+                duration: 1,
+                rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+              }}
+            >
+              <div className="relative w-24 h-24">
+                {/* Glow Effect */}
+                <div
+                  className="absolute inset-0 bg-white rounded-full"
+                  style={{
+                    boxShadow: `
+                  0 0 40px rgba(255, 255, 255, 0.8),
+                  0 0 80px rgba(255, 255, 255, 0.6),
+                  0 0 120px rgba(255, 255, 255, 0.4)
+                `,
+                    animation: "pulse 1s ease-in-out infinite",
+                  }}
+                />
+                <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
+                  <Image
+                    src="/images/keplerpay-logo.png" // Using the specified logo
+                    alt="KeplerPay Logo"
+                    width={88}
+                    height={88}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Claim Button */}
         <AnimatePresence>
@@ -676,6 +609,25 @@ export default function AirdropClient() {
           }}
         />
       ))}
+
+      <style jsx>{`
+        @keyframes moveRight {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100vw);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }
