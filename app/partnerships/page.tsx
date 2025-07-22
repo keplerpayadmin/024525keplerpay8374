@@ -102,9 +102,9 @@ export default function PartnershipsPage() {
         className="absolute inset-0 opacity-10"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(34,211,238,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34,211,238,0.3) 1px, transparent 1px)
-          `,
+          linear-gradient(rgba(34,211,238,0.3) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34,211,238,0.3) 1px, transparent 1px)
+        `,
           backgroundSize: "60px 60px",
         }}
       />
@@ -145,23 +145,23 @@ export default function PartnershipsPage() {
       ))}
 
       <style jsx>{`
-        @keyframes moveRight {
-          0% {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateX(100vw);
-            opacity: 0;
-          }
+      @keyframes moveRight {
+        0% {
+          transform: translateX(-100%);
+          opacity: 0;
         }
-      `}</style>
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(100vw);
+          opacity: 0;
+        }
+      }
+    `}</style>
 
       {/* Back Button */}
       <motion.div
@@ -233,16 +233,15 @@ export default function PartnershipsPage() {
           <Image src="/images/HUB.png" alt="DropWallet HUB Logo" width={80} height={80} className="mb-4 rounded-full" />
           <h2 className="text-xl font-semibold text-white mb-2">{t.dropWalletTitle}</h2>
           <p className="text-gray-300 text-sm mb-4 leading-relaxed">{t.dropWalletDescription}</p>
-          {/* Assuming DropWallet might also have a link, add it here if available */}
-          {/* <a
-            href="#" // Replace with actual DropWallet link if available
+          <a
+            href="https://worldcoin.org/mini-app?app_id=app_459cd0d0d3125864ea42bd4c19d1986c&path=/dlink/KeplerPay"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-medium hover:bg-purple-700 transition-colors"
           >
             <LinkIcon className="w-4 h-4" />
             {t.learnMore}
-          </a> */}
+          </a>
         </motion.div>
       </motion.div>
     </main>
