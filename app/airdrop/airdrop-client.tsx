@@ -273,7 +273,6 @@ export default function AirdropClient() {
               {t.airdrop.title}
             </span>
           </h1>
-          <p className="text-gray-400 text-sm">{t.airdrop.everyDayReward}</p>
         </motion.div>
 
         {/* Countdown Timer - Show if in cooldown */}
@@ -489,7 +488,7 @@ export default function AirdropClient() {
             >
               {/* KeplerPay Logo */}
               <motion.div
-                className="relative w-24 h-24 mb-8" // Added mb-8 for spacing, removed absolute positioning
+                className="relative w-24 h-24 mb-24" // Added mb-8 for spacing, removed absolute positioning
                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
                 animate={{
                   y: 0,
