@@ -4,21 +4,28 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { Coins, Gift, Lock, ArrowLeft, Clock } from "lucide-react"
+import { Coins, Gift, ArrowLeft, Clock } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { MiniKit } from "@worldcoin/minikit-js"
 
 export default function AirdropClient() {
   const { t } = useI18n()
 
-  const [chainsBreaking, setChainsBreaking] = useState(false)
-  const [chainsBroken, setChainsBroken] = useState(false)
-  const [boxOpened, setBoxOpened] = useState(false)
-  const [canClaim, setCanClaim] = useState(false)
+  // REMOVE the following state declarations:
+  // const [chainsBreaking, setChainsBreaking] = useState(false)
+  // const [chainsBroken, setChainsBroken] = useState(false)
+  // const [boxOpened, setBoxOpened] = useState(false)
+  // const [canClaim, setCanClaim] = useState(false)
+  // const [showReward, setShowReward] = useState(false)
+
+  // ADD the following new state declarations:
+  const [isRevealTriggerActive, setIsRevealTriggerActive] = useState(false)
+  const [isRevealing, setIsRevealing] = useState(false)
+  const [showClaimButton, setShowClaimButton] = useState(false)
+
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimSuccess, setClaimSuccess] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [showReward, setShowReward] = useState(false)
   const [showCountdown, setShowCountdown] = useState(false)
   const [countdownTime, setCountdownTime] = useState(24 * 60 * 60) // 24 hours in seconds
   const [isInCooldown, setIsInCooldown] = useState(false)
@@ -39,12 +46,12 @@ export default function AirdropClient() {
           setCountdownTime(remainingTime)
           setShowCountdown(true)
           setIsInCooldown(true)
-          setCanClaim(false)
         } else {
           // Cooldown expired, clear localStorage
           localStorage.removeItem("airdrop_last_claim")
           setIsInCooldown(false)
           setShowCountdown(false)
+          setIsRevealTriggerActive(true) // Ready to reveal if not in cooldown
         }
       }
     }
@@ -55,10 +62,9 @@ export default function AirdropClient() {
   // Reset state on component mount if not in cooldown
   useEffect(() => {
     if (!isInCooldown) {
-      setChainsBroken(false)
-      setBoxOpened(false)
-      setShowReward(false)
-      setCanClaim(false)
+      setIsRevealTriggerActive(true)
+      setIsRevealing(false)
+      setShowClaimButton(false)
     }
   }, [isInCooldown])
 
@@ -72,10 +78,9 @@ export default function AirdropClient() {
             // Countdown finished
             setShowCountdown(false)
             setIsInCooldown(false)
-            setCanClaim(false)
-            setBoxOpened(false)
-            setShowReward(false)
-            setChainsBroken(false)
+            setIsRevealTriggerActive(true) // Now ready to reveal again
+            setIsRevealing(false)
+            setShowClaimButton(false)
             localStorage.removeItem("airdrop_last_claim")
             return 24 * 60 * 60 // Reset to 24 hours
           }
@@ -97,42 +102,33 @@ export default function AirdropClient() {
     }
   }
 
+  // MODIFY the `startCooldown` function:
   const startCooldown = () => {
     const now = Date.now()
     localStorage.setItem("airdrop_last_claim", now.toString())
     setCountdownTime(24 * 60 * 60) // 24 hours
     setShowCountdown(true)
     setIsInCooldown(true)
-    setCanClaim(false)
+    setIsRevealTriggerActive(false) // Cannot reveal if in cooldown
+    setIsRevealing(false)
+    setShowClaimButton(false)
   }
 
-  const handleBoxClick = async () => {
-    // Don't allow interaction if in cooldown
-    if (isInCooldown || showCountdown) {
-      return
-    }
+  // ADD the new `handleRevealClick` function:
+  const handleRevealClick = () => {
+    if (!isRevealTriggerActive || isRevealing || isInCooldown) return
 
-    if (!chainsBroken && !chainsBreaking) {
-      // First phase: break chains
-      setChainsBreaking(true)
+    setIsRevealing(true) // Start reveal animation
+    setIsRevealTriggerActive(false) // No longer clickable for reveal
 
-      setTimeout(() => {
-        setChainsBroken(true)
-        setChainsBreaking(false)
-        // Directly open box after chains broken (no World ID)
-        setTimeout(() => {
-          setBoxOpened(true)
-          setTimeout(() => {
-            setShowReward(true)
-            setCanClaim(true)
-          }, 1000)
-        }, 500)
-      }, 1500)
-    }
+    setTimeout(() => {
+      setShowClaimButton(true) // Show the claim button after animation
+      setIsRevealing(false) // End revealing state
+    }, 1500) // Adjust delay for animation
   }
 
   const handleClaim = async () => {
-    if (!canClaim || isClaiming) return
+    if (!showClaimButton || isClaiming) return
 
     try {
       setIsClaiming(true)
@@ -200,7 +196,7 @@ export default function AirdropClient() {
             setClaimSuccess(false)
             startCooldown()
           }, 2000)
-          setClaimError("You have already claimed today. Please wait 24 hours.")
+          setClaimError(t.airdrop.alreadyClaimedError)
         } else {
           throw new Error(finalPayload.message || "Failed to claim airdrop")
         }
@@ -210,7 +206,7 @@ export default function AirdropClient() {
       console.log("Airdrop claimed successfully:", finalPayload)
 
       setClaimSuccess(true)
-      setCanClaim(false)
+      setShowClaimButton(false) // Hide claim button after successful claim
 
       // Start cooldown after successful claim
       setTimeout(() => {
@@ -231,7 +227,7 @@ export default function AirdropClient() {
           setClaimSuccess(false)
           startCooldown()
         }, 2000)
-        setClaimError("You have already claimed today. Please wait 24 hours.")
+        setClaimError(t.airdrop.alreadyClaimedError)
       } else {
         setClaimError(t.airdrop.claimFailed)
       }
@@ -439,168 +435,86 @@ export default function AirdropClient() {
           )}
         </AnimatePresence>
 
-        {/* Surprise Box */}
+        {/* REPLACE the entire "Surprise Box" motion.div (starting with <motion.div initial={{ opacity: 0, scale: 0.8 }} ... className="mb-8 relative">)
+        and the subsequent "Click instruction", "Breaking chain", "Wait for countdown" paragraphs
+        with the following new JSX for the reveal trigger: */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-8 relative"
         >
-          <div className="relative w-64 h-64 mx-auto">
-            {/* Box Container */}
+          <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+            {/* Central Orb / Reveal Trigger */}
             <motion.div
-              className={`absolute inset-0 ${isInCooldown ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-              onClick={handleBoxClick}
-              whileHover={{ scale: chainsBroken || isInCooldown ? 1 : 1.05 }}
-              whileTap={{ scale: chainsBroken || isInCooldown ? 1 : 0.95 }}
+              className={`relative w-48 h-48 rounded-full flex items-center justify-center
+        ${isRevealTriggerActive && !isInCooldown ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+        bg-gradient-to-br from-blue-600 via-cyan-500 to-blue-700 shadow-2xl border-4 border-cyan-400/50`}
+              style={{
+                boxShadow: `
+          0 0 30px rgba(0, 255, 255, 0.5),
+          inset 0 0 20px rgba(255, 255, 255, 0.2)
+        `,
+              }}
+              onClick={handleRevealClick}
+              whileHover={{ scale: isRevealTriggerActive && !isInCooldown ? 1.05 : 1 }}
+              whileTap={{ scale: isRevealTriggerActive && !isInCooldown ? 0.95 : 1 }}
+              animate={
+                isRevealing
+                  ? { scale: [1, 1.2, 0.8, 0], opacity: [1, 0.8, 0.5, 0] }
+                  : isRevealTriggerActive && !isInCooldown
+                    ? {
+                        scale: [1, 1.02, 1],
+                        boxShadow: [
+                          "0 0 30px rgba(0, 255, 255, 0.5)",
+                          "0 0 40px rgba(0, 255, 255, 0.8)",
+                          "0 0 30px rgba(0, 255, 255, 0.5)",
+                        ],
+                      }
+                    : {}
+              }
+              transition={{
+                scale: {
+                  duration: isRevealing ? 1.5 : 1.5,
+                  repeat: isRevealing ? 0 : Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                },
+                boxShadow: { duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                opacity: { duration: isRevealing ? 1.5 : 0.5 },
+              }}
             >
-              {/* Box Base */}
-              <div className="relative w-full h-full">
-                {/* Box Bottom */}
-                <motion.div
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48 h-32 bg-gradient-to-br from-amber-600 via-yellow-500 to-amber-700 rounded-lg shadow-2xl border-4 border-yellow-400/50"
-                  style={{
-                    boxShadow: `
-                      0 0 30px rgba(251, 191, 36, 0.5),
-                      inset 0 0 20px rgba(255, 255, 255, 0.2)
-                    `,
-                  }}
-                >
-                  {/* Box Pattern */}
-                  <div className="absolute inset-2 border-2 border-yellow-300/30 rounded" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <Gift className="w-8 h-8 text-yellow-200" />
-                  </div>
-                </motion.div>
+              {/* Orb Pattern / Icon */}
+              <div className="absolute inset-2 border-2 border-cyan-300/30 rounded-full" />
+              <motion.div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                animate={isRevealing ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Gift className="w-12 h-12 text-cyan-200" />
+              </motion.div>
 
-                {/* Box Lid - Moved further down from top-12 to top-16 */}
-                <AnimatePresence>
-                  {!boxOpened && (
-                    <motion.div
-                      className="absolute top-16 left-1/2 transform -translate-x-1/2 w-48 h-16 bg-gradient-to-br from-amber-500 via-yellow-400 to-amber-600 rounded-lg shadow-xl border-4 border-yellow-300/50"
-                      style={{
-                        boxShadow: `
-                          0 0 25px rgba(251, 191, 36, 0.4),
-                          inset 0 0 15px rgba(255, 255, 255, 0.3)
-                        `,
-                      }}
-                      exit={{
-                        rotateX: -120,
-                        y: -50,
-                        opacity: 0.7,
-                        transition: { duration: 0.8, ease: "easeOut" },
-                      }}
-                    >
-                      <div className="absolute inset-2 border-2 border-yellow-200/40 rounded" />
-                      {/* Ribbon */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-2 bg-gradient-to-r from-red-500 to-red-600 shadow-lg" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Chain - Only Horizontal - Adjusted position to match new lid position */}
-                <AnimatePresence>
-                  {!chainsBroken && (
-                    <motion.div
-                      className="absolute top-28 left-1/2 transform -translate-x-1/2 w-52 h-1 bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 rounded-full shadow-lg"
-                      style={{
-                        boxShadow: `
-                          0 0 10px rgba(107, 114, 128, 0.8),
-                          inset 0 0 5px rgba(255, 255, 255, 0.3)
-                        `,
-                      }}
-                      exit={{
-                        scale: 0,
-                        opacity: 0,
-                        transition: { duration: 0.5, ease: "easeOut" },
-                      }}
-                    >
-                      {/* Chain Links */}
-                      {[...Array(10)].map((_, i) => (
-                        <motion.div
-                          key={`chain-link-${i}`}
-                          className="absolute w-6 h-3 border-2 border-gray-400 rounded-full bg-gradient-to-b from-gray-300 to-gray-500"
-                          style={{
-                            left: `${i * 20}px`,
-                            top: "-5px",
-                            boxShadow: "inset 0 0 3px rgba(255,255,255,0.5)",
-                          }}
-                          animate={
-                            chainsBreaking
-                              ? {
-                                  scale: [1, 0.8, 0],
-                                  opacity: [1, 0.5, 0],
-                                  y: [0, 10, 20],
-                                }
-                              : {}
-                          }
-                          transition={{ delay: i * 0.05 }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Padlock - Adjusted position to match new chain position */}
-                <AnimatePresence>
-                  {!chainsBroken && (
-                    <motion.div
-                      className="absolute top-24 left-1/2 transform -translate-x-1/2 z-30"
-                      exit={{
-                        scale: 0,
-                        rotate: 180,
-                        opacity: 0,
-                        transition: { duration: 0.5, ease: "easeOut" },
-                      }}
-                    >
-                      <div className="relative">
-                        {/* Padlock Glow */}
-                        <div
-                          className="absolute inset-0 bg-gray-300 rounded-lg blur-sm"
-                          style={{
-                            boxShadow: `
-                              0 0 20px rgba(156, 163, 175, 0.8),
-                              0 0 40px rgba(156, 163, 175, 0.6)
-                            `,
-                          }}
-                        />
-                        {/* Padlock Body */}
-                        <div className="relative bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 w-10 h-12 rounded-lg border-2 border-gray-200 shadow-xl">
-                          {/* Padlock Shackle */}
-                          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 border-4 border-gray-300 rounded-t-full bg-transparent" />
-                          {/* Keyhole */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <Lock className="w-4 h-4 text-gray-700" />
-                          </div>
-                          {/* Metallic shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent rounded-lg" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Chain Breaking Effect */}
-                {chainsBreaking && (
+              {/* Sparkles Effect during reveal */}
+              <AnimatePresence>
+                {isRevealing && (
                   <>
                     {[...Array(15)].map((_, i) => (
                       <motion.div
-                        key={`break-particle-${i}`}
-                        className="absolute w-1 h-1 bg-gray-400 rounded-full"
+                        key={`sparkle-${i}`}
+                        className="absolute w-2 h-2 bg-yellow-300 rounded-full"
                         initial={{
-                          x: 120,
-                          y: 120,
-                          scale: 1,
+                          x: 0,
+                          y: 0,
+                          scale: 0,
                           opacity: 1,
                         }}
                         animate={{
-                          x: 120 + (Math.random() - 0.5) * 200,
-                          y: 120 + (Math.random() - 0.5) * 200,
-                          scale: [1, 0.5, 0],
-                          opacity: [1, 0.8, 0],
+                          x: Math.cos((i * Math.PI * 2) / 15) * (50 + Math.random() * 50),
+                          y: Math.sin((i * Math.PI * 2) / 15) * (50 + Math.random() * 50),
+                          scale: [0, 1, 0],
+                          opacity: [1, 1, 0],
                         }}
                         transition={{
-                          duration: 1,
+                          duration: 1.5,
                           delay: i * 0.05,
                           ease: "easeOut",
                         }}
@@ -608,101 +522,72 @@ export default function AirdropClient() {
                     ))}
                   </>
                 )}
-
-                {/* Sparkles Effect */}
-                {boxOpened && (
-                  <>
-                    {[...Array(12)].map((_, i) => (
-                      <motion.div
-                        key={`sparkle-${i}`}
-                        className="absolute w-2 h-2 bg-yellow-300 rounded-full"
-                        initial={{
-                          x: 120,
-                          y: 120,
-                          scale: 0,
-                          opacity: 1,
-                        }}
-                        animate={{
-                          x: 120 + Math.cos((i * Math.PI * 2) / 12) * 100,
-                          y: 120 + Math.sin((i * Math.PI * 2) / 12) * 100,
-                          scale: [0, 1, 0],
-                          opacity: [1, 1, 0],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          delay: i * 0.1,
-                          ease: "easeOut",
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {/* TPF Logo Reveal */}
-                <AnimatePresence>
-                  {showReward && (
-                    <motion.div
-                      className="absolute top-4 left-1/2 transform -translate-x-1/2"
-                      initial={{ y: 50, opacity: 0, scale: 0.5 }}
-                      animate={{
-                        y: 0,
-                        opacity: 1,
-                        scale: 1,
-                        rotateY: [0, 360],
-                      }}
-                      transition={{
-                        duration: 1,
-                        rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-                      }}
-                    >
-                      <div className="relative w-24 h-24">
-                        {/* Glow Effect */}
-                        <div
-                          className="absolute inset-0 bg-white rounded-full"
-                          style={{
-                            boxShadow: `
-                              0 0 40px rgba(255, 255, 255, 0.8),
-                              0 0 80px rgba(255, 255, 255, 0.6),
-                              0 0 120px rgba(255, 255, 255, 0.4)
-                            `,
-                            animation: "pulse 1s ease-in-out infinite",
-                          }}
-                        />
-                        <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
-                          <Image
-                            src="/placeholder.svg?height=88&width=88"
-                            alt="TPF Logo"
-                            width={88}
-                            height={88}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              </AnimatePresence>
             </motion.div>
+
+            {/* TPF Logo Reveal - Now appears with the claim button */}
+            <AnimatePresence>
+              {showClaimButton && (
+                <motion.div
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                  initial={{ y: 50, opacity: 0, scale: 0.5 }}
+                  animate={{
+                    y: 0,
+                    opacity: 1,
+                    scale: 1,
+                    rotateY: [0, 360],
+                  }}
+                  transition={{
+                    duration: 1,
+                    rotateY: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+                  }}
+                >
+                  <div className="relative w-24 h-24">
+                    {/* Glow Effect */}
+                    <div
+                      className="absolute inset-0 bg-white rounded-full"
+                      style={{
+                        boxShadow: `
+                  0 0 40px rgba(255, 255, 255, 0.8),
+                  0 0 80px rgba(255, 255, 255, 0.6),
+                  0 0 120px rgba(255, 255, 255, 0.4)
+                `,
+                        animation: "pulse 1s ease-in-out infinite",
+                      }}
+                    />
+                    <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
+                      <Image
+                        src="/placeholder.svg?height=88&width=88"
+                        alt="TPF Logo"
+                        width={88}
+                        height={88}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Click instruction */}
-          {!chainsBroken && !chainsBreaking && !isInCooldown && (
+          {/* Instruction text */}
+          {!isInCooldown && !isRevealing && isRevealTriggerActive && (
             <motion.p
               className="text-gray-400 text-sm mt-4"
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
             >
-              {t.airdrop.clickToBreakChain}
+              {t.airdrop.pressToReveal}
             </motion.p>
           )}
 
-          {chainsBreaking && (
+          {isRevealing && (
             <motion.p
               className="text-yellow-400 text-sm mt-4 font-medium"
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY }}
             >
-              {t.airdrop.breakingChain}
+              {t.airdrop.revealingAirdrop}
             </motion.p>
           )}
 
@@ -712,14 +597,14 @@ export default function AirdropClient() {
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
             >
-              Wait for the countdown to finish
+              {t.airdrop.waitCountdown}
             </motion.p>
           )}
         </motion.div>
 
         {/* Claim Button */}
         <AnimatePresence>
-          {showReward && !showCountdown && !isInCooldown && (
+          {showClaimButton && !showCountdown && !isInCooldown && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -728,15 +613,15 @@ export default function AirdropClient() {
             >
               <button
                 className={`w-56 py-3 px-5 rounded-full ${
-                  canClaim
+                  showClaimButton
                     ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 hover:from-gray-200 hover:to-gray-300"
                     : "bg-gradient-to-b from-gray-700 to-gray-800 text-gray-400"
                 } font-bold text-sm shadow-lg border border-gray-300/30 relative overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200`}
+                disabled={!showClaimButton || isClaiming}
                 onClick={handleClaim}
-                disabled={!canClaim || isClaiming}
               >
                 <div
-                  className={`absolute inset-0 bg-gradient-to-b ${canClaim ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
+                  className={`absolute inset-0 bg-gradient-to-b ${showClaimButton ? "from-white/30" : "from-white/10"} to-transparent opacity-70`}
                 />
                 <div className="relative flex items-center justify-center gap-2">
                   {isClaiming ? (
@@ -744,13 +629,11 @@ export default function AirdropClient() {
                       <div className="w-4 h-4 border-2 border-t-gray-800 border-gray-400 rounded-full animate-spin" />
                       <span>{t.airdrop.processing}</span>
                     </>
-                  ) : canClaim ? (
+                  ) : (
                     <>
                       <Coins className="w-4 h-4" />
                       <span>{t.airdrop.claim}</span>
                     </>
-                  ) : (
-                    <span>{t.airdrop.claimed}</span>
                   )}
                 </div>
               </button>
