@@ -260,7 +260,9 @@ export default function AirdropClient() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4 pt-20">
+        {" "}
+        {/* Added pt-20 here */}
         {/* Title */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -274,7 +276,6 @@ export default function AirdropClient() {
             </span>
           </h1>
         </motion.div>
-
         {/* Countdown Timer - Show if in cooldown */}
         <AnimatePresence>
           {showCountdown && isInCooldown && (
@@ -356,7 +357,6 @@ export default function AirdropClient() {
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Central Orb / Reveal Trigger */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -476,7 +476,6 @@ export default function AirdropClient() {
             </motion.p>
           )}
         </motion.div>
-
         {/* Group for KeplerPay Logo and Claim Button */}
         <AnimatePresence>
           {showClaimButton && !showCountdown && !isInCooldown && (
@@ -488,7 +487,7 @@ export default function AirdropClient() {
             >
               {/* KeplerPay Logo */}
               <motion.div
-                className="relative w-24 h-24 mb-24" // Added mb-8 for spacing, removed absolute positioning
+                className="relative w-24 h-24 mb-40" // Increased mb- to move logo higher
                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
                 animate={{
                   y: 0,
@@ -554,7 +553,6 @@ export default function AirdropClient() {
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Success/Error Messages */}
         <AnimatePresence>
           {claimSuccess && (
@@ -571,7 +569,6 @@ export default function AirdropClient() {
             </motion.div>
           )}
         </AnimatePresence>
-
         <AnimatePresence>
           {claimError && (
             <motion.div
