@@ -11,14 +11,6 @@ import { MiniKit } from "@worldcoin/minikit-js"
 export default function AirdropClient() {
   const { t } = useI18n()
 
-  // REMOVE the following state declarations:
-  // const [chainsBreaking, setChainsBreaking] = useState(false)
-  // const [chainsBroken, setChainsBroken] = useState(false)
-  // const [boxOpened, setBoxOpened] = useState(false)
-  // const [canClaim, setCanClaim] = useState(false)
-  // const [showReward, setShowReward] = useState(false)
-
-  // ADD the following new state declarations:
   const [isRevealTriggerActive, setIsRevealTriggerActive] = useState(false)
   const [isRevealing, setIsRevealing] = useState(false)
   const [showClaimButton, setShowClaimButton] = useState(false)
@@ -102,7 +94,6 @@ export default function AirdropClient() {
     }
   }
 
-  // MODIFY the `startCooldown` function:
   const startCooldown = () => {
     const now = Date.now()
     localStorage.setItem("airdrop_last_claim", now.toString())
@@ -114,7 +105,6 @@ export default function AirdropClient() {
     setShowClaimButton(false)
   }
 
-  // ADD the new `handleRevealClick` function:
   const handleRevealClick = () => {
     if (!isRevealTriggerActive || isRevealing || isInCooldown) return
 
@@ -435,9 +425,7 @@ export default function AirdropClient() {
           )}
         </AnimatePresence>
 
-        {/* REPLACE the entire "Surprise Box" motion.div (starting with <motion.div initial={{ opacity: 0, scale: 0.8 }} ... className="mb-8 relative">)
-        and the subsequent "Click instruction", "Breaking chain", "Wait for countdown" paragraphs
-        with the following new JSX for the reveal trigger: */}
+        {/* Central Orb / Reveal Trigger */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -445,7 +433,6 @@ export default function AirdropClient() {
           className="mb-8 relative"
         >
           <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
-            {/* Central Orb / Reveal Trigger */}
             <motion.div
               className={`relative w-48 h-48 rounded-full flex items-center justify-center
         ${isRevealTriggerActive && !isInCooldown ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
@@ -525,7 +512,7 @@ export default function AirdropClient() {
               </AnimatePresence>
             </motion.div>
 
-            {/* TPF Logo Reveal - Now appears with the claim button */}
+            {/* KeplerPay Logo Reveal - Now appears with the claim button */}
             <AnimatePresence>
               {showClaimButton && (
                 <motion.div
@@ -557,8 +544,8 @@ export default function AirdropClient() {
                     />
                     <div className="relative z-10 w-full h-full rounded-full overflow-hidden bg-white p-1">
                       <Image
-                        src="/placeholder.svg?height=88&width=88"
-                        alt="TPF Logo"
+                        src="/images/keplerpay-logo.png" // Updated path
+                        alt="KeplerPay Logo" // Updated alt text
                         width={88}
                         height={88}
                         className="w-full h-full object-contain"
