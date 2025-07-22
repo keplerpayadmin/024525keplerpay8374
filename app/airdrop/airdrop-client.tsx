@@ -260,9 +260,9 @@ export default function AirdropClient() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4 pt-20">
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4">
         {" "}
-        {/* Added pt-20 here */}
+        {/* Removed pt-20 here */}
         {/* Title */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -483,11 +483,11 @@ export default function AirdropClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative z-10 flex flex-col items-center" // Flex container to stack and center
+              className="relative z-10 flex flex-col items-center mt-[-150px]" // Added mt-[-150px]
             >
               {/* KeplerPay Logo */}
               <motion.div
-                className="relative w-24 h-24 mb-40" // Increased mb- to move logo higher
+                className="relative w-24 h-24 mb-12" // Changed mb-40 to mb-12
                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
                 animate={{
                   y: 0,
