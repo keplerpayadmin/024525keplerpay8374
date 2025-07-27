@@ -68,7 +68,7 @@ export default function WorldIdVerificationPage() {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
         <div className="mb-8">
-          <Image src="/images/keplerpay-logo.png" alt="KeplerPay Logo" width={120} height={120} className="mb-4" />
+          <Image src="/images/keplerpay-rb.png" alt="KeplerPay Logo" width={120} height={120} className="mb-4" />
           <h1 className="text-5xl font-bold text-white">Kepler</h1>
         </div>
 
