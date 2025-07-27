@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import Image from "next/image" // Re-importing Image
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -159,7 +160,7 @@ const translations = {
         "TPulseFi é um projeto DeFi centrado na apreciação do valor a longo prazo, e nosso principal socio/desenvolvedor.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
-        "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Acesse os melhores airdrops como KPP, intercámbialos por USDC ou WLD, e ganhe HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
+        "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomoedas na World Chain. Acesse os melhores airdrops como KPP, intercámbialos por USDC ou WLD, e ganhe HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
     },
     common: {
       loading: "Cargando...",
@@ -171,7 +172,7 @@ const translations = {
       pricing: "Precios",
       terms: "Términos",
       privacy: "Privacidad",
-      contact: "Contacto",
+      contact: "Contato",
     },
   },
   id: {
@@ -179,7 +180,7 @@ const translations = {
       connectWallet: "Hubungkan Dompet",
       heroTitle: "Buka Masa Depan Aplikasi Terdesentralisasi",
       heroSubtitle:
-        "Rasakan integrasi tanpa batas dan keterlibatan pengguna yang ditingkatkan dengan MiniKit canggih kami.",
+        "Rasakan integrasi tanpa batas dan keterlibatan pengguna yang ditingkatkan com MiniKit canggih kami.",
       getStarted: "Mulai",
       learnMore: "Pelajari Lebih Lanjut",
       featuresTitle: "Fitur Utama",
@@ -194,7 +195,7 @@ const translations = {
         "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih dan protokol keamanan.",
       ctaTitle: "Siap Memulai?",
       ctaSubtitle:
-        "Bergabunglah dengan ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
+        "Bergabunglah com ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
       signUp: "Daftar Sekarang",
     },
     navigation: {
@@ -210,7 +211,7 @@ const translations = {
         "TPulseFi adalah proyek DeFi yang berfokus pada apresiasi nilai jangka panjang, dan mitra/pengembang utama kami.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
-        "Drop Wallet adalah aplikasi pilihan Anda untuk dengan mudah mengklaim airdrop kripto di World Chain. Akses airdrop teratas seperti KPP, tukarkan dengan USDC ou WLD, e ganhe HUB—token asli Drop Wallet—melalui check-in harian e pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, e tabungan kripto – membuat penghasilan Web3 simples para todos.",
+        "Drop Wallet adalah aplikasi pilihan Anda untuk dengan mudah mengklaim airdrop kripto di World Chain. Akses airdrop teratas seperti KPP, tukarkan com USDC ou WLD, e ganhe HUB—token asli Drop Wallet—melalui check-in harian e pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, e tabungan kripto – membuat penghasilan Web3 simples para todos.",
     },
     common: {
       loading: "Memuat...",
@@ -338,7 +339,7 @@ const Presentation: React.FC = () => {
             {/* Connect Wallet Button (only when not connected) */}
             {!isAuthenticated && (
               <button onClick={connectWallet} disabled={isLoading} className="relative group">
-                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
                   <span className="text-white font-medium relative z-10">
@@ -351,7 +352,7 @@ const Presentation: React.FC = () => {
             {/* Wallet Button (when wallet is connected but hidden) */}
             {isAuthenticated && !showMiniWallet && (
               <button onClick={handleShowWallet} className="relative group">
-                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Eye className="w-4 h-4 text-green-300 relative z-10" />
                   <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
@@ -363,7 +364,7 @@ const Presentation: React.FC = () => {
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
-              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <Globe className="w-4 h-4 text-purple-300 relative z-10" />
                 <span className="text-purple-300 text-sm font-medium relative z-10">
@@ -413,7 +414,7 @@ const Presentation: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-6 z-40"
+            className="absolute top-24 left-6 z-40"
           >
             <MiniWallet
               walletAddress={user.walletAddress}
@@ -435,18 +436,20 @@ const Presentation: React.FC = () => {
             <div className="flex items-center justify-center py-2 px-4 space-x-4">
               {/* Central Menu Button */}
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative group">
-                <div className="w-12 h-12 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl relative overflow-hidden">
+                <div className="w-8 h-8 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl">
                   {/* Pulsing Ring */}
                   <div className="absolute inset-0 bg-gray-600/70 rounded-full animate-ping opacity-75" />
                   {/* Inner Glow */}
                   <div className="absolute inset-1 bg-gray-700/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {/* Icon */}
                   {isMenuOpen ? (
-                    <X className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
+                    <X className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
                   ) : (
-                    <Menu className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300" />
+                    <Menu className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300" />
                   )}
                 </div>
+                {/* Button Glow */}
+                <div className="absolute inset-0 bg-gray-700/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
           </div>
@@ -486,14 +489,13 @@ const Presentation: React.FC = () => {
                         }
                         setIsMenuOpen(false)
                       }}
-                      className="group p-4 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4 relative overflow-hidden hover:scale-[1.02] active:scale-[0.98]" // Added flex items-center space-x-4
+                      className="group p-3 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4" // Added flex items-center space-x-4
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0 relative z-10">
-                        <item.icon className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />{" "}
+                      <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0">
+                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />{" "}
                         {/* Increased icon size */}
                       </div>
-                      <span className="text-gray-300 group-hover:text-white font-medium text-lg tracking-wide relative z-10">
+                      <span className="text-gray-300 group-hover:text-white font-medium text-base tracking-wide">
                         {" "}
                         {t.navigation[item.labelKey]}
                       </span>
@@ -528,26 +530,15 @@ const Presentation: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative z-10 text-center">
-        {/* Logo - Enhanced Pseudo-3D Sphere */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center z-10">
-          <div
-            className="relative w-48 h-48 rounded-full flex items-center justify-center overflow-hidden animate-pulse-slow"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at 70% 70%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%), #f0f0f0",
-              boxShadow:
-                "inset 0 0 20px rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 0 120px rgba(255,255,255,0.05)",
-            }}
-          >
-            <div
-              className="absolute w-32 h-32 rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at 70% 70%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 70%), #FFD700",
-                boxShadow: "inset 0 0 15px rgba(0,0,0,0.2), 0 0 30px rgba(255,215,0,0.5)",
-              }}
-            />
-          </div>
+        {/* Logo - Using next/image with a placeholder for the desired visual */}
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+          <Image
+            src="/placeholder.svg?height=320&width=320"
+            alt="KeplerPay Logo"
+            width={320}
+            height={320}
+            className="w-full h-full object-contain"
+          />
         </div>
       </div>
 
@@ -567,24 +558,6 @@ const Presentation: React.FC = () => {
             transform: translateX(100vw);
             opacity: 0;
           }
-        }
-
-        @keyframes pulse-slow {
-          0% {
-            transform: scale(1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 0 120px rgba(255,255,255,0.05);
-          }
-          50% {
-            transform: scale(1.02);
-            box-shadow: inset 0 0 25px rgba(0,0,0,0.15), 0 0 50px rgba(255,255,255,0.3), 0 0 100px rgba(255,255,255,0.15), 0 0 150px rgba(255,255,255,0.1);
-          }
-          100% {
-            transform: scale(1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 0 120px rgba(255,255,255,0.05);
-          }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 4s infinite ease-in-out;
         }
       `}</style>
     </div>
