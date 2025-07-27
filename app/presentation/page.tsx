@@ -2,12 +2,12 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
 import MiniWallet from "../../components/mini-wallet" // Corrected path
+// import ThreeSphere from "../../components/three-sphere" // Remove this line
 
 // Simplified language support
 const LANGUAGES = [
@@ -157,7 +157,7 @@ const translations = {
       title: "Nuestras Asociaciones",
       tPulseFiTitle: "TPulseFi",
       tPulseFiDescription:
-        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo plazo, y nuestro principal socio/desarrollador.",
+        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo prazo, y nuestro principal socio/desenvolvedor.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
         "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Accede a los mejores airdrops como KPP, intercámbialos por USDC o WLD, y gana HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
@@ -531,13 +531,14 @@ const Presentation: React.FC = () => {
       <div className="relative z-10 text-center">
         {/* Logo */}
         <div className="relative w-[320px] h-[320px] flex items-center justify-center z-10">
-          <Image
-            src="/images/keplerpay-rb.png"
-            alt="KeplerPay Logo"
-            width={320}
-            height={320}
-            className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] animate-pulse-slow"
-          />
+          {/* Substitua:
+          // <ThreeSphere size={1.5} />
+
+          // Por: */}
+          <div className="relative w-40 h-40 flex items-center justify-center rounded-full bg-white/10">
+            <div className="absolute w-32 h-32 rounded-full bg-white opacity-20" />
+            <div className="w-20 h-20 rounded-full bg-yellow-400 relative z-10" />
+          </div>
         </div>
       </div>
 
@@ -559,14 +560,7 @@ const Presentation: React.FC = () => {
           }
         }
 
-        @keyframes pulse-slow {
-          0%, 100% {
-            filter: drop-shadow(0 0 10px rgba(0,212,255,0.3));
-          }
-          50% {
-            filter: drop-shadow(0 0 30px rgba(0,212,255,0.8));
-          }
-        }
+        /* Removed pulse-slow animation as it's not needed for ThreeSphere */
       `}</style>
     </div>
   )
