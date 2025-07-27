@@ -4,9 +4,11 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MiniKit, type VerifyCommandInput, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function WorldIdVerificationPage() {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleVerify = async () => {
     setVerificationStatus("Verifying...")
@@ -48,7 +50,10 @@ export default function WorldIdVerificationPage() {
       if (verifyResponseJson.status === 200) {
         console.log("Verification success!", verifyResponseJson)
         setVerificationStatus("Verification successful!")
-        // TODO: Handle success, e.g., redirect user or update UI
+        // Mark onboarding as completed
+        localStorage.setItem("onboarding-completed", "true")
+        // Redirect to presentation page
+        router.push("/presentation")
       } else {
         console.error("Backend verification failed:", verifyResponseJson)
         setVerificationStatus(`Backend verification failed: ${verifyResponseJson.verifyRes?.code || "Unknown error"}`)
