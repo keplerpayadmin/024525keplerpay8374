@@ -6,8 +6,8 @@ import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
-import MiniWallet from "../../components/mini-wallet" // Corrected path
+import { useMiniKit } from "@/hooks/use-minikit" // Corrected path
+import MiniWallet from "@/components/mini-wallet" // Corrected path
 
 // Simplified language support
 const LANGUAGES = [
@@ -204,15 +204,6 @@ const translations = {
       about: "Tentang",
       partnerships: "Kemitraan",
     },
-    partnerships: {
-      title: "Kemitraan Kami",
-      tPulseFiTitle: "TPulseFi",
-      tPulseFiDescription:
-        "TPulseFi adalah proyek DeFi yang berfokus pada apresiasi nilai jangka panjang, dan mitra/pengembang utama kami.",
-      dropWalletTitle: "DropWallet",
-      dropWalletDescription:
-        "Drop Wallet adalah aplikasi pilihan Anda untuk dengan mudah mengklaim airdrop kripto di World Chain. Akses airdrop teratas seperti KPP, tukarkan dengan USDC atau WLD, dan dapatkan HUB—token asli Drop Wallet—melalui check-in harian dan pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, dan tabungan kripto – membuat penghasilan Web3 sederhana untuk semua orang.",
-    },
     common: {
       loading: "Memuat...",
       language: "Bahasa",
@@ -240,6 +231,8 @@ const Presentation: React.FC = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
   const [showMiniWallet, setShowMiniWallet] = useState(false)
+  const [showKPPBalance, setShowKPPBalance] = useState(false) // Novo estado para o saldo KPP
+  const kppBalance = "123.45 KPP" // Saldo KPP de exemplo
   const router = useRouter()
 
   const miniKitContext = useMiniKit()
@@ -268,6 +261,7 @@ const Presentation: React.FC = () => {
       setShowMiniWallet(true)
     } else {
       setShowMiniWallet(false)
+      setShowKPPBalance(false) // Esconde o saldo se a carteira for desconectada
     }
   }, [isAuthenticated, user])
 
@@ -311,6 +305,7 @@ const Presentation: React.FC = () => {
     try {
       await disconnectWallet()
       setShowMiniWallet(false)
+      setShowKPPBalance(false) // Esconde o saldo ao desconectar
       console.log("✅ Wallet disconnected and mini wallet hidden")
     } catch (error) {
       console.error("❌ Error during disconnect:", error)
@@ -319,12 +314,17 @@ const Presentation: React.FC = () => {
 
   const handleMinimizeWallet = () => {
     setShowMiniWallet(false)
+    setShowKPPBalance(false) // Esconde o saldo ao minimizar
   }
 
   const handleShowWallet = () => {
     if (isAuthenticated) {
       setShowMiniWallet(true)
     }
+  }
+
+  const toggleKPPBalanceVisibility = () => {
+    setShowKPPBalance(!showKPPBalance)
   }
 
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
@@ -407,19 +407,30 @@ const Presentation: React.FC = () => {
         </div>
       </div>
 
-      {/* Mini Wallet - Positioned with safe spacing from top navigation */}
+      {/* Mini Wallet and KPP Balance - Positioned at bottom center */}
       <AnimatePresence>
         {showMiniWallet && user && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-24 left-6 z-40"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center" // Posicionamento centralizado na parte inferior
           >
+            <AnimatePresence>
+              {showKPPBalance && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
+                >
+                  {kppBalance}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <MiniWallet
               walletAddress={user.walletAddress}
               onMinimize={handleMinimizeWallet}
               onDisconnect={handleWalletDisconnect}
+              onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
             />
           </motion.div>
         )}
