@@ -339,7 +339,7 @@ const Presentation: React.FC = () => {
             {/* Connect Wallet Button (only when not connected) */}
             {!isAuthenticated && (
               <button onClick={connectWallet} disabled={isLoading} className="relative group">
-                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
                   <span className="text-white font-medium relative z-10">
@@ -352,7 +352,7 @@ const Presentation: React.FC = () => {
             {/* Wallet Button (when wallet is connected but hidden) */}
             {isAuthenticated && !showMiniWallet && (
               <button onClick={handleShowWallet} className="relative group">
-                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Eye className="w-4 h-4 text-green-300 relative z-10" />
                   <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
@@ -364,7 +364,7 @@ const Presentation: React.FC = () => {
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
-              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
+              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <Globe className="w-4 h-4 text-purple-300 relative z-10" />
                 <span className="text-purple-300 text-sm font-medium relative z-10">
@@ -414,7 +414,7 @@ const Presentation: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-24 left-6 z-40"
+            className="absolute top-20 left-6 z-40"
           >
             <MiniWallet
               walletAddress={user.walletAddress}
@@ -436,20 +436,18 @@ const Presentation: React.FC = () => {
             <div className="flex items-center justify-center py-2 px-4 space-x-4">
               {/* Central Menu Button */}
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative group">
-                <div className="w-8 h-8 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl">
+                <div className="w-12 h-12 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl relative overflow-hidden">
                   {/* Pulsing Ring */}
                   <div className="absolute inset-0 bg-gray-600/70 rounded-full animate-ping opacity-75" />
                   {/* Inner Glow */}
                   <div className="absolute inset-1 bg-gray-700/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {/* Icon */}
                   {isMenuOpen ? (
-                    <X className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
+                    <X className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
                   ) : (
-                    <Menu className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300" />
+                    <Menu className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300" />
                   )}
                 </div>
-                {/* Button Glow */}
-                <div className="absolute inset-0 bg-gray-700/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
           </div>
@@ -489,13 +487,14 @@ const Presentation: React.FC = () => {
                         }
                         setIsMenuOpen(false)
                       }}
-                      className="group p-3 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4" // Added flex items-center space-x-4
+                      className="group p-4 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4 relative overflow-hidden hover:scale-[1.02] active:scale-[0.98]" // Added flex items-center space-x-4
                     >
-                      <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0">
-                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />{" "}
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0 relative z-10">
+                        <item.icon className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />{" "}
                         {/* Increased icon size */}
                       </div>
-                      <span className="text-gray-300 group-hover:text-white font-medium text-base tracking-wide">
+                      <span className="text-gray-300 group-hover:text-white font-medium text-lg tracking-wide relative z-10">
                         {" "}
                         {t.navigation[item.labelKey]}
                       </span>
@@ -531,13 +530,13 @@ const Presentation: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 text-center">
         {/* Logo */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center z-10">
           <Image
             src="/images/keplerpay-rb.png"
             alt="KeplerPay Logo"
             width={320}
             height={320}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] animate-pulse-slow"
           />
         </div>
       </div>
@@ -557,6 +556,15 @@ const Presentation: React.FC = () => {
           100% {
             transform: translateX(100vw);
             opacity: 0;
+          }
+        }
+
+        @keyframes pulse-slow {
+          0%, 100% {
+            filter: drop-shadow(0 0 10px rgba(0,212,255,0.3));
+          }
+          50% {
+            filter: drop-shadow(0 0 30px rgba(0,212,255,0.8));
           }
         }
       `}</style>
