@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
+import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "@/hooks/use-minikit" // Corrected path
@@ -129,7 +129,7 @@ const translations = {
       connectWallet: "Conectar Billetera",
       heroTitle: "Desbloquea el Futuro de las Aplicaciones Descentralizadas",
       heroSubtitle:
-        "Experimenta una integración perfecta y una mayor participación del usuario con nuestro MiniKit de vanguardia.",
+        "Experimenta una integración perfecta e uma maior participação do usuário com nosso MiniKit de vanguarda.",
       getStarted: "Empezar",
       learnMore: "Aprender Más",
       featuresTitle: "Características Clave",
@@ -203,15 +203,6 @@ const translations = {
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Tentang",
       partnerships: "Kemitraan",
-    },
-    partnerships: {
-      title: "Kemitraan Kami",
-      tPulseFiTitle: "TPulseFi",
-      tPulseFiDescription:
-        "TPulseFi adalah proyek DeFi yang berfokus pada peningkatan nilai jangka panjang, dan mitra utama kami.",
-      dropWalletTitle: "DropWallet",
-      dropWalletDescription:
-        "Drop Wallet adalah aplikasi Anda utama untuk klaim airdrops kripto dengan mudah di World Chain. Akses airdrops terbaik seperti KPP, tukar mereka menjadi USDC atau WLD, dan dapatkan HUB — token asli Drop Wallet — melalui check-ins harian dan pertukaran. Fitur-fitur yang akan datang termasuk cross-chain, ramp on-ramp fiat, staking, dan penyimpanan kripto – membuat pendapatan Web3 menjadi sederhana bagi semua.",
     },
     common: {
       loading: "Memuat...",
@@ -342,34 +333,9 @@ const Presentation: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-900">
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50 p-6">
-        <div className="flex items-center justify-between">
-          {/* Left Side - Connect Wallet Button / Mini Wallet Toggle */}
-          <div className="flex items-center space-x-3">
-            {/* Connect Wallet Button (only when not connected) */}
-            {!isAuthenticated && (
-              <button onClick={connectWallet} disabled={isLoading} className="relative group">
-                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
-                  <span className="text-white font-medium relative z-10">
-                    {isLoading ? t.common.loading : t.presentation.connectWallet}
-                  </span>
-                </div>
-              </button>
-            )}
-
-            {/* Wallet Button (when wallet is connected but hidden) */}
-            {isAuthenticated && !showMiniWallet && (
-              <button onClick={handleShowWallet} className="relative group">
-                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Eye className="w-4 h-4 text-green-300 relative z-10" />
-                  <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
-                </div>
-              </button>
-            )}
-          </div>
-
+        <div className="flex items-center justify-end">
+          {" "}
+          {/* Alinhado à direita */}
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
@@ -416,11 +382,11 @@ const Presentation: React.FC = () => {
         </div>
       </div>
 
-      {/* Mini Wallet and KPP Balance - Positioned at bottom center */}
+      {/* Mini Wallet / Connect Wallet Button and KPP Balance - Positioned at bottom center */}
       <AnimatePresence>
-        {showMiniWallet && user && (
+        {isAuthenticated && user ? (
           <motion.div
-            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-24 z-40 flex flex-col items-center" // Aumentado ml-20 para ml-24
+            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-20 z-40 flex flex-col items-center" // Ajustado ml-24 para ml-20
           >
             <AnimatePresence>
               {showKPPBalance && (
@@ -441,6 +407,26 @@ const Presentation: React.FC = () => {
               onDisconnect={handleWalletDisconnect}
               onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
             />
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-20 z-40 flex flex-col items-center" // Mesma posição da MiniWallet
+          >
+            <button
+              onClick={connectWallet}
+              disabled={isLoading}
+              className="relative group w-36 h-36 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center"
+            >
+              <Wallet className="w-8 h-8 text-cyan-300 mb-2 relative z-10" />
+              <span className="text-white font-bold text-lg relative z-10">
+                {isLoading ? t.common.loading : t.common.wallet}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
