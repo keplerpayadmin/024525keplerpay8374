@@ -411,7 +411,7 @@ const Presentation: React.FC = () => {
       <AnimatePresence>
         {showMiniWallet && user && (
           <motion.div
-            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center" // Posicionamento centralizado na parte inferior, mais para cima
+            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-10 z-40 flex flex-col items-center" // Posicionamento centralizado na parte inferior, mais para cima
           >
             <AnimatePresence>
               {showKPPBalance && (
