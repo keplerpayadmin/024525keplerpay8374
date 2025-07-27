@@ -2,12 +2,12 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
 import MiniWallet from "../../components/mini-wallet" // Corrected path
-// import ThreeSphere from "../../components/three-sphere" // Remove this line
 
 // Simplified language support
 const LANGUAGES = [
@@ -157,7 +157,7 @@ const translations = {
       title: "Nuestras Asociaciones",
       tPulseFiTitle: "TPulseFi",
       tPulseFiDescription:
-        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo prazo, y nuestro principal socio/desenvolvedor.",
+        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo plazo, y nuestro principal socio/desarrollador.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
         "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Accede a los mejores airdrops como KPP, intercámbialos por USDC o WLD, y gana HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
@@ -339,7 +339,7 @@ const Presentation: React.FC = () => {
             {/* Connect Wallet Button (only when not connected) */}
             {!isAuthenticated && (
               <button onClick={connectWallet} disabled={isLoading} className="relative group">
-                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
                   <span className="text-white font-medium relative z-10">
@@ -352,7 +352,7 @@ const Presentation: React.FC = () => {
             {/* Wallet Button (when wallet is connected but hidden) */}
             {isAuthenticated && !showMiniWallet && (
               <button onClick={handleShowWallet} className="relative group">
-                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Eye className="w-4 h-4 text-green-300 relative z-10" />
                   <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
@@ -364,7 +364,7 @@ const Presentation: React.FC = () => {
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
-              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <Globe className="w-4 h-4 text-purple-300 relative z-10" />
                 <span className="text-purple-300 text-sm font-medium relative z-10">
@@ -414,7 +414,7 @@ const Presentation: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-6 z-40"
+            className="absolute top-24 left-6 z-40"
           >
             <MiniWallet
               walletAddress={user.walletAddress}
@@ -436,18 +436,20 @@ const Presentation: React.FC = () => {
             <div className="flex items-center justify-center py-2 px-4 space-x-4">
               {/* Central Menu Button */}
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative group">
-                <div className="w-12 h-12 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl relative overflow-hidden">
+                <div className="w-8 h-8 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl">
                   {/* Pulsing Ring */}
                   <div className="absolute inset-0 bg-gray-600/70 rounded-full animate-ping opacity-75" />
                   {/* Inner Glow */}
                   <div className="absolute inset-1 bg-gray-700/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {/* Icon */}
                   {isMenuOpen ? (
-                    <X className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
+                    <X className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
                   ) : (
-                    <Menu className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300" />
+                    <Menu className="w-4 h-4 text-gray-300 relative z-10 transition-transform duration-300" />
                   )}
                 </div>
+                {/* Button Glow */}
+                <div className="absolute inset-0 bg-gray-700/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
           </div>
@@ -487,14 +489,13 @@ const Presentation: React.FC = () => {
                         }
                         setIsMenuOpen(false)
                       }}
-                      className="group p-4 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4 relative overflow-hidden hover:scale-[1.02] active:scale-[0.98]" // Added flex items-center space-x-4
+                      className="group p-3 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4" // Added flex items-center space-x-4
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0 relative z-10">
-                        <item.icon className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />{" "}
+                      <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0">
+                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />{" "}
                         {/* Increased icon size */}
                       </div>
-                      <span className="text-gray-300 group-hover:text-white font-medium text-lg tracking-wide relative z-10">
+                      <span className="text-gray-300 group-hover:text-white font-medium text-base tracking-wide">
                         {" "}
                         {t.navigation[item.labelKey]}
                       </span>
@@ -530,15 +531,14 @@ const Presentation: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 text-center">
         {/* Logo */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center z-10">
-          {/* Substitua:
-          // <ThreeSphere size={1.5} />
-
-          // Por: */}
-          <div className="relative w-40 h-40 flex items-center justify-center rounded-full bg-white/10">
-            <div className="absolute w-32 h-32 rounded-full bg-white opacity-20" />
-            <div className="w-20 h-20 rounded-full bg-yellow-400 relative z-10" />
-          </div>
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+          <Image
+            src="/images/keplerpay-rb.png"
+            alt="KeplerPay Logo"
+            width={320}
+            height={320}
+            className="w-full h-full object-contain"
+          />
         </div>
       </div>
 
@@ -559,8 +559,6 @@ const Presentation: React.FC = () => {
             opacity: 0;
           }
         }
-
-        /* Removed pulse-slow animation as it's not needed for ThreeSphere */
       `}</style>
     </div>
   )
