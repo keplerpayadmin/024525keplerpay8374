@@ -1,134 +1,82 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { MiniKit } from "@worldcoin/minikit-js"
+import type React from "react"
+
+import { useState, useEffect, createContext, useContext, useCallback } from "react"
 
 interface User {
   walletAddress: string
-  username?: string
+  // Add other user properties if known
 }
 
-export function useMiniKit() {
+interface MiniKitContextType {
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  connectWallet: () => Promise<void>
+  disconnectWallet: () => Promise<void>
+}
+
+const MiniKitContext = createContext<MiniKitContextType | undefined>(undefined)
+
+export const useMiniKit = () => {
+  const context = useContext(MiniKitContext)
+  if (!context) {
+    throw new Error("useMiniKit must be used within a MiniKitProvider")
+  }
+  return context
+}
+
+export const MiniKitProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const checkAuth = async () => {
-      try {
-        const response = await fetch("/api/session")
-        if (response.ok) {
-          const data = await response.json()
-          if (data.authenticated && data.user) {
-            setUser(data.user)
-            setIsAuthenticated(true)
-          }
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error)
+    // Simulate initial loading and connection status
+    const timer = setTimeout(() => {
+      // For demonstration, simulate a connected user after a delay
+      const simulatedUser: User = {
+        walletAddress: "0xAbC123DeF456GhI789JkL012MnOpQ345RsT678UvW",
       }
-    }
+      setUser(simulatedUser)
+      setIsAuthenticated(true)
+      setIsLoading(false)
+    }, 1500) // Simulate a network delay
 
-    checkAuth()
+    return () => clearTimeout(timer)
   }, [])
 
   const connectWallet = useCallback(async () => {
-    if (!MiniKit.isInstalled()) {
-      throw new Error("MiniKit not available. Please use World App.")
-    }
-
     setIsLoading(true)
-    try {
-      // Get nonce from backend
-      const nonceResponse = await fetch("/api/nonce")
-      const { nonce } = await nonceResponse.json()
-
-      // Execute wallet auth
-      const { commandPayload, finalPayload } = await MiniKit.commandsAsync.walletAuth({
-        nonce,
-        expirationTime: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
-        notBefore: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
-        statement: "Sign in to TPF Airdrop Platform",
-        requestId: crypto.randomUUID(),
-      })
-
-      if (finalPayload.status === "error") {
-        throw new Error(finalPayload.message || "Wallet authentication failed")
-      }
-
-      // Verify the signature on backend
-      const verifyResponse = await fetch("/api/complete-siwe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          payload: finalPayload,
-          nonce,
-        }),
-      })
-
-      const verifyResult = await verifyResponse.json()
-
-      if (!verifyResult.isValid) {
-        throw new Error("Signature verification failed")
-      }
-
-      // Set user data
-      const userData = {
-        walletAddress: finalPayload.address,
-        username: MiniKit.user?.username,
-      }
-
-      setUser(userData)
-      setIsAuthenticated(true)
-
-      return userData
-    } catch (error) {
-      console.error("Wallet connection failed:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
+    // Simulate wallet connection
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const simulatedUser: User = {
+      walletAddress: "0xAbC123DeF456GhI789JkL012MnOpQ345RsT678UvW", // Example address
     }
+    setUser(simulatedUser)
+    setIsAuthenticated(true)
+    setIsLoading(false)
+    console.log("Wallet connected (simulated)")
   }, [])
 
   const disconnectWallet = useCallback(async () => {
-    try {
-      console.log("🔌 Disconnecting wallet...")
-
-      // Clear local state
-      setUser(null)
-      setIsAuthenticated(false)
-
-      // Clear localStorage
-      localStorage.removeItem("minikit-user")
-      localStorage.removeItem("worldid-verification")
-
-      // Call logout API to clear server session
-      await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      console.log("✅ Wallet disconnected successfully")
-    } catch (error) {
-      console.error("❌ Error disconnecting wallet:", error)
-      // Even if there's an error, clear local state
-      setUser(null)
-      setIsAuthenticated(false)
-      localStorage.removeItem("minikit-user")
-      localStorage.removeItem("worldid-verification")
-    }
+    setIsLoading(true)
+    // Simulate wallet disconnection
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    setUser(null)
+    setIsAuthenticated(false)
+    setIsLoading(false)
+    console.log("Wallet disconnected (simulated)")
   }, [])
 
-  return {
+  const value: MiniKitContextType = {
     user,
     isAuthenticated,
     isLoading,
     connectWallet,
     disconnectWallet,
   }
+
+  return <MiniKitContext.Provider value={value}>{children}</MiniKitContext.Provider>
 }
