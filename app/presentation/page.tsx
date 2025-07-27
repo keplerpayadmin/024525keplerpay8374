@@ -192,7 +192,7 @@ const translations = {
         "Dengan API kami yang sederhana dan intuitif, mengintegrasikan MiniKit kami ke dalam aplikasi Anda yang sudah ada sangat mudah.",
       feature3Title: "Transaksi Aman",
       feature3Description:
-        "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih dan protokol keamanan.",
+        "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih e protocolos de segurança.",
       ctaTitle: "Siap Memulai?",
       ctaSubtitle:
         "Bergabunglah dengan ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
@@ -382,54 +382,72 @@ const Presentation: React.FC = () => {
         </div>
       </div>
 
-      {/* Mini Wallet / Connect Wallet Button and KPP Balance - Positioned at bottom center */}
-      <AnimatePresence>
-        {isAuthenticated && user ? (
-          <motion.div
-            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-20 z-40 flex flex-col items-center" // Ajustado ml-24 para ml-20
-          >
-            <AnimatePresence>
-              {showKPPBalance && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
-                >
-                  {kppBalance}
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <MiniWallet
-              walletAddress={user.walletAddress}
-              onMinimize={handleMinimizeWallet}
-              onDisconnect={handleWalletDisconnect}
-              onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-20 z-40 flex flex-col items-center" // Mesma posição da MiniWallet
-          >
-            <button
-              onClick={connectWallet}
-              disabled={isLoading}
-              className="relative group w-36 h-36 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center"
+      {/* Main Content - Agora um flex container para empilhar logo e wallet */}
+      <div className="relative z-10 text-center flex flex-col items-center justify-center">
+        {/* Logo */}
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+          <Image
+            src="/images/keplerpay-rb.png"
+            alt="KeplerPay Logo"
+            width={320}
+            height={320}
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {/* Mini Wallet / Connect Wallet Button and KPP Balance - MOVIDO AQUI */}
+        <AnimatePresence>
+          {isAuthenticated && user ? (
+            <motion.div
+              className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado mt e ml
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
             >
-              <Wallet className="w-8 h-8 text-cyan-300 mb-2 relative z-10" />
-              <span className="text-white font-bold text-lg relative z-10">
-                {isLoading ? t.common.loading : t.common.wallet}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <AnimatePresence>
+                {showKPPBalance && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
+                  >
+                    {kppBalance}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <MiniWallet
+                walletAddress={user.walletAddress}
+                onMinimize={handleMinimizeWallet}
+                onDisconnect={handleWalletDisconnect}
+                onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Mesma posição da MiniWallet
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <button
+                onClick={connectWallet}
+                disabled={isLoading}
+                className="relative group w-36 h-36 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center"
+              >
+                <Wallet className="w-8 h-8 text-cyan-300 mb-2 relative z-10" />
+                <span className="text-white font-bold text-lg relative z-10">
+                  {isLoading ? t.common.loading : t.common.wallet}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Bottom Navigation Bar with Menu Button */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
@@ -532,20 +550,6 @@ const Presentation: React.FC = () => {
             }}
           />
         ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 text-center">
-        {/* Logo */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
-          <Image
-            src="/images/keplerpay-rb.png"
-            alt="KeplerPay Logo"
-            width={320}
-            height={320}
-            className="w-full h-full object-contain"
-          />
-        </div>
       </div>
 
       <style jsx>{`
