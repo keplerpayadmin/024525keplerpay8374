@@ -204,6 +204,15 @@ const translations = {
       about: "Tentang",
       partnerships: "Kemitraan",
     },
+    partnerships: {
+      title: "Kemitraan Kami",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi adalah proyek DeFi yang berfokus pada peningkatan nilai jangka panjang, dan mitra utama kami.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet adalah aplikasi Anda utama untuk klaim airdrops kripto dengan mudah di World Chain. Akses airdrops terbaik seperti KPP, tukar mereka menjadi USDC atau WLD, dan dapatkan HUB — token asli Drop Wallet — melalui check-ins harian dan pertukaran. Fitur-fitur yang akan datang termasuk cross-chain, ramp on-ramp fiat, staking, dan penyimpanan kripto – membuat pendapatan Web3 menjadi sederhana bagi semua.",
+    },
     common: {
       loading: "Memuat...",
       language: "Bahasa",
@@ -411,7 +420,7 @@ const Presentation: React.FC = () => {
       <AnimatePresence>
         {showMiniWallet && user && (
           <motion.div
-            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-20 z-40 flex flex-col items-center" // Aumentado ml-10 para ml-20
+            className="fixed bottom-[300px] left-1/2 -translate-x-1/2 ml-24 z-40 flex flex-col items-center" // Aumentado ml-20 para ml-24
           >
             <AnimatePresence>
               {showKPPBalance && (
