@@ -195,7 +195,7 @@ const translations = {
         "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih e protocolos de segurança.",
       ctaTitle: "Siap Memulai?",
       ctaSubtitle:
-        "Bergabunglah dengan ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
+        "Bergabunglah com ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
       signUp: "Daftar Sekarang",
     },
     navigation: {
@@ -395,58 +395,62 @@ const Presentation: React.FC = () => {
           />
         </div>
 
-        {/* Mini Wallet / Connect Wallet Button and KPP Balance - MOVIDO AQUI */}
-        <AnimatePresence>
+        {/* Wallet Area (Connect Button / Mini Wallet / Show Wallet Button) */}
+        <motion.div
+          className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado ml-24 para ml-20
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        >
+          <AnimatePresence>
+            {showKPPBalance && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
+              >
+                {kppBalance}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {isAuthenticated && user ? (
-            <motion.div
-              className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado mt e ml
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            >
-              <AnimatePresence>
-                {showKPPBalance && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
-                  >
-                    {kppBalance}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            showMiniWallet ? (
               <MiniWallet
-                walletAddress={user.walletAddress}
+                walletAddress={user.walletAddress} // Ainda passa, mesmo que não seja exibido
                 onMinimize={handleMinimizeWallet}
                 onDisconnect={handleWalletDisconnect}
-                onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
+                // O clique para o saldo KPP será no próprio MiniWallet
               />
-            </motion.div>
-          ) : (
-            <motion.div
-              className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Mesma posição da MiniWallet
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            >
+            ) : (
+              // Autenticado mas MiniWallet está minimizada, mostra um botão para abri-la
               <button
-                onClick={connectWallet}
-                disabled={isLoading}
-                className="relative group w-36 h-36 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center"
+                onClick={handleShowWallet} // Isso definirá showMiniWallet como true
+                className="relative group w-48 h-20 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center transition-all duration-300"
               >
-                <Wallet className="w-8 h-8 text-cyan-300 mb-2 relative z-10" />
-                <span className="text-white font-bold text-lg relative z-10">
-                  {isLoading ? t.common.loading : t.common.wallet}
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <Wallet className="w-8 h-8 text-blue-400 relative z-10" />
+                <span className="text-white font-bold text-lg relative z-10">{t.common.wallet}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
-            </motion.div>
+            )
+          ) : (
+            // Não autenticado, mostra o botão de conectar carteira
+            <button
+              onClick={connectWallet}
+              disabled={isLoading}
+              className="relative group w-48 h-20 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center transition-all duration-300 disabled:opacity-50"
+            >
+              <Wallet className="w-8 h-8 text-cyan-300 relative z-10" />
+              <span className="text-white font-bold text-lg relative z-10">
+                {isLoading ? t.common.loading : t.common.wallet}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
           )}
-        </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* Bottom Navigation Bar with Menu Button */}
