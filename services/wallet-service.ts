@@ -59,7 +59,6 @@ const ERC20_ABI = [
 
 // Informações dos tokens
 const TOKENS_INFO = {
-  
   KPP: {
     symbol: "KPP",
     name: "KeplerPay",
