@@ -6,8 +6,8 @@ import Image from "next/image"
 import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useMiniKit } from "@/hooks/use-minikit" // Corrected path
-import MiniWallet from "@/components/mini-wallet" // Corrected path
+import { useMiniKit } from "@/hooks/use-minikit"
+import MiniWallet from "@/components/mini-wallet"
 
 // Simplified language support
 const LANGUAGES = [
@@ -383,7 +383,7 @@ const Presentation: React.FC = () => {
       </div>
 
       {/* Main Content - Agora um flex container para empilhar logo e wallet */}
-      <div className="relative z-10 text-center flex flex-col items-center justify-center">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
         {/* Logo */}
         <div className="relative w-[320px] h-[320px] flex items-center justify-center">
           <Image
@@ -397,7 +397,7 @@ const Presentation: React.FC = () => {
 
         {/* Wallet Area (Connect Button / Mini Wallet / Show Wallet Button) */}
         <motion.div
-          className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado ml-24 para ml-20
+          className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado mt e ml
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
@@ -423,7 +423,7 @@ const Presentation: React.FC = () => {
                 walletAddress={user.walletAddress} // Ainda passa, mesmo que não seja exibido
                 onMinimize={handleMinimizeWallet}
                 onDisconnect={handleWalletDisconnect}
-                // O clique para o saldo KPP será no próprio MiniWallet
+                onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
               />
             ) : (
               // Autenticado mas MiniWallet está minimizada, mostra um botão para abri-la
