@@ -2,8 +2,26 @@
 
 import { doSwap } from "@/services/swap-service"
 import { walletService } from "@/services/wallet-service"
-import { motion } from "framer-motion"
-import { EyeOff, Wallet, X } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  Check,
+  Copy,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  History,
+  LogOut,
+  Minimize2,
+  RefreshCw,
+  Send,
+  Wallet,
+} from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
 import { Client, Multicall3 } from "@holdstation/worldchain-ethers-v6"
@@ -747,33 +765,610 @@ export default function MiniWallet({ walletAddress, onMinimize, onDisconnect, on
 
   return (
     <motion.div
-      className="relative bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center w-48 h-20 cursor-pointer" // Dimensões retangulares
-      onClick={onClick} // Aplica o onClick aqui
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      className="relative bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl min-w-[320px] max-w-[380px] overflow-hidden"
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
     >
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onMinimize()
-        }}
-        className="absolute top-1 right-1 p-1 rounded-full hover:bg-gray-700/50 transition-colors z-10" // Posição ajustada
-      >
-        <EyeOff className="w-4 h-4 text-gray-400" />
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onDisconnect()
-        }}
-        className="absolute top-1 left-1 p-1 rounded-full hover:bg-gray-700/50 transition-colors z-10" // Posição ajustada
-      >
-        <X className="w-4 h-4 text-red-400" />
-      </button>
-      <Wallet className="w-8 h-8 text-blue-400" /> {/* Ícone */}
-      <div className="text-white font-bold text-lg">Wallet</div> {/* Texto "Wallet" */}
+      <AnimatePresence mode="wait">
+        {/* Main View */}
+        {viewMode === "main" && (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="p-4"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">{t.connected}</p>
+                  <p className="text-gray-400 text-xs">{formatAddress(walletAddress)}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={copyAddress}
+                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                  title={t.copyAddress}
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={onMinimize} // Usa onMinimize do pai
+                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                  title="Minimize to icon"
+                >
+                  <Minimize2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onDisconnect}
+                  className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-white/10"
+                  title={t.disconnect}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Balances Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowBalances(!showBalances)}
+                    className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
+                  >
+                    {showBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <span className="text-sm font-medium">{t.tokens}</span>
+                  </button>
+                </div>
+                <button
+                  onClick={refreshBalances}
+                  disabled={refreshing}
+                  className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 disabled:opacity-50"
+                  title={t.refreshBalances}
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {showBalances && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 max-h-[280px] overflow-y-auto pr-1"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <RefreshCw className="w-4 h-4 text-gray-400 animate-spin mr-2" />
+                        <span className="text-gray-400 text-sm">{t.loading}</span>
+                      </div>
+                    ) : error ? (
+                      <div className="flex items-center justify-center py-4">
+                        <AlertCircle className="w-4 h-4 text-red-400 mr-2" />
+                        <span className="text-red-400 text-sm">{error}</span>
+                      </div>
+                    ) : balances.length === 0 ? (
+                      <div className="text-center py-4">
+                        <span className="text-gray-400 text-sm">No tokens found</span>
+                      </div>
+                    ) : (
+                      balances.map((token, index) => {
+                        return (
+                          <motion.button
+                            key={token.symbol}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="w-full bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-3 hover:bg-white/5 transition-all duration-200 group"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                                  <img
+                                    src={getTokenIcon(token.symbol) || "/placeholder.svg"}
+                                    alt={token.name}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "/placeholder.svg?height=32&width=32"
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <p className="text-white font-medium text-sm text-left">{token.symbol}</p>
+                                  <p className="text-gray-400 text-xs text-left">{token.name}</p>
+                                </div>
+                              </div>
+                              <div className="text-right flex flex-col items-end">
+                                <p className="text-white font-medium text-sm">
+                                  {showBalances ? formatBalance(token.balance) : "••••"}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.button>
+                        )
+                      })
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <button
+                onClick={() => setViewMode("send")}
+                className="flex flex-col items-center justify-center p-3 bg-blue-600/30 border border-blue-600/50 rounded-xl text-blue-300 hover:bg-blue-600/50 transition-colors"
+              >
+                <Send className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{t.send}</span>
+              </button>
+              <button
+                onClick={() => setViewMode("swap")}
+                className="flex flex-col items-center justify-center p-3 bg-orange-600/30 border border-orange-600/50 rounded-xl text-orange-300 hover:bg-orange-600/50 transition-colors"
+              >
+                <ArrowLeftRight className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{t.swap}</span>
+              </button>
+              <button
+                onClick={() => setViewMode("history")}
+                className="flex flex-col items-center justify-center p-3 bg-purple-600/30 border border-purple-600/50 rounded-xl text-purple-300 hover:bg-purple-600/50 transition-colors"
+              >
+                <History className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{t.history}</span>
+              </button>
+              <button
+                onClick={() => setViewMode("receive")}
+                className="flex flex-col items-center justify-center p-3 bg-green-600/30 border border-green-600/50 rounded-xl text-green-300 hover:bg-green-600/50 transition-colors"
+              >
+                <ArrowDownLeft className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{t.receive}</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Send View */}
+        {viewMode === "send" && (
+          <motion.div
+            key="send"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="p-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handleBackToMain}
+                className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">{t.back}</span>
+              </button>
+              <h3 className="font-semibold text-white">{t.sendTokens}</h3>
+              <div className="w-6"></div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t.token}</label>
+                <select
+                  value={sendForm.token}
+                  onChange={(e) =>
+                    setSendForm((prev) => ({
+                      ...prev,
+                      token: e.target.value,
+                    }))
+                  }
+                  className="w-full bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
+                >
+                  {balances.map((token) => (
+                    <option key={token.symbol} value={token.symbol} className="bg-black">
+                      {token.symbol} ({t.available}: {formatBalance(token.balance)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t.amount}</label>
+                <input
+                  type="number"
+                  value={sendForm.amount}
+                  onChange={(e) =>
+                    setSendForm((prev) => ({
+                      ...prev,
+                      amount: e.target.value,
+                    }))
+                  }
+                  placeholder="0.00"
+                  className="w-full bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t.recipientAddress}</label>
+                <input
+                  type="text"
+                  value={sendForm.recipient}
+                  onChange={(e) =>
+                    setSendForm((prev) => ({
+                      ...prev,
+                      recipient: e.target.value,
+                    }))
+                  }
+                  placeholder="0x..."
+                  className="w-full bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-yellow-300 text-xs">{t.sendWarning}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSend}
+                disabled={sending || !sendForm.amount || !sendForm.recipient}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                {sending ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{t.sending}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>{t.send}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Receive View */}
+        {viewMode === "receive" && (
+          <motion.div
+            key="receive"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="p-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handleBackToMain}
+                className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">{t.back}</span>
+              </button>
+              <h3 className="font-semibold text-white">{t.receiveTokens}</h3>
+              <div className="w-6"></div>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="bg-white p-4 rounded-lg">
+                <div className="w-32 h-32 mx-auto bg-black rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs">QR Code</span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-gray-300 text-sm mb-2">{t.yourWalletAddress}</p>
+                <div className="bg-black/30 border border-white/20 rounded-lg p-3 break-all">
+                  <p className="text-white text-sm font-mono">{walletAddress}</p>
+                </div>
+                <button
+                  onClick={copyAddress}
+                  className="mt-2 flex items-center justify-center space-x-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{t.copyAddress}</span>
+                </button>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-yellow-300 text-xs">{t.networkWarning}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Swap View */}
+        {viewMode === "swap" && (
+          <motion.div
+            key="swap"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="p-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handleBackToMain}
+                className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">{t.back}</span>
+              </button>
+              <h3 className="font-semibold text-white">{t.swapTokens}</h3>
+              <div className="w-6"></div>
+            </div>
+
+            <div className="space-y-4">
+              {/* From Token Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t.from}</label>
+                <div className="bg-black/30 border border-white/20 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src={getTokenIcon(swapForm.tokenFrom) || "/placeholder.svg"}
+                        alt={swapForm.tokenFrom}
+                        className="w-6 h-6 rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg?height=24&width=24"
+                        }}
+                      />
+                      <select
+                        value={swapForm.tokenFrom}
+                        onChange={(e) =>
+                          setSwapForm((prev) => ({
+                            ...prev,
+                            tokenFrom: e.target.value,
+                            amountTo: "",
+                            amountFrom: "",
+                          }))
+                        }
+                        className="bg-transparent text-white font-medium focus:outline-none"
+                      >
+                        {TOKENS.map((token) => (
+                          <option key={token.symbol} value={token.symbol} className="bg-black">
+                            {token.symbol}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-400 text-xs">
+                        {t.available}: {balances.find((b) => b.symbol === swapForm.tokenFrom)?.balance || "0"}
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    value={swapForm.amountFrom}
+                    onChange={(e) =>
+                      setSwapForm((prev) => ({
+                        ...prev,
+                        amountFrom: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                    className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Swap Arrow Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={handleSwapTokens}
+                  className="p-2 bg-gray-600/50 rounded-full hover:bg-gray-500/50 transition-colors"
+                  title="Swap tokens"
+                >
+                  <ArrowLeftRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* To Token Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t.to}</label>
+                <div className="bg-black/30 border border-white/20 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <img
+                      src={getTokenIcon(swapForm.tokenTo) || "/placeholder.svg"}
+                      alt={swapForm.tokenTo}
+                      className="w-6 h-6 rounded-full"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg?height=24&width=24"
+                      }}
+                    />
+                    <select
+                      value={swapForm.tokenTo}
+                      onChange={(e) =>
+                        setSwapForm((prev) => ({
+                          ...prev,
+                          tokenTo: e.target.value,
+                          amountTo: "",
+                          amountFrom: "",
+                        }))
+                      }
+                      className="bg-transparent text-white font-medium focus:outline-none"
+                    >
+                      {TOKENS.map((token) => (
+                        <option key={token.symbol} value={token.symbol} className="bg-black">
+                          {token.symbol}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="text-white text-lg font-medium">
+                    {gettingQuote ? (
+                      <div className="flex items-center space-x-2">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span className="text-gray-400">{t.gettingQuote}</span>
+                      </div>
+                    ) : swapForm.amountTo ? (
+                      swapForm.amountTo
+                    ) : (
+                      <span className="text-gray-500">{t.enterAmount}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote Error */}
+              {quoteError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-red-300 text-xs">{quoteError}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Swap Button */}
+              <button
+                onClick={handleSwap}
+                disabled={
+                  swapping ||
+                  !swapForm.amountFrom ||
+                  !swapForm.amountTo ||
+                  !swapQuote ||
+                  gettingQuote ||
+                  !!quoteError ||
+                  swapForm.tokenFrom === swapForm.tokenTo
+                }
+                className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                {swapping ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{t.swapping}</span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowLeftRight className="w-4 h-4" />
+                    <span>{t.swap}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* History View */}
+        {viewMode === "history" && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="p-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handleBackToMain}
+                className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">{t.back}</span>
+              </button>
+              <h3 className="font-semibold text-white">{t.transactionHistory}</h3>
+              <div className="w-6"></div>
+            </div>
+
+            <div className="space-y-3">
+              {loadingHistory ? (
+                <div className="flex items-center justify-center py-4">
+                  <RefreshCw className="w-4 h-4 text-gray-400 animate-spin mr-2" />
+                  <span className="text-gray-400 text-sm">{t.loading}</span>
+                </div>
+              ) : displayedTransactions.length === 0 ? (
+                <div className="text-center py-8">
+                  <History className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-400 text-sm">{t.noTransactions}</p>
+                </div>
+              ) : (
+                <>
+                  {displayedTransactions.map((tx, index) => (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-black/30 border border-white/10 rounded-lg p-3 hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            tx.type === "sent" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"
+                          }`}
+                        >
+                          {tx.type === "sent" ? (
+                            <ArrowUpRight className="w-4 h-4" />
+                          ) : (
+                            <ArrowDownLeft className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium text-sm">
+                            {tx.type === "sent" ? t.sent : t.received} {tx.token}
+                          </p>
+                          <p className="text-gray-400 text-xs">{formatAddress(tx.address)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white font-medium text-sm">
+                          {tx.type === "sent" ? "-" : "+"}
+                          {tx.amount}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-xs ${getStatusColor(tx.status)}`}>
+                            {tx.status === "confirmed" ? t.confirmed : tx.status === "pending" ? t.pending : t.failed}
+                          </span>
+                          <button
+                            onClick={() => openTransactionInExplorer(tx.hash)}
+                            className="text-gray-400 hover:text-white transition-colors"
+                            title={t.viewOnExplorer}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-500">{formatTimestamp(tx.timestamp)}</div>
+                    </motion.div>
+                  ))}
+
+                  {hasMoreTransactions && (
+                    <button
+                      onClick={loadMoreTransactions}
+                      disabled={loadingMore}
+                      className="w-full bg-gray-600/50 hover:bg-gray-600/70 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>{t.loading}</span>
+                        </>
+                      ) : (
+                        <span>{t.loadMore}</span>
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
