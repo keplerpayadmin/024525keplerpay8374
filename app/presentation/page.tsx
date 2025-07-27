@@ -3,12 +3,11 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Users } from "lucide-react"
+import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useMiniKit } from "@/hooks/use-minikit"
-import MiniWallet from "@/components/mini-wallet"
-import ThreeBackground from "@/components/three-background" // Import the new 3D component
+import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
+import MiniWallet from "../../components/mini-wallet" // Corrected path
 
 // Simplified language support
 const LANGUAGES = [
@@ -130,7 +129,7 @@ const translations = {
       connectWallet: "Conectar Billetera",
       heroTitle: "Desbloquea el Futuro de las Aplicaciones Descentralizadas",
       heroSubtitle:
-        "Experimenta una integración perfecta e uma maior participação do usuário com nosso MiniKit de vanguarda.",
+        "Experimenta una integración perfecta y una mayor participación del usuario con nuestro MiniKit de vanguardia.",
       getStarted: "Empezar",
       learnMore: "Aprender Más",
       featuresTitle: "Características Clave",
@@ -209,10 +208,10 @@ const translations = {
       title: "Kemitraan Kami",
       tPulseFiTitle: "TPulseFi",
       tPulseFiDescription:
-        "TPulseFi adalah proyek DeFi yang berfoca na apresiasi nilai jangka panjang, e nosso principal parceiro/desenvolvedor.",
+        "TPulseFi adalah proyek DeFi yang berfokus pada apresiasi nilai jangka panjang, dan mitra/pengembang utama kami.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
-        "Drop Wallet é o seu aplicativo ideal para reivindicar facilmente airdrops de criptomoedas na World Chain. Acesse airdrops teratas seperti KPP, tukarkan dengan USDC atau WLD, dan dapatkan HUB—token asli Drop Wallet—melalui check-in harian dan pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, dan tabungan kripto – membuat penghasilan Web3 sederhana untuk semua orang.",
+        "Drop Wallet adalah aplikasi pilihan Anda untuk dengan mudah mengklaim airdrop kripto di World Chain. Akses airdrop teratas seperti KPP, tukarkan dengan USDC atau WLD, dan dapatkan HUB—token asli Drop Wallet—melalui check-in harian dan pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, dan tabungan kripto – membuat penghasilan Web3 sederhana untuk semua orang.",
     },
     common: {
       loading: "Memuat...",
@@ -241,8 +240,6 @@ const Presentation: React.FC = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
   const [showMiniWallet, setShowMiniWallet] = useState(false)
-  const [showKPPBalance, setShowKPPBalance] = useState(false) // Estado para o saldo KPP
-  const kppBalance = "123.45 KPP" // Saldo KPP de exemplo
   const router = useRouter()
 
   const miniKitContext = useMiniKit()
@@ -271,7 +268,6 @@ const Presentation: React.FC = () => {
       setShowMiniWallet(true)
     } else {
       setShowMiniWallet(false)
-      setShowKPPBalance(false) // Esconde o saldo se a carteira for desconectada
     }
   }, [isAuthenticated, user])
 
@@ -315,7 +311,6 @@ const Presentation: React.FC = () => {
     try {
       await disconnectWallet()
       setShowMiniWallet(false)
-      setShowKPPBalance(false) // Esconde o saldo ao desconectar
       console.log("✅ Wallet disconnected and mini wallet hidden")
     } catch (error) {
       console.error("❌ Error during disconnect:", error)
@@ -324,36 +319,48 @@ const Presentation: React.FC = () => {
 
   const handleMinimizeWallet = () => {
     setShowMiniWallet(false)
-    setShowKPPBalance(false) // Esconde o saldo ao minimizar
   }
 
-  const handleWalletButtonClick = async () => {
-    if (isAuthenticated && user) {
-      // If authenticated, toggle the mini wallet visibility
-      setShowMiniWallet(!showMiniWallet)
-      setShowKPPBalance(false) // Hide KPP balance when toggling wallet visibility
-    } else {
-      // If not authenticated, connect wallet
-      await connectWallet()
+  const handleShowWallet = () => {
+    if (isAuthenticated) {
+      setShowMiniWallet(true)
     }
-  }
-
-  const toggleKPPBalanceVisibility = () => {
-    setShowKPPBalance(!showKPPBalance)
   }
 
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-gray-900">
-      {/* 3D Background */}
-      <div className="absolute inset-0 z-0">
-        <ThreeBackground />
-      </div>
-
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-900">
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50 p-6">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Connect Wallet Button / Mini Wallet Toggle */}
+          <div className="flex items-center space-x-3">
+            {/* Connect Wallet Button (only when not connected) */}
+            {!isAuthenticated && (
+              <button onClick={connectWallet} disabled={isLoading} className="relative group">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
+                  <span className="text-white font-medium relative z-10">
+                    {isLoading ? t.common.loading : t.presentation.connectWallet}
+                  </span>
+                </div>
+              </button>
+            )}
+
+            {/* Wallet Button (when wallet is connected but hidden) */}
+            {isAuthenticated && !showMiniWallet && (
+              <button onClick={handleShowWallet} className="relative group">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Eye className="w-4 h-4 text-green-300 relative z-10" />
+                  <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
+                </div>
+              </button>
+            )}
+          </div>
+
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
@@ -400,64 +407,23 @@ const Presentation: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content - Agora um flex container para empilhar logo e wallet */}
-      <div className="relative z-10 text-center flex flex-col items-center justify-center">
-        {/* Logo */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
-          <Image
-            src="/images/keplerpay-rb.png"
-            alt="KeplerPay Logo"
-            width={320}
-            height={320}
-            className="w-full h-full object-contain"
-          />
-        </div>
-
-        {/* Wallet Area (Connect Button / Mini Wallet / Show Wallet Button) */}
-        <motion.div
-          className="mt-[-100px] ml-20 z-40 flex flex-col items-center" // Ajustado mt e ml
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        >
-          <AnimatePresence>
-            {showKPPBalance && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="mb-4 px-4 py-2 bg-gray-700/80 backdrop-blur-md border border-gray-600/50 rounded-full text-white text-lg font-semibold shadow-lg"
-              >
-                {kppBalance}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {isAuthenticated && user && showMiniWallet ? (
+      {/* Mini Wallet - Positioned with safe spacing from top navigation */}
+      <AnimatePresence>
+        {showMiniWallet && user && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-24 left-6 z-40"
+          >
             <MiniWallet
               walletAddress={user.walletAddress}
               onMinimize={handleMinimizeWallet}
               onDisconnect={handleWalletDisconnect}
-              onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
             />
-          ) : (
-            // Botão unificado para conectar ou abrir a carteira
-            <button
-              onClick={handleWalletButtonClick}
-              disabled={isLoading}
-              className="relative group w-48 h-20 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center transition-all duration-300 disabled:opacity-50"
-            >
-              <Wallet className="w-8 h-8 text-cyan-300 relative z-10" />
-              <span className="text-white font-bold text-lg relative z-10">
-                {isLoading ? t.common.loading : t.common.wallet}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
-          )}
-        </motion.div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation Bar with Menu Button */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
@@ -543,6 +509,57 @@ const Presentation: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Moving Light Lines Background */}
+      <div className="absolute inset-0 bg-gray-900">
+        {/* Horizontal Moving Lines */}
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute h-px bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
+            style={{
+              top: `${8 + i * 8}%`,
+              left: "-100%",
+              width: "200%",
+              animation: `moveRight 4s linear infinite`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 text-center">
+        {/* Logo */}
+        <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+          <Image
+            src="/images/keplerpay-rb.png"
+            alt="KeplerPay Logo"
+            width={320}
+            height={320}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes moveRight {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100vw);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }
