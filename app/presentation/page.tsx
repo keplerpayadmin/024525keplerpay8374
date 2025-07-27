@@ -2,12 +2,12 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { Menu, X, Wallet, Globe, Gift, TrendingUp, Info, Eye, Users } from "lucide-react"
+import Image from "next/image"
+import { Wallet, Globe, Gift, TrendingUp, Info, Eye, Users, Home } from "lucide-react" // Added Home icon
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "../../hooks/use-minikit" // Corrected path
 import MiniWallet from "../../components/mini-wallet" // Corrected path
-// import ThreeSphere from "../../components/three-sphere" // Remove this line
 
 // Simplified language support
 const LANGUAGES = [
@@ -72,6 +72,7 @@ const translations = {
       terms: "Terms",
       privacy: "Privacy",
       contact: "Contact",
+      home: "Home", // Added home translation
     },
   },
   pt: {
@@ -122,6 +123,7 @@ const translations = {
       terms: "Termos",
       privacy: "Privacidade",
       contact: "Contato",
+      home: "Início", // Added home translation
     },
   },
   es: {
@@ -157,7 +159,7 @@ const translations = {
       title: "Nuestras Asociaciones",
       tPulseFiTitle: "TPulseFi",
       tPulseFiDescription:
-        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo prazo, y nuestro principal socio/desenvolvedor.",
+        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo plazo, y nuestro principal socio/desarrollador.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
         "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Accede a los mejores airdrops como KPP, intercámbialos por USDC o WLD, y gana HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
@@ -173,6 +175,7 @@ const translations = {
       terms: "Términos",
       privacy: "Privacidad",
       contact: "Contacto",
+      home: "Inicio", // Added home translation
     },
   },
   id: {
@@ -224,22 +227,22 @@ const translations = {
       terms: "Ketentuan",
       privacy: "Privasi",
       contact: "Kontak",
+      home: "Beranda", // Added home translation
     },
   },
 }
 
 interface NavItem {
   id: string
-  labelKey: keyof typeof translations.en.navigation
+  labelKey: keyof typeof translations.en.navigation | "home"
   icon: React.ComponentType<any>
-  href?: string
 }
 
 const Presentation: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
   const [showMiniWallet, setShowMiniWallet] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>("home") // New state for active section
   const router = useRouter()
 
   const miniKitContext = useMiniKit()
@@ -273,28 +276,29 @@ const Presentation: React.FC = () => {
 
   const navigationItems: NavItem[] = [
     {
+      id: "home",
+      labelKey: "home",
+      icon: Home,
+    },
+    {
       id: "airdrop",
       labelKey: "airdrop",
       icon: Gift,
-      href: "/airdrop",
     },
     {
       id: "fistaking",
-      labelKey: "fistaking", // This key now points to "KStaking" in translations
+      labelKey: "fistaking",
       icon: TrendingUp,
-      href: "/fistaking",
     },
     {
       id: "about",
       labelKey: "about",
       icon: Info,
-      href: "/about",
     },
     {
-      id: "partnerships", // Novo item
+      id: "partnerships",
       labelKey: "partnerships",
-      icon: Users, // Ícone para parcerias
-      href: "/partnerships",
+      icon: Users,
     },
   ]
 
@@ -303,7 +307,6 @@ const Presentation: React.FC = () => {
     setCurrentLang(newLanguage)
     localStorage.setItem("preferred-language", newLanguage)
     setShowLanguageMenu(false)
-    setIsMenuOpen(false)
   }
 
   const handleWalletDisconnect = async () => {
@@ -330,7 +333,7 @@ const Presentation: React.FC = () => {
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-900">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-between bg-gray-900">
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50 p-6">
         <div className="flex items-center justify-between">
@@ -339,7 +342,7 @@ const Presentation: React.FC = () => {
             {/* Connect Wallet Button (only when not connected) */}
             {!isAuthenticated && (
               <button onClick={connectWallet} disabled={isLoading} className="relative group">
-                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-6 py-3 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Wallet className="w-5 h-5 text-cyan-300 relative z-10" />
                   <span className="text-white font-medium relative z-10">
@@ -352,7 +355,7 @@ const Presentation: React.FC = () => {
             {/* Wallet Button (when wallet is connected but hidden) */}
             {isAuthenticated && !showMiniWallet && (
               <button onClick={handleShowWallet} className="relative group">
-                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <Eye className="w-4 h-4 text-green-300 relative z-10" />
                   <span className="text-green-300 text-sm font-medium relative z-10">{t.common.wallet}</span>
@@ -364,7 +367,7 @@ const Presentation: React.FC = () => {
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
-              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+              <div className="px-3 py-2 bg-gray-800/70 backdrop-blur-md border border-gray-700/50 rounded-full flex items-center space-x-2 hover:bg-gray-700/80 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <Globe className="w-4 h-4 text-purple-300 relative z-10" />
                 <span className="text-purple-300 text-sm font-medium relative z-10">
@@ -414,7 +417,7 @@ const Presentation: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-6 z-40"
+            className="absolute top-24 left-6 z-40"
           >
             <MiniWallet
               walletAddress={user.walletAddress}
@@ -425,89 +428,132 @@ const Presentation: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation Bar with Menu Button */}
+      {/* Main Content Area - Dynamic Sections */}
+      <div className="relative z-10 flex-grow flex items-center justify-center w-full max-w-4xl px-4 py-24">
+        <AnimatePresence mode="wait">
+          {activeSection === "home" && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="text-center"
+            >
+              {/* Logo */}
+              <div className="relative w-[320px] h-[320px] flex items-center justify-center mx-auto">
+                <Image
+                  src="/images/keplerpay-rb.png"
+                  alt="KeplerPay Logo"
+                  width={320}
+                  height={320}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mt-8">{t.presentation.heroTitle}</h1>
+              <p className="text-lg text-gray-300 mt-4 max-w-2xl mx-auto">{t.presentation.heroSubtitle}</p>
+            </motion.div>
+          )}
+
+          {activeSection === "airdrop" && (
+            <motion.div
+              key="airdrop"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="text-center text-white"
+            >
+              <h2 className="text-3xl font-bold">{t.navigation.airdrop}</h2>
+              <p className="mt-4 text-gray-300">{"Conteúdo para a seção Airdrop aqui."}</p>
+            </motion.div>
+          )}
+
+          {activeSection === "fistaking" && (
+            <motion.div
+              key="fistaking"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="text-center text-white"
+            >
+              <h2 className="text-3xl font-bold">{t.navigation.fistaking}</h2>
+              <p className="mt-4 text-gray-300">{"Conteúdo para a seção KStaking aqui."}</p>
+            </motion.div>
+          )}
+
+          {activeSection === "about" && (
+            <motion.div
+              key="about"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="text-center text-white"
+            >
+              <h2 className="text-3xl font-bold">{t.navigation.about}</h2>
+              <p className="mt-4 text-gray-300">{"Conteúdo para a seção Sobre aqui."}</p>
+            </motion.div>
+          )}
+
+          {activeSection === "partnerships" && (
+            <motion.div
+              key="partnerships"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="text-center text-white max-w-2xl mx-auto"
+            >
+              <h2 className="text-3xl font-bold mb-6">{t.partnerships.title}</h2>
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-2xl font-semibold text-cyan-300">{t.partnerships.tPulseFiTitle}</h3>
+                  <p className="mt-2 text-gray-300">{t.partnerships.tPulseFiDescription}</p>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-semibold text-green-300">{t.partnerships.dropWalletTitle}</h3>
+                  <p className="mt-2 text-gray-300">{t.partnerships.dropWalletDescription}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Navigation Bar (Swipe Menu) */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
-        {/* Futuristic Bottom Bar */}
         <div className="relative">
           {/* Glow Effect */}
           <div className="absolute inset-0 bg-gradient-to-t from-gray-700/20 via-gray-600/10 to-transparent blur-lg" />
           {/* Main Bar */}
           <div className="relative bg-gray-800/70 backdrop-blur-xl border border-gray-700/50 rounded-xl">
-            <div className="flex items-center justify-center py-2 px-4 space-x-4">
-              {/* Central Menu Button */}
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative group">
-                <div className="w-12 h-12 bg-gray-700/50 backdrop-blur-md border border-gray-600/50 rounded-full flex items-center justify-center hover:bg-gray-700/70 transition-all duration-300 shadow-xl relative overflow-hidden">
-                  {/* Pulsing Ring */}
-                  <div className="absolute inset-0 bg-gray-600/70 rounded-full animate-ping opacity-75" />
-                  {/* Inner Glow */}
-                  <div className="absolute inset-1 bg-gray-700/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  {/* Icon */}
-                  {isMenuOpen ? (
-                    <X className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300 rotate-90" />
-                  ) : (
-                    <Menu className="w-6 h-6 text-gray-300 relative z-10 transition-transform duration-300" />
+            <div className="flex items-center justify-around py-2 px-4">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`relative group flex flex-col items-center p-2 rounded-lg transition-all duration-300 ${
+                    activeSection === item.id ? "text-white" : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {activeSection === item.id && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg"
+                    />
                   )}
-                </div>
-              </button>
+                  <item.icon className="w-5 h-5 relative z-10" />
+                  <span className="text-xs mt-1 relative z-10">
+                    {item.labelKey === "home" ? t.common.home : t.navigation[item.labelKey]}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Sliding Menu from Bottom */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-6 left-6 right-6 z-40"
-          >
-            <div className="bg-gray-800/70 backdrop-blur-xl border border-gray-700/50 rounded-2xl mb-12">
-              {/* Menu Handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-8 h-0.5 bg-white/30 rounded-full" />
-              </div>
-              {/* Menu Content */}
-              <div className="p-4 pb-4">
-                {/* Menu Glow Effect */}
-                <div className="absolute inset-0 bg-gray-700/10 rounded-2xl" />
-                {/* Menu Items List (changed from grid to flex-col) */}
-                <div className="relative z-10 flex flex-col space-y-3 mb-4">
-                  {navigationItems.map((item, index) => (
-                    <motion.button
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      onClick={() => {
-                        if (item.href) {
-                          router.push(item.href)
-                        }
-                        setIsMenuOpen(false)
-                      }}
-                      className="group p-4 bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl hover:bg-gray-700/50 transition-all duration-300 flex items-center space-x-4 relative overflow-hidden hover:scale-[1.02] active:scale-[0.98]" // Added flex items-center space-x-4
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-700/70 transition-all duration-300 flex-shrink-0 relative z-10">
-                        <item.icon className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />{" "}
-                        {/* Increased icon size */}
-                      </div>
-                      <span className="text-gray-300 group-hover:text-white font-medium text-lg tracking-wide relative z-10">
-                        {" "}
-                        {t.navigation[item.labelKey]}
-                      </span>
-                    </motion.button>
-                  ))}
-                </div>
-                {/* Menu Bottom Glow */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-gray-600/50 rounded-full" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Moving Light Lines Background */}
       <div className="absolute inset-0 bg-gray-900">
@@ -527,21 +573,6 @@ const Presentation: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 text-center">
-        {/* Logo */}
-        <div className="relative w-[320px] h-[320px] flex items-center justify-center z-10">
-          {/* Substitua:
-          // <ThreeSphere size={1.5} />
-
-          // Por: */}
-          <div className="relative w-40 h-40 flex items-center justify-center rounded-full bg-white/10">
-            <div className="absolute w-32 h-32 rounded-full bg-white opacity-20" />
-            <div className="w-20 h-20 rounded-full bg-yellow-400 relative z-10" />
-          </div>
-        </div>
-      </div>
-
       <style jsx>{`
         @keyframes moveRight {
           0% {
@@ -559,8 +590,6 @@ const Presentation: React.FC = () => {
             opacity: 0;
           }
         }
-
-        /* Removed pulse-slow animation as it's not needed for ThreeSphere */
       `}</style>
     </div>
   )
