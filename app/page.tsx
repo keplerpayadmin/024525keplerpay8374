@@ -156,10 +156,10 @@ const translations = {
       title: "Nuestras Asociaciones",
       tPulseFiTitle: "TPulseFi",
       tPulseFiDescription:
-        "TPulseFi es un proyecto DeFi centrado en la apreciación del valor a largo prazo, e nosso principal socio/desenvolvedor.",
+        "TPulseFi é um projeto DeFi centrado na apreciação do valor a longo prazo, e nosso principal socio/desenvolvedor.",
       dropWalletTitle: "DropWallet",
       dropWalletDescription:
-        "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Accede a los mejores airdrops como KPP, intercámbialos por USDC o WLD, y gana HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
+        "Drop Wallet es tu aplicación ideal para reclamar fácilmente airdrops de criptomonedas en World Chain. Acesse os melhores airdrops como KPP, intercámbialos por USDC ou WLD, e ganhe HUB —el token nativo de Drop Wallet— a través de registros diarios e intercambios. Las próximas características incluyen cross-chain, rampas de acceso fiat, staking y ahorros de criptomonedas, haciendo que ganar en Web3 sea sencillo para todos.",
     },
     common: {
       loading: "Cargando...",
@@ -185,7 +185,7 @@ const translations = {
       featuresTitle: "Fitur Utama",
       feature1Title: "Kompatibilitas Lintas Platform",
       feature1Description:
-        "MiniKit kami terintegrasi dengan mulus dengan berbagai platform, memastikan pengalaman pengguna yang konsisten di semua perangkat.",
+        "MiniKit kami terintegrasi com mulus com várias plataformas, memastikan experiência de usuário yang konsisten di semua perangkat.",
       feature2Title: "Integrasi Mudah",
       feature2Description:
         "Dengan API kami yang sederhana dan intuitif, mengintegrasikan MiniKit kami ke dalam aplikasi Anda yang sudah ada sangat mudah.",
