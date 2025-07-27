@@ -68,9 +68,11 @@ export default function WorldIdVerificationPage() {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
         <div className="mb-8">
-          {/* Removed the h1 title, keeping only the logo */}
           <Image src="/images/keplerpay-rb.png" alt="KeplerPay Logo" width={120} height={120} className="mb-4" />
         </div>
+
+        {/* New text added here */}
+        <p className="text-white text-lg mb-6">Login with World ID to continue</p>
 
         <Button
           onClick={handleVerify}
