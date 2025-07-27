@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "@/hooks/use-minikit"
 import MiniWallet from "@/components/mini-wallet"
+import ThreeBackground from "@/components/three-background" // Import the new 3D component
 
 // Simplified language support
 const LANGUAGES = [
@@ -192,10 +193,10 @@ const translations = {
         "Dengan API kami yang sederhana dan intuitif, mengintegrasikan MiniKit kami ke dalam aplikasi Anda yang sudah ada sangat mudah.",
       feature3Title: "Transaksi Aman",
       feature3Description:
-        "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih e protocolos de segurança.",
+        "Kami memprioritaskan keamanan transaksi pengguna Anda, menggunakan enkripsi canggih dan protokol keamanan.",
       ctaTitle: "Siap Memulai?",
       ctaSubtitle:
-        "Bergabunglah com ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
+        "Bergabunglah dengan ribuan pengembang yang sudah menggunakan MiniKit kami untuk merevolusi aplikasi mereka.",
       signUp: "Daftar Sekarang",
     },
     navigation: {
@@ -203,6 +204,15 @@ const translations = {
       fistaking: "KStaking", // Changed from Fi Staking to KStaking
       about: "Tentang",
       partnerships: "Kemitraan",
+    },
+    partnerships: {
+      title: "Kemitraan Kami",
+      tPulseFiTitle: "TPulseFi",
+      tPulseFiDescription:
+        "TPulseFi adalah proyek DeFi yang berfoca na apresiasi nilai jangka panjang, e nosso principal parceiro/desenvolvedor.",
+      dropWalletTitle: "DropWallet",
+      dropWalletDescription:
+        "Drop Wallet é o seu aplicativo ideal para reivindicar facilmente airdrops de criptomoedas na World Chain. Acesse airdrops teratas seperti KPP, tukarkan dengan USDC atau WLD, dan dapatkan HUB—token asli Drop Wallet—melalui check-in harian dan pertukaran. Fitur mendatang termasuk cross-chain, fiat on-ramps, staking, dan tabungan kripto – membuat penghasilan Web3 sederhana untuk semua orang.",
     },
     common: {
       loading: "Memuat...",
@@ -231,7 +241,7 @@ const Presentation: React.FC = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>("en")
   const [showMiniWallet, setShowMiniWallet] = useState(false)
-  const [showKPPBalance, setShowKPPBalance] = useState(false) // Novo estado para o saldo KPP
+  const [showKPPBalance, setShowKPPBalance] = useState(false) // Estado para o saldo KPP
   const kppBalance = "123.45 KPP" // Saldo KPP de exemplo
   const router = useRouter()
 
@@ -317,9 +327,14 @@ const Presentation: React.FC = () => {
     setShowKPPBalance(false) // Esconde o saldo ao minimizar
   }
 
-  const handleShowWallet = () => {
-    if (isAuthenticated) {
-      setShowMiniWallet(true)
+  const handleWalletButtonClick = async () => {
+    if (isAuthenticated && user) {
+      // If authenticated, toggle the mini wallet visibility
+      setShowMiniWallet(!showMiniWallet)
+      setShowKPPBalance(false) // Hide KPP balance when toggling wallet visibility
+    } else {
+      // If not authenticated, connect wallet
+      await connectWallet()
     }
   }
 
@@ -330,12 +345,15 @@ const Presentation: React.FC = () => {
   const currentLanguage = LANGUAGES.find((lang) => lang.code === currentLang)
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-900">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-gray-900">
+      {/* 3D Background */}
+      <div className="absolute inset-0 z-0">
+        <ThreeBackground />
+      </div>
+
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50 p-6">
         <div className="flex items-center justify-end">
-          {" "}
-          {/* Alinhado à direita */}
           {/* Right Side - Language Selector */}
           <div className="relative">
             <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="relative group">
@@ -383,7 +401,7 @@ const Presentation: React.FC = () => {
       </div>
 
       {/* Main Content - Agora um flex container para empilhar logo e wallet */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+      <div className="relative z-10 text-center flex flex-col items-center justify-center">
         {/* Logo */}
         <div className="relative w-[320px] h-[320px] flex items-center justify-center">
           <Image
@@ -417,29 +435,17 @@ const Presentation: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {isAuthenticated && user ? (
-            showMiniWallet ? (
-              <MiniWallet
-                walletAddress={user.walletAddress} // Ainda passa, mesmo que não seja exibido
-                onMinimize={handleMinimizeWallet}
-                onDisconnect={handleWalletDisconnect}
-                onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
-              />
-            ) : (
-              // Autenticado mas MiniWallet está minimizada, mostra um botão para abri-la
-              <button
-                onClick={handleShowWallet} // Isso definirá showMiniWallet como true
-                className="relative group w-48 h-20 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center transition-all duration-300"
-              >
-                <Wallet className="w-8 h-8 text-blue-400 relative z-10" />
-                <span className="text-white font-bold text-lg relative z-10">{t.common.wallet}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
-            )
+          {isAuthenticated && user && showMiniWallet ? (
+            <MiniWallet
+              walletAddress={user.walletAddress}
+              onMinimize={handleMinimizeWallet}
+              onDisconnect={handleWalletDisconnect}
+              onClick={toggleKPPBalanceVisibility} // Adiciona o clique para mostrar/esconder o saldo
+            />
           ) : (
-            // Não autenticado, mostra o botão de conectar carteira
+            // Botão unificado para conectar ou abrir a carteira
             <button
-              onClick={connectWallet}
+              onClick={handleWalletButtonClick}
               disabled={isLoading}
               className="relative group w-48 h-20 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-4 shadow-2xl flex flex-col items-center justify-center transition-all duration-300 disabled:opacity-50"
             >
@@ -537,43 +543,6 @@ const Presentation: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Moving Light Lines Background */}
-      <div className="absolute inset-0 bg-gray-900">
-        {/* Horizontal Moving Lines */}
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={`h-line-${i}`}
-            className="absolute h-px bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
-            style={{
-              top: `${8 + i * 8}%`,
-              left: "-100%",
-              width: "200%",
-              animation: `moveRight 4s linear infinite`,
-              animationDelay: `${i * 0.3}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <style jsx>{`
-        @keyframes moveRight {
-          0% {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateX(100vw);
-            opacity: 0;
-          }
-        }
-      `}</style>
     </div>
   )
 }
