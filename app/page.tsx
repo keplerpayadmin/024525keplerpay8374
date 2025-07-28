@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { IDKitWidget } from "@worldcoin/idkit-react" // Corrected import path for IDKitWidget
+import { IDKitWidget } from "@worldcoin/idkit" // Corrected import path back to @worldcoin/idkit
 import { useToast } from "@/hooks/use-toast"
 
 export default function Component() {
