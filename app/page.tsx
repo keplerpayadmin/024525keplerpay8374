@@ -50,9 +50,9 @@ export default function Component() {
       </div>
 
       {/* Fixed Button */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50">
         {" "}
-        {/* Increased z-index for visibility */}
+        {/* Adjusted bottom position to move it slightly down */}
         <Button
           className="px-8 py-3 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-200 transition-colors duration-300 shadow-lg"
           onClick={() => router.push("/dashboard")} // Added onClick to navigate
