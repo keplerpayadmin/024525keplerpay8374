@@ -11,16 +11,16 @@ export async function POST(req: NextRequest) {
   try {
     const { payload, action, signal } = (await req.json()) as IRequestPayload
 
+    // Início do log do backend
     console.log("=== World ID Verify Backend API START ===")
     console.log("Received payload:", JSON.stringify(payload, null, 2))
     console.log("Received action:", action)
     console.log("Received signal:", signal)
 
-    // Certifique-se de que APP_ID está configurado nas suas variáveis de ambiente do Vercel.
-    // Este APP_ID deve ser o mesmo usado no MiniKitProvider no frontend.
-    const app_id = process.env.APP_ID as `app_${string}` // Usando APP_ID conforme seu prompt
+    const app_id = process.env.APP_ID as `app_${string}`
 
     if (!app_id) {
+      // Log de erro se APP_ID não estiver configurado
       console.error("❌ APP_ID environment variable is not set.")
       return NextResponse.json(
         {
@@ -35,11 +35,12 @@ export async function POST(req: NextRequest) {
 
     console.log("Calling verifyCloudProof...")
     const verifyRes = (await verifyCloudProof(payload, app_id, action, signal)) as IVerifyResponse
+    // Este console.log mostra a resposta COMPLETA da API da Worldcoin
     console.log("Response from verifyCloudProof:", JSON.stringify(verifyRes, null, 2))
 
     if (verifyRes.success) {
+      // Log de sucesso
       console.log("✅ World ID proof verified successfully!")
-      // Aqui você pode adicionar lógica para atualizar seu banco de dados, etc.
       return NextResponse.json(
         {
           status: 200,
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       )
     } else {
+      // Log de falha na verificação
       console.error("❌ World ID proof verification failed.")
       let errorMessage = "Verificação falhou."
       if (verifyRes.detail?.includes("already verified")) {
@@ -69,6 +71,7 @@ export async function POST(req: NextRequest) {
       )
     }
   } catch (error: any) {
+    // Log de erros inesperados no backend
     console.error("=== World ID Verify Backend API ERROR ===")
     console.error("Error type:", typeof error)
     console.error("Error message:", error.message)
@@ -86,6 +89,7 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     )
   } finally {
+    // Fim do log do backend
     console.log("=== World ID Verify Backend API END ===")
   }
 }
