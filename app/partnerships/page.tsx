@@ -5,10 +5,14 @@ import { FingerAnimation } from "@/components/finger-animation"
 import BottomNavbar from "@/components/bottom-navbar"
 import Image from "next/image"
 import Link from "next/link"
+import { BackButton } from "@/components/back-button" // Import BackButton
 
 export default function PartnershipsPage() {
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col items-center p-4 sm:p-8 pb-20">
+      {/* Back Button */}
+      <BackButton />
+
       {/* 3D Sphere as background */}
       <div className="absolute inset-0 z-0">
         <FingerAnimation />
