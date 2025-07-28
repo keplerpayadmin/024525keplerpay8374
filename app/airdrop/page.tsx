@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import AirdropLoader from "./airdrop-loader"
+import AirdropLoader from "@/components/airdrop-loader"
 
 export default function AirdropPage() {
   return (
