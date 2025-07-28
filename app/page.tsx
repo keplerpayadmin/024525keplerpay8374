@@ -4,14 +4,93 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { MiniKit, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js" // Import MiniKit and types
 
 export default function Component() {
   const router = useRouter()
   const { toast } = useToast() // Initialize toast
 
-  // Function to handle navigation to dashboard
-  const handleProceed = () => {
-    router.push("/dashboard")
+  // Function to handle World ID verification and navigation
+  const handleProceed = async () => {
+    if (!MiniKit.isInstalled()) {
+      toast({
+        title: "Erro",
+        description: "World App não está disponível. Por favor, use o World App para verificar.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      // Define the verification payload
+      const verifyPayload = {
+        action: "welcome", // Action ID from Worldcoin Developer Portal (from screenshot)
+        signal: "keplerpay-dashboard-access", // Optional additional data
+        verification_level: VerificationLevel.Orb, // Orb or Device
+      }
+
+      toast({
+        title: "Verificação World ID",
+        description: "Abrindo World App para verificação...",
+      })
+
+      // Open World App drawer for verification
+      const { finalPayload } = await MiniKit.commandsAsync.verify(verifyPayload)
+
+      if (finalPayload.status === "error") {
+        console.error("World ID verification error payload:", finalPayload)
+        let errorMessage = "Verificação World ID falhou."
+        if (finalPayload.message?.includes("user_rejected")) {
+          errorMessage = "Verificação cancelada pelo usuário."
+        } else if (finalPayload.message?.includes("already_verified")) {
+          errorMessage = "Você já verificou seu World ID para esta ação."
+        }
+        toast({
+          title: "Erro de Verificação",
+          description: errorMessage,
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Verify the proof in the backend
+      const verifyResponse = await fetch("/api/world-id/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          payload: finalPayload as ISuccessResult, // Pass the full success payload
+          action: verifyPayload.action,
+          signal: verifyPayload.signal,
+        }),
+      })
+
+      const verifyResponseJson = await verifyResponse.json()
+
+      if (verifyResponseJson.status === 200 && verifyResponseJson.verified) {
+        console.log("World ID verification successful!")
+        toast({
+          title: "Sucesso!",
+          description: "World ID verificado com sucesso. Redirecionando...",
+        })
+        router.push("/dashboard")
+      } else {
+        console.error("Backend verification failed:", verifyResponseJson)
+        toast({
+          title: "Erro de Verificação",
+          description: verifyResponseJson.message || "Falha na verificação do backend.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro durante a verificação do World ID:", error)
+      toast({
+        title: "Erro Inesperado",
+        description: "Ocorreu um erro inesperado durante a verificação.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
