@@ -4,6 +4,8 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { MiniKitProvider } from "@/components/minikit-provider"
+import { DebugConsole } from "@/components/debug-console" // Import DebugConsole
+import { Toaster } from "@/components/ui/toaster" // Import Toaster for useToast
 
 export const metadata: Metadata = {
   title: "v0 App",
@@ -29,6 +31,8 @@ html {
       </head>
       <body className={GeistSans.className}>
         <MiniKitProvider>{children}</MiniKitProvider>
+        <DebugConsole /> {/* Adicione o DebugConsole aqui */}
+        <Toaster /> {/* Certifique-se de que o Toaster também está presente para as notificações */}
       </body>
     </html>
   )
