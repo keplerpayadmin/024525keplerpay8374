@@ -60,9 +60,9 @@ export default function DashboardPage() {
         {/* Animated title - positioned relative to the sphere */}
         <AnimatedText
           text="Kepler Pay"
-          className="text-white font-extrabold text-3xl drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] mt-20"
+          className="text-white font-extrabold text-3xl drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] mt-60"
         />{" "}
-        {/* Adjusted font size, shadow, and margin-top */}
+        {/* Adjusted margin-top to move it further down */}
       </div>
       {/* Bottom Navigation Bar */}
       <BottomNavbar />
