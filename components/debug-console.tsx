@@ -2,10 +2,17 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog" // Import DialogDescription
 import { Bug, Copy, Trash2 } from "lucide-react"
 import { useDebugLogs } from "@/hooks/use-debug-logs"
-import { useToast } from "@/hooks/use-toast" // Assuming useToast is available
+import { useToast } from "@/hooks/use-toast"
 
 export function DebugConsole() {
   const { logs, clearLogs } = useDebugLogs()
@@ -39,6 +46,10 @@ export function DebugConsole() {
         <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col bg-gray-950 text-white border-gray-700">
           <DialogHeader>
             <DialogTitle className="text-white">Console de Depuração (Cliente)</DialogTitle>
+            {/* Adicionado DialogDescription para acessibilidade */}
+            <DialogDescription className="sr-only">
+              Exibe logs e erros do lado do cliente para depuração.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-2 border border-gray-800 rounded-md bg-black text-xs font-mono">
             {logs.length === 0 ? (
