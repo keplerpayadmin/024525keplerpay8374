@@ -142,7 +142,7 @@ export default function Component() {
           className="px-8 py-3 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-200 transition-colors duration-300 shadow-lg"
           onClick={handleProceed}
         >
-          Proceed to Dashboard
+          World ID
         </Button>
       </div>
 
