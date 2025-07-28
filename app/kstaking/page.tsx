@@ -5,7 +5,7 @@ import { ArrowLeft, Gift, Loader2, CheckCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { MiniKit } from "@worldcoin/minikit-js"
-import { useMiniKit } from "../../hooks/use-minikit"
+import { useMiniKit } from "@/hooks/use-minikit"
 import Image from "next/image"
 
 // Supported languages
