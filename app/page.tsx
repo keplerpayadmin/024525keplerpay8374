@@ -38,7 +38,7 @@ export default function Component() {
       const { finalPayload } = await MiniKit.commandsAsync.verify(verifyPayload)
 
       if (finalPayload.status === "error") {
-        console.error("World ID verification error payload:", finalPayload)
+        console.error("World ID verification error payload from MiniKit:", finalPayload)
         let errorMessage = "Verificação World ID falhou."
         if (finalPayload.message?.includes("user_rejected")) {
           errorMessage = "Verificação cancelada pelo usuário."
@@ -54,6 +54,7 @@ export default function Component() {
       }
 
       // Verify the proof in the backend
+      console.log("Sending proof to backend for verification...")
       const verifyResponse = await fetch("/api/world-id/verify", {
         method: "POST",
         headers: {
@@ -67,16 +68,18 @@ export default function Component() {
       })
 
       const verifyResponseJson = await verifyResponse.json()
+      console.log("Backend verification response:", verifyResponseJson) // Log the full response
 
-      if (verifyResponseJson.status === 200 && verifyResponseJson.verified) {
-        console.log("World ID verification successful!")
+      if (verifyResponse.ok && verifyResponseJson.verified) {
+        // Check response.ok for HTTP status 2xx
+        console.log("World ID verification successful! Redirecting to dashboard...")
         toast({
           title: "Sucesso!",
           description: "World ID verificado com sucesso. Redirecionando...",
         })
         router.push("/dashboard")
       } else {
-        console.error("Backend verification failed:", verifyResponseJson)
+        console.error("Backend verification failed or returned non-200 status:", verifyResponseJson)
         toast({
           title: "Erro de Verificação",
           description: verifyResponseJson.message || "Falha na verificação do backend.",
