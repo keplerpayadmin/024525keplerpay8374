@@ -4,12 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
 import { FingerAnimation } from "@/components/finger-animation"
 import BottomNavbar from "@/components/bottom-navbar"
+import { BackButton } from "@/components/back-button" // Import BackButton
 
 export default function KStakingPage() {
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col items-center p-4 sm:p-8 pb-20">
+      {/* Back Button */}
+      <BackButton />
+
       {/* 3D Sphere as background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute top-0 left-0 w-full h-full z-0">
         <FingerAnimation />
       </div>
 
