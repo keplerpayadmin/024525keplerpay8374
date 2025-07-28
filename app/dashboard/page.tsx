@@ -60,7 +60,7 @@ export default function DashboardPage() {
         {/* Animated title - positioned relative to the sphere */}
         <AnimatedText
           text="Kepler Pay"
-          className="text-white font-extrabold text-3xl drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] mt-60"
+          className="text-white font-extrabold text-3xl drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] mt-72"
         />{" "}
         {/* Adjusted margin-top to move it further down */}
       </div>
@@ -68,21 +68,21 @@ export default function DashboardPage() {
       <BottomNavbar />
       {/* Custom CSS for subtle pulse animation */}
       <style jsx global>{`
-        @keyframes pulse-subtle {
-          0%,
-          100% {
-            transform: scale(1);
-            box-shadow: 0 0 0px rgba(255, 255, 255, 0);
-          }
-          50% {
-            transform: scale(1.01);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-          }
+      @keyframes pulse-subtle {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0px rgba(255, 255, 255, 0);
         }
-        .animate-pulse-subtle {
-          animation: pulse-subtle 2s infinite ease-in-out;
+        50% {
+          transform: scale(1.01);
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
-      `}</style>
+      }
+      .animate-pulse-subtle {
+        animation: pulse-subtle 2s infinite ease-in-out;
+      }
+    `}</style>
     </div>
   )
 }
