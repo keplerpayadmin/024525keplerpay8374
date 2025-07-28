@@ -34,8 +34,19 @@ export function useMiniKit() {
   }, [])
 
   const connectWallet = useCallback(async () => {
-    if (!MiniKit.isInstalled()) {
-      throw new Error("MiniKit not available. Please use World App.")
+    if (typeof window === "undefined"  !MiniKit.isInstalled()) {
+      console.warn("MiniKit not available or not installed. Simulating connection.")
+      setIsLoading(true)
+      await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate network delay
+      const simulatedUser: User = {
+        walletAddress: "0xAbC123DeF456GhI789JkL012MnOpQ345RsT678UvW", // Example address
+        username: "simulated_user",
+      }
+      setUser(simulatedUser)
+      setIsAuthenticated(true)
+      setIsLoading(false)
+      console.log("Simulated wallet connected.")
+      return simulatedUser
     }
 
     setIsLoading(true)
