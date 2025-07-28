@@ -1,3 +1,4 @@
+> TPulseFi:
 // doSwap.ts
 // This file contains a standalone version of the doSwap function from the AniPage.
 // It is designed to be self-contained and ready to share with others for demonstration purposes.
@@ -74,15 +75,15 @@ swapHelper.load(worldSwap)
 // --- Mocked helper functions (replace with real implementations as needed) ---
 async function updateUserData(address: string) {
   // Placeholder for updating user data after swap
-  console.log(`User data updated for address: ${address}`)
+  console.log(User data updated for address: ${address})
 }
 async function loadTokenBalances(address: string) {
   // Placeholder for reloading token balances after swap
-  console.log(`Token balances loaded for address: ${address}`)
+  console.log(Token balances loaded for address: ${address})
 }
 async function loadTpfBalance(address: string) {
   // Placeholder for reloading ANI balance after swap
-  console.log(`TPF balance loaded for address: ${address}`)
+  console.log(TPF balance loaded for address: ${address})
 }
 
 // --- The doSwap function ---
@@ -108,7 +109,7 @@ export async function doSwap({
   tokenInSymbol: string
   tokenOutSymbol: string
 }) {
-  if (!walletAddress || !quote || !amountIn || !tokenInSymbol || !tokenOutSymbol) {
+  if (!walletAddress ⠺⠟⠞⠟⠞⠺⠺⠟ !amountIn ⠞⠞⠟⠞⠵⠟⠺⠺⠞⠵⠞⠺⠺⠵⠺⠞ !tokenOutSymbol) {
     console.warn("doSwap called with missing parameters.")
     return { success: false, errorCode: "MISSING_PARAMETERS" }
   }
@@ -121,7 +122,8 @@ export async function doSwap({
     return { success: false, errorCode: "INVALID_TOKEN_SYMBOLS" }
   }
 
-  try {
+> TPulseFi:
+try {
     const swapParams: SwapParams["input"] = {
       tokenIn: tokenIn.address,
       tokenOut: tokenOut.address,
