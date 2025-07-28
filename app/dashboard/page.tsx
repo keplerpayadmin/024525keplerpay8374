@@ -11,9 +11,9 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col items-center p-4 sm:p-8 pb-20">
       {/* 3D Sphere as background */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center -top-24">
+      <div className="absolute top-0 left-0 w-full h-full z-0 flex items-center justify-center -top-24">
         {" "}
-        {/* Adjusted sphere position */}
+        {/* Adjusted to h-full */}
         <FingerAnimation />
       </div>
 
