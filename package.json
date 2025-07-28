@@ -59,8 +59,8 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "@worldcoin/idkit": "^1.0.0",
-    "@worldcoin/minikit-js": "^0.0.38-internal-alpha",
+    "@worldcoin/idkit": "^2.3.0",
+    "@worldcoin/minikit-js": "^1.9.6",
     "@react-three/drei": "10.6.1",
     "@react-three/fiber": "9.3.0",
     "three": "0.178.0"
