@@ -1,12 +1,15 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
+import "./globals.css"
+import { IDKitProvider } from "@worldcoin/idkit"
+import { MiniKitProvider } from "@/components/minikit-provider"
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: "v0 App",
+  description: "Created with v0",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -25,7 +28,17 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body className={GeistSans.className}>
+        <MiniKitProvider>
+          <IDKitProvider
+            app_id={process.env.NEXT_PUBLIC_APP_ID || "app_a3a55e132983350c67923dd57dc22c5e"} // Replace with your actual App ID
+            action="verify-keplerpay-user" // A unique action ID for this verification
+            enableTelemetry
+          >
+            {children}
+          </IDKitProvider>
+        </MiniKitProvider>
+      </body>
     </html>
   )
 }

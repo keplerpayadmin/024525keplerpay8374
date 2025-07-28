@@ -3,15 +3,18 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { IDKitWidget } from "@worldcoin/idkit"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Component() {
   const router = useRouter()
+  const { toast } = useToast() // Initialize toast
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-black text-white overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950 opacity-70"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-950 opacity-70"></div>
         {/* Explosion effects */}
         <div
           className="absolute top-[10%] left-[15%] w-48 h-48 explosion-effect"
@@ -51,14 +54,63 @@ export default function Component() {
 
       {/* Fixed Button */}
       <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50">
-        {" "}
-        {/* Adjusted bottom position to move it slightly down */}
-        <Button
-          className="px-8 py-3 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-200 transition-colors duration-300 shadow-lg"
-          onClick={() => router.push("/dashboard")} // Added onClick to navigate
+        <IDKitWidget
+          app_id={process.env.NEXT_PUBLIC_APP_ID || "app_a3a55e132983350c67923dd57dc22c5e"} // Replace with your actual App ID
+          action="verify-keplerpay-user" // Must match the action in IDKitProvider
+          onSuccess={async (result) => {
+            console.log("World ID verification successful:", result)
+            // Call your backend login API
+            try {
+              const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ payload: { address: result.nullifierHash }, nonce: result.proof }), // Simplified payload for example
+              })
+
+              const data = await response.json()
+
+              if (data.success) {
+                toast({
+                  title: "Verification Successful",
+                  description: "You have been successfully verified with World ID.",
+                })
+                router.push("/dashboard")
+              } else {
+                toast({
+                  title: "Login Failed",
+                  description: data.error || "Could not log in after verification.",
+                  variant: "destructive",
+                })
+              }
+            } catch (error) {
+              console.error("Error during login after World ID verification:", error)
+              toast({
+                title: "Error",
+                description: "An error occurred during login.",
+                variant: "destructive",
+              })
+            }
+          }}
+          onError={(error) => {
+            console.error("World ID verification failed:", error)
+            toast({
+              title: "Verification Failed",
+              description: "World ID verification could not be completed.",
+              variant: "destructive",
+            })
+          }}
         >
-          World ID
-        </Button>
+          {({ open }) => (
+            <Button
+              className="px-8 py-3 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-200 transition-colors duration-300 shadow-lg"
+              onClick={open}
+            >
+              World ID
+            </Button>
+          )}
+        </IDKitWidget>
       </div>
 
       {/* Tailwind CSS for custom effects */}
