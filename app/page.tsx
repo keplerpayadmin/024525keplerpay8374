@@ -5,19 +5,23 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { MiniKit, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js" // Import MiniKit and types
+import { useState } from "react" // Import useState
 
 export default function Component() {
   const router = useRouter()
   const { toast } = useToast() // Initialize toast
+  const [isVerifying, setIsVerifying] = useState(false) // New state for loading indicator
 
   // Function to handle World ID verification and navigation
   const handleProceed = async () => {
+    setIsVerifying(true) // Set loading state to true
     if (!MiniKit.isInstalled()) {
       toast({
         title: "Erro",
         description: "World App não está disponível. Por favor, use o World App para verificar.",
         variant: "destructive",
       })
+      setIsVerifying(false) // Reset loading state
       return
     }
 
@@ -50,6 +54,7 @@ export default function Component() {
           description: errorMessage,
           variant: "destructive",
         })
+        setIsVerifying(false) // Reset loading state
         return
       }
 
@@ -93,6 +98,8 @@ export default function Component() {
         description: "Ocorreu um erro inesperado durante a verificação.",
         variant: "destructive",
       })
+    } finally {
+      setIsVerifying(false) // Ensure loading state is reset even on error
     }
   }
 
@@ -144,8 +151,28 @@ export default function Component() {
         <Button
           className="px-8 py-3 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-200 transition-colors duration-300 shadow-lg"
           onClick={handleProceed}
+          disabled={isVerifying} // Disable button while verifying
         >
-          World ID
+          {isVerifying ? (
+            <span className="flex items-center">
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Verificando...
+            </span>
+          ) : (
+            "World ID"
+          )}
         </Button>
       </div>
 
