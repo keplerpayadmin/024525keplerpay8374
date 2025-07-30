@@ -371,14 +371,12 @@ export default function FiStakingPage() {
       </div>
 
       <div className="flex flex-col items-center justify-center flex-grow space-y-8">
-        {" "}
-        {/* Added space-y-8 */}
         {/* KPP Logo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-center justify-center" // Removed mb-8
+          className="flex flex-col items-center justify-center"
         >
           <Image
             src={kppContract.image || "/placeholder.svg"}
@@ -392,15 +390,15 @@ export default function FiStakingPage() {
         </motion.div>
         {/* Pending Rewards Display */}
         {authLoading ? (
-          <p className="text-gray-400 text-sm">Loading wallet status...</p> // Removed mb-4
+          <p className="text-gray-400 text-sm">Loading wallet status...</p>
         ) : !isAuthenticated ? (
-          <p className="text-gray-400 text-sm">{t.staking.connectWalletFirst}</p> // Removed mb-4
+          <p className="text-gray-400 text-sm">{t.staking.connectWalletFirst}</p>
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center" // Removed mb-6
+            className="text-center"
           >
             <p className="text-gray-400 text-sm font-medium">{t.staking.pendingRewards}</p>
             {rewardsLoading ? (
@@ -419,12 +417,12 @@ export default function FiStakingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-xs" // Removed mt-12
+          className="w-full max-w-xs"
         >
           <button
             onClick={() => handleClaim("KPP")}
             disabled={isClaimingKPP || !isAuthenticated}
-            className={`py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+            className={`mx-auto py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30"
