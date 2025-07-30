@@ -429,8 +429,8 @@ export default function FiStakingPage() {
             className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30" // Botão branco, texto preto, brilho branco
-            }`}
+                : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30"
+            } w-[220px]`}
           >
             {isClaimingKPP ? (
               <>
