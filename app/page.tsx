@@ -82,8 +82,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white p-4 bg-[url('/white-explosions-background.png')] bg-cover bg-center">
-      <div className="flex flex-col items-center space-y-4">
+    <div className="flex h-screen flex-col items-center justify-center bg-black text-white bg-[url('/white-explosions-background.png')] bg-cover bg-center overflow-hidden">
+      <div className="flex flex-col items-center space-y-4 px-4">
+        {" "}
+        {/* Added px-4 here */}
         <Image src="/keplerpay-logo.png" alt="KeplerPay Logo" width={200} height={200} className="mb-4" />
         <p className="text-lg text-center text-gray-400">To continue, please verify your World ID</p>
         <Button
