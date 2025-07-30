@@ -270,7 +270,7 @@ export default function FiStakingPage() {
   const [rewardsError, setRewardsError] = useState<string | null>(null)
 
   const fetchPendingRewards = async (walletAddress: string) => {
-    setRewardsLoading(true) // Set loading to true at the start
+    setRewardsLoading(true)
     setRewardsError(null)
     try {
       const provider = new ethers.JsonRpcProvider(
@@ -278,23 +278,22 @@ export default function FiStakingPage() {
       )
       const stakingContract = new ethers.Contract(STAKING_CONTRACTS.KPP.address, STAKING_ABI, provider)
       const rewards = await stakingContract.calculatePendingRewards(walletAddress)
-      setPendingRewards(ethers.formatUnits(rewards, 18)) // Assumindo 18 decimais para KPP
+      setPendingRewards(ethers.formatUnits(rewards, 18))
     } catch (error) {
       console.error("Error fetching pending rewards:", error)
       setRewardsError("Failed to fetch pending rewards.")
       setPendingRewards("0.00")
     } finally {
-      setRewardsLoading(false) // Set loading to false at the end
+      setRewardsLoading(false)
     }
   }
 
   useEffect(() => {
     if (isAuthenticated && user?.walletAddress) {
       fetchPendingRewards(user.walletAddress)
-      // Atualizar recompensas a cada 1 segundo
       const interval = setInterval(() => {
         fetchPendingRewards(user.walletAddress!)
-      }, 1000) // A cada 1 segundo
+      }, 1000)
       return () => clearInterval(interval)
     } else {
       setPendingRewards("0.00")
@@ -337,7 +336,6 @@ export default function FiStakingPage() {
         console.error(`Transaction failed: ${finalPayload.message || "Unknown error"}`)
       } else if (finalPayload.status === "success") {
         console.log(`✅ ${contract.symbol} rewards claimed successfully!`)
-        // Após o sucesso, buscar as recompensas novamente para atualizar o display
         if (user?.walletAddress) {
           fetchPendingRewards(user.walletAddress)
         }
@@ -355,16 +353,16 @@ export default function FiStakingPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
       <style jsx>{`
-      @keyframes glow-light {
-        0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); } /* Brilho branco */
-        50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); } /* Brilho branco */
-      }
-    `}</style>
+        @keyframes glow-light {
+          0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); }
+          50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); }
+        }
+      `}</style>
 
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-50">
         <Link
-          href="/dashboard" // Link de volta para o dashboard
+          href="/dashboard"
           className="flex items-center gap-2 px-4 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-white hover:bg-gray-800/80 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -372,65 +370,65 @@ export default function FiStakingPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col items-center justify-center flex-grow">
+      <div className="flex flex-col items-center justify-center flex-grow space-y-8">
+        {" "}
+        {/* Added space-y-8 */}
         {/* KPP Logo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-center justify-center mb-8"
+          className="flex flex-col items-center justify-center" // Removed mb-8
         >
           <Image
             src={kppContract.image || "/placeholder.svg"}
             alt={kppContract.name}
             width={128}
             height={128}
-            className="rounded-full border-4 border-white/50 shadow-lg shadow-white/30 animate-[glow-light_2s_ease-in-out_infinite]" // Brilho branco
+            className="rounded-full border-4 border-white/50 shadow-lg shadow-white/30 animate-[glow-light_2s_ease-in-out_infinite]"
           />
           <h3 className="text-white font-bold text-2xl mt-4">{kppContract.symbol}</h3>
           <p className="text-gray-400 text-sm">{kppContract.name}</p>
         </motion.div>
-
         {/* Pending Rewards Display */}
         {authLoading ? (
-          <p className="text-gray-400 text-sm mb-4">Loading wallet status...</p>
+          <p className="text-gray-400 text-sm">Loading wallet status...</p> // Removed mb-4
         ) : !isAuthenticated ? (
-          <p className="text-gray-400 text-sm mb-4">{t.staking.connectWalletFirst}</p>
+          <p className="text-gray-400 text-sm">{t.staking.connectWalletFirst}</p> // Removed mb-4
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center mb-6"
+            className="text-center" // Removed mb-6
           >
             <p className="text-gray-400 text-sm font-medium">{t.staking.pendingRewards}</p>
             {rewardsLoading ? (
-              <p className="text-white text-xl font-bold mt-1">Loading...</p>
+              <p className="text-white text-xl font-bold mt-1 min-w-[120px] tabular-nums">Loading...</p>
             ) : rewardsError ? (
-              <p className="text-red-500 text-xl font-bold mt-1">{pendingRewards}</p>
+              <p className="text-red-500 text-xl font-bold mt-1 min-w-[120px] tabular-nums">{pendingRewards}</p>
             ) : (
-              <p className="text-white text-xl font-bold mt-1">
+              <p className="text-white text-xl font-bold mt-1 min-w-[120px] tabular-nums">
                 {pendingRewards || "0.00"} {kppContract.symbol}
               </p>
             )}
           </motion.div>
         )}
-
         {/* Claim Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-xs mt-12"
+          className="w-full max-w-xs" // Removed mt-12
         >
           <button
             onClick={() => handleClaim("KPP")}
             disabled={isClaimingKPP || !isAuthenticated}
-            className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+            className={`py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30"
-            }`}
+            } min-w-[220px] max-w-[220px]`}
           >
             {isClaimingKPP ? (
               <>
