@@ -405,11 +405,11 @@ export default function FiStakingPage() {
           >
             <p className="text-gray-400 text-sm font-medium">{t.staking.pendingRewards}</p>
             {rewardsLoading ? (
-              <p className="text-white text-xl font-bold mt-1">Loading...</p>
+              <p className="text-white text-xl font-bold mt-1 min-w-[120px]">Loading...</p>
             ) : rewardsError ? (
-              <p className="text-red-500 text-xl font-bold mt-1">{pendingRewards}</p>
+              <p className="text-red-500 text-xl font-bold mt-1 min-w-[120px]">{pendingRewards}</p>
             ) : (
-              <p className="text-white text-xl font-bold mt-1">
+              <p className="text-white text-xl font-bold mt-1 min-w-[120px]">
                 {pendingRewards || "0.00"} {kppContract.symbol}
               </p>
             )}
@@ -425,7 +425,7 @@ export default function FiStakingPage() {
         >
           <button
             onClick={() => handleClaim("KPP")}
-            disabled={isClaimingKPP || !isAuthenticated} // Removido rewardsLoading daqui
+            disabled={isClaimingKPP || !isAuthenticated}
             className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
