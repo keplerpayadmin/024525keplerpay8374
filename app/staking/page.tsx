@@ -422,11 +422,11 @@ export default function FiStakingPage() {
           <button
             onClick={() => handleClaim("KPP")}
             disabled={isClaimingKPP || !isAuthenticated}
-            className={`mx-auto py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+            className={`mx-auto py-2 rounded-lg font-bold text-base transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30"
-            } min-w-[220px] max-w-[220px]`}
+            } min-w-[280px] max-w-[280px]`}
           >
             {isClaimingKPP ? (
               <>
