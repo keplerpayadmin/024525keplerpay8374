@@ -86,7 +86,7 @@
     background-color: black; /* Force black background for html */
   }
   body {
-    min-height: 100%;
+    height: 100%;
     overflow-x: hidden; /* Impede a rolagem horizontal */
     overscroll-behavior-y: none; /* Impede o efeito de "bounce" na rolagem vertical */
     background-color: black; /* Force black background for body */
