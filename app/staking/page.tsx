@@ -425,9 +425,9 @@ export default function FiStakingPage() {
         >
           <button
             onClick={() => handleClaim("KPP")}
-            disabled={isClaimingKPP || !isAuthenticated || rewardsLoading} // Desabilitar durante o carregamento de recompensas
+            disabled={isClaimingKPP || !isAuthenticated} // Removido rewardsLoading daqui
             className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
-              isClaimingKPP || !isAuthenticated || rewardsLoading
+              isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30" // Botão branco, texto preto, brilho branco
             }`}
