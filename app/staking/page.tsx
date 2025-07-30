@@ -355,11 +355,11 @@ export default function FiStakingPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
       <style jsx>{`
-        @keyframes glow-light {
-          0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); } /* Brilho branco */
-          50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); } /* Brilho branco */
-        }
-      `}</style>
+      @keyframes glow-light {
+        0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); } /* Brilho branco */
+        50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); } /* Brilho branco */
+      }
+    `}</style>
 
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-50">
@@ -405,11 +405,11 @@ export default function FiStakingPage() {
           >
             <p className="text-gray-400 text-sm font-medium">{t.staking.pendingRewards}</p>
             {rewardsLoading ? (
-              <p className="text-white text-xl font-bold mt-1 min-w-[120px] tabular-nums">Loading...</p>
+              <p className="text-white text-xl font-bold mt-1">Loading...</p>
             ) : rewardsError ? (
-              <p className="text-red-500 text-xl font-bold mt-1 min-w-[120px] tabular-nums">{pendingRewards}</p>
+              <p className="text-red-500 text-xl font-bold mt-1">{pendingRewards}</p>
             ) : (
-              <p className="text-white text-xl font-bold mt-1 min-w-[120px] tabular-nums">
+              <p className="text-white text-xl font-bold mt-1">
                 {pendingRewards || "0.00"} {kppContract.symbol}
               </p>
             )}
@@ -421,16 +421,16 @@ export default function FiStakingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-xs"
+          className="w-full max-w-xs mt-12"
         >
           <button
             onClick={() => handleClaim("KPP")}
             disabled={isClaimingKPP || !isAuthenticated}
-            className={`py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
               isClaimingKPP || !isAuthenticated
                 ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/30"
-            } min-w-[220px] max-w-[220px]`}
+            }`}
           >
             {isClaimingKPP ? (
               <>
