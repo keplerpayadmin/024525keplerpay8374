@@ -279,7 +279,7 @@ export default function DashboardPage() {
   const isSphereAnimatingFast = isLoaded || (nextClaimTimestamp !== null && remainingTime > 0)
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-black text-white p-4">
+    <div className="relative flex h-screen flex-col items-center justify-center bg-black text-white overflow-hidden">
       <div className="absolute inset-0 z-0">
         <KeplerSphere isLoaded={isSphereAnimatingFast} />
       </div>
@@ -298,7 +298,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full w-full">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full w-full px-4">
+        {" "}
+        {/* Added px-4 here */}
         {!isConnected ? (
           <div className="mt-[350px] w-full max-w-xs text-center">
             <Button
