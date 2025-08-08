@@ -4,98 +4,89 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MiniKit, type VerifyCommandInput, VerificationLevel, type ISuccessResult } from "@worldcoin/minikit-js"
 import { useState } from "react"
-import { redirect } from "next/navigation" // Import redirect
+import { useRouter } from "next/navigation"
 
-export default function HomePage() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export default function WorldIdVerificationPage() {
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleVerify = async () => {
-    setLoading(true)
-    setError(null)
-
+    setVerificationStatus("Verifying...")
     if (!MiniKit.isInstalled()) {
-      setError("World App (MiniKit) is not installed.")
-      setLoading(false)
+      setVerificationStatus("World App not installed.")
       return
     }
 
     const verifyPayload: VerifyCommandInput = {
-      action: "welcome", // Updated to match the screenshot
-      signal: "0x12345", // Optional additional data, can be dynamic
+      action: "welcome", // This is your action ID from the Developer Portal, based on the provided image
+      signal: undefined, // Optional additional data
       verification_level: VerificationLevel.Orb, // Orb | Device
     }
-
-    let verificationSuccessfulFromWorldApp = false // Flag to track success from World App
 
     try {
       // World App will open a drawer prompting the user to confirm the operation
       const { finalPayload } = await MiniKit.commandsAsync.verify(verifyPayload)
 
       if (finalPayload.status === "error") {
-        setError(`Verification failed: ${finalPayload.code || "Unknown error"}`)
-        console.error("Error payload from World App", finalPayload)
-        setLoading(false)
+        console.error("Error payload", finalPayload)
+        setVerificationStatus(`Verification failed: ${finalPayload.code || "Unknown error"}`)
         return
       }
 
-      // If World App interaction is successful, consider it successful for redirection
-      verificationSuccessfulFromWorldApp = true
+      // Verify the proof in the backend
+      const verifyResponse = await fetch("/api/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          payload: finalPayload as ISuccessResult, // Parses only the fields we need to verify
+          action: "welcome",
+          signal: undefined,
+        }),
+      })
 
-      // --- Backend verification (will be ignored for redirection if it fails) ---
-      try {
-        const verifyResponse = await fetch("/api/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            payload: finalPayload as ISuccessResult,
-            action: "welcome",
-            signal: "0x12345",
-          }),
-        })
-
-        const verifyResponseJson = await verifyResponse.json()
-
-        if (verifyResponse.ok && verifyResponseJson.status === 200) {
-          console.log("Backend verification successful!", verifyResponseJson)
-        } else {
-          console.warn("Backend verification failed, but proceeding as requested:", verifyResponseJson)
-          // We don't set an error here because the user wants to ignore it for redirection
-        }
-      } catch (backendError) {
-        console.warn("Error during backend verification, but proceeding as requested:", backendError)
-        // We don't set an error here because the user wants to ignore it for redirection
+      const verifyResponseJson = await verifyResponse.json()
+      if (verifyResponseJson.status === 200) {
+        console.log("Verification success!", verifyResponseJson)
+        setVerificationStatus("Verification successful!")
+        // Mark onboarding as completed
+        localStorage.setItem("onboarding-completed", "true")
+        // Redirect to presentation page
+        router.push("/presentation")
+      } else {
+        console.error("Backend verification failed:", verifyResponseJson)
+        setVerificationStatus(`Backend verification failed: ${verifyResponseJson.verifyRes?.code || "Unknown error"}`)
       }
-      // --- End of backend verification block ---
-    } catch (err) {
-      console.error("Error during World ID interaction:", err)
-      setError(`An unexpected error occurred during World ID interaction: ${(err as Error).message}`)
-    } finally {
-      setLoading(false)
-      // Perform redirect if World App interaction was successful, regardless of backend result
-      if (verificationSuccessfulFromWorldApp) {
-        redirect("/dashboard") // Redirect to the dashboard page
-      }
+    } catch (error) {
+      console.error("Error during World ID verification:", error)
+      setVerificationStatus(`An unexpected error occurred: ${(error as Error).message}`)
     }
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-black text-white bg-[url('/white-explosions-background.png')] bg-cover bg-center overflow-hidden">
-      <div className="flex flex-col items-center space-y-4 px-4">
-        {" "}
-        {/* Added px-4 here */}
-        <Image src="/keplerpay-logo.png" alt="KeplerPay Logo" width={200} height={200} className="mb-4" />
-        <p className="text-lg text-center text-gray-400">To continue, please verify your World ID</p>
+    <div className="min-h-screen bg-black relative overflow-hidden flex flex-col items-center justify-center p-4">
+      {/* Background white spots/blobs */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/5 rounded-full mix-blend-screen filter blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-white/5 rounded-full mix-blend-screen filter blur-3xl animate-pulse-slow animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full mix-blend-screen filter blur-3xl animate-pulse-slow animation-delay-4000" />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center text-center">
+        <div className="mb-8">
+          <Image src="/images/keplerlogo.png" alt="KeplerPay Logo" width={240} height={240} className="mb-4" />
+        </div>
+
+        <p className="text-white text-lg mb-6">Login with World ID to continue</p>
+
         <Button
           onClick={handleVerify}
-          disabled={loading}
-          className="mt-8 px-8 py-3 text-lg font-semibold bg-white text-black hover:bg-gray-200 rounded-full shadow-lg"
+          className="bg-gradient-to-r from-cyan-600 to-blue-500 text-white font-semibold py-3 px-8 rounded-lg hover:from-cyan-700 hover:to-blue-600 transition-all duration-200 shadow-lg text-lg"
         >
-          {loading ? "Verifying..." : "Verify with World ID"}
+          Verify World ID
         </Button>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
+        {verificationStatus && <p className="mt-4 text-white text-sm">{verificationStatus}</p>}
       </div>
     </div>
   )
